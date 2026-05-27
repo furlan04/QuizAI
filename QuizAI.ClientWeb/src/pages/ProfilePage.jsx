@@ -1,37 +1,32 @@
 import { useEffect, useState } from "react";
-import {
-  getUserProfile,
-  getSpecificUserProfile,
-} from "../services/UserService";
-import {
-  sendFriendshipRequest,
-  removeFriendship,
-} from "../services/FriendshipService";
-import { useParams } from "react-router-dom";
-
+import { getUserProfile, getSpecificUserProfile } from "../services/UserService";
+import { sendFriendshipRequest, removeFriendship } from "../services/FriendshipService";
+import { useParams, useNavigate } from "react-router-dom";
 import { getAuthToken } from "../services/CommonService";
-import { useNavigate } from "react-router-dom";
-import "../styles/settings.css";
 import { motion, AnimatePresence } from "framer-motion";
+import "../styles/settings.css";
+
+const getInitials = (email) => {
+  if (!email) return "?";
+  const name  = email.split("@")[0];
+  const parts = name.replace(/[^a-zA-Z0-9]/g, " ").trim().split(" ");
+  return ((parts[0]?.[0] || "").toUpperCase() + (parts[1]?.[0] || "").toUpperCase()) || name.slice(0, 2).toUpperCase();
+};
+
+const BANNER_COLORS = [
+  "var(--coral)",
+  "var(--violet)",
+  "var(--sky)",
+  "var(--butter)",
+  "var(--mint)",
+];
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
-  const { userId } = useParams();
-
-  const getInitials = (email) => {
-    if (!email) return "?";
-    const name = email.split("@")[0];
-    const parts = name
-      .replace(/[^a-zA-Z0-9]/g, " ")
-      .trim()
-      .split(" ");
-    const initials =
-      (parts[0]?.[0] || "").toUpperCase() + (parts[1]?.[0] || "").toUpperCase();
-    return initials || name.slice(0, 2).toUpperCase();
-  };
+  const [error, setError]     = useState(null);
+  const navigate              = useNavigate();
+  const { userId }            = useParams();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -42,143 +37,151 @@ const ProfilePage = () => {
           : await getUserProfile(getAuthToken());
         setProfile(data);
         setError(null);
-      } catch (err) {
+      } catch {
         setError("Errore nel recupero del profilo.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, [userId]);
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Caricamento profilo...</div>
+      <div className="user-settings-container">
+        <div className="loading-container">
+          <div className="loading-spinner" />
+          <p className="loading-text">Caricamento profilo...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="error-state">
-        <div className="error-icon">⚠️</div>
-        <div className="error-title">{error}</div>
+      <div className="user-settings-container">
+        <div className="error-state">
+          <div className="error-title">{error}</div>
+        </div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon">👤</div>
-        <div className="empty-title">Nessun profilo trovato</div>
-        <div className="empty-message">
-          Il profilo richiesto non esiste o non può essere visualizzato.
+      <div className="user-settings-container">
+        <div className="empty-state">
+          <div className="empty-title">Nessun profilo trovato</div>
+          <p className="empty-message">Il profilo richiesto non esiste o non può essere visualizzato.</p>
         </div>
       </div>
     );
   }
 
+  /* Pick a stable banner colour from the email hash */
+  const bannerColor = BANNER_COLORS[(profile.email?.charCodeAt(0) ?? 0) % BANNER_COLORS.length];
+
   return (
     <div className="user-settings-container">
       <div className="settings-content">
-        {/* User Profile Card */}
         <div className="profile-card">
-          <div className="profile-header">
+          {/* Banner */}
+          <div
+            className="profile-header"
+            style={{
+              background: bannerColor,
+              backgroundImage: "repeating-linear-gradient(135deg, rgba(0,0,0,.1) 0 16px, transparent 16px 34px)",
+            }}
+          >
             <div className="profile-avatar">
               <span className="avatar-text">{getInitials(profile.email)}</span>
             </div>
             <div className="profile-info">
               <h2 className="profile-title">
-                {userId ? `Profilo di ${profile.email}` : "Il tuo profilo"}
+                {userId ? profile.email : "Il tuo profilo"}
               </h2>
-              <p className="profile-subtitle">Informazioni dell' account</p>
+              <p className="profile-subtitle">
+                {userId ? `Account di ${profile.email}` : "Informazioni account"}
+              </p>
             </div>
           </div>
 
-          <div className="profile-content">
-            {/* Email Section */}
-            <div className="setting-item">
-              <label className="setting-label">Indirizzo Email</label>
-              <div className="setting-value">
-                <div className="setting-display">
-                  <span className="setting-icon">📧</span>
-                  <span className="setting-text">{profile.email}</span>
-                </div>
-                <label className="setting-label">Numero amici</label>
-                <div className="setting-display">
-                  <span className="setting-icon">👥</span>
-                  <span className="setting-text">{profile.friendsCount}</span>
-                </div>
+          {/* Stats row */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            borderBottom: "1.5px solid rgba(26,23,38,.12)",
+          }}>
+            <div style={{ padding: "16px 22px", borderRight: "1.5px solid rgba(26,23,38,.12)" }}>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--ink-soft)", marginBottom: 4 }}>
+                Email
+              </div>
+              <div style={{ fontWeight: 700, wordBreak: "break-all", fontSize: 14, color: "var(--ink)" }}>
+                {profile.email}
               </div>
             </div>
+            <div style={{ padding: "16px 22px" }}>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--ink-soft)", marginBottom: 4 }}>
+                Amici
+              </div>
+              <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 28, lineHeight: 1, letterSpacing: "-.02em", color: "var(--ink)" }}>
+                {profile.friendsCount ?? 0}
+              </div>
+            </div>
+          </div>
 
+          {/* Actions */}
+          <div className="profile-content">
             <div className="actions-card">
-              <h2 className="actions-title">Azioni Profilo</h2>
+              <h2 className="actions-title">Azioni profilo</h2>
               <div className="actions-grid">
                 <button
-                  className="btn btn-action btn-primary"
+                  className="btn btn-primary btn-action"
                   onClick={() => navigate(`/quizzes/${profile.userId}`)}
                 >
                   Vedi Quiz
                 </button>
+
                 {!profile.isCurrentUser && !profile.haveSentRequest && (
                   <AnimatePresence mode="wait">
                     <motion.button
-                      key={profile.isFriend ? "remove" : "add"} // cambia la key per forzare transizione
-                      className={`btn btn-action ${
-                        profile.friendStatus ? "btn-outline" : "btn-primary"
-                      }`}
+                      key={profile.isFriend ? "remove" : "add"}
+                      className={`btn btn-action ${profile.isFriend ? "btn-outline" : "btn-primary"}`}
                       onClick={async () => {
                         try {
                           if (profile.isFriend) {
-                            await removeFriendship(
-                              profile.friendshipId,
-                              getAuthToken()
-                            );
+                            await removeFriendship(profile.friendshipId, getAuthToken());
                             setProfile({ ...profile, isFriend: false, haveSentRequest: false });
                           } else {
-                            await sendFriendshipRequest(
-                              profile.email,
-                              getAuthToken()
-                            );
-                            setProfile({ ...profile, isFriend: true, haveSentRequest: true});
+                            await sendFriendshipRequest(profile.email, getAuthToken());
+                            setProfile({ ...profile, isFriend: true, haveSentRequest: true });
                           }
                         } catch (err) {
-                          console.error(
-                            "Errore nell'aggiornamento dello stato di amicizia",
-                            err
-                          );
+                          console.error("Errore aggiornamento amicizia", err);
                         }
                       }}
-                      initial={{ opacity: 0, scale: 0.8 }}
+                      initial={{ opacity: 0, scale: .85 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.3 }}
+                      exit={{ opacity: 0, scale: .85 }}
+                      transition={{ duration: .25 }}
                     >
-                      {profile.isFriend
-                        ? "Rimuovi Amicizia"
-                        : "Aggiungi Amicizia"}
+                      {profile.isFriend ? "Rimuovi amicizia" : "Aggiungi amicizia"}
                     </motion.button>
                   </AnimatePresence>
                 )}
-                { profile.haveSentRequest && !profile.isCurrentUser && (
-                  <button
-                    className="btn btn-action btn-secondary"
-                    disabled
-                  >
-                    Richiesta Inviata 📨
+
+                {profile.haveSentRequest && !profile.isCurrentUser && (
+                  <button className="btn btn-action btn-secondary" disabled>
+                    Richiesta inviata
                   </button>
                 )}
-                { profile.isCurrentUser && (
+
+                {profile.isCurrentUser && (
                   <button
                     className="btn btn-action btn-secondary"
                     onClick={() => navigate("/settings")}
                   >
-                    Impostazioni Account 🛠️
+                    Impostazioni account
                   </button>
                 )}
               </div>

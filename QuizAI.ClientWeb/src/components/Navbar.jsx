@@ -2,6 +2,90 @@ import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+/* ── Inline SVG icons (no emoji) ── */
+const IcHome = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v10h14V10"/>
+  </svg>
+);
+
+const IcQuiz = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8M8 12h6M8 16h4"/>
+  </svg>
+);
+
+const IcFriends = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+    <circle cx="17" cy="8" r="3"/><path d="M21 20c0-3.3-2.7-6-6-6"/>
+  </svg>
+);
+
+const IcCreate = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+);
+
+const IcProfile = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
+  </svg>
+);
+
+const IcSettings = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+);
+
+const IcLogout = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+);
+
+const IcLogin = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+    <polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+  </svg>
+);
+
+const IcRegister = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+  </svg>
+);
+
+const IcArrow = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9l6 6 6-6"/>
+  </svg>
+);
+
+/* ── Brand mark ── */
+function BrandMark() {
+  return (
+    <div style={{
+      width: 38, height: 38, borderRadius: 12,
+      background: "var(--ink)", color: "var(--lime)",
+      display: "grid", placeItems: "center",
+      fontFamily: "'Bricolage Grotesque', sans-serif",
+      fontWeight: 800, fontSize: 20,
+      boxShadow: "3px 3px 0 0 var(--coral)",
+      transform: "rotate(-4deg)",
+      flexShrink: 0,
+    }}>
+      Q
+    </div>
+  );
+}
+
 export default function Navbar({ isLoggedIn, onLogout }) {
   const location = useLocation();
   const [friendsDropdownOpen, setFriendsDropdownOpen] = useState(false);
@@ -11,117 +95,59 @@ export default function Navbar({ isLoggedIn, onLogout }) {
 
   const isActive = (path) => location.pathname === path;
 
-  // Effect per chiudere i dropdown quando si clicca fuori
   useEffect(() => {
     const handleClickOutside = (event) => {
-      const isClickInsideDesktop = desktopNavRef.current && desktopNavRef.current.contains(event.target);
-      const isClickInsideMobile = mobileNavRef.current && mobileNavRef.current.contains(event.target);
-      
-      if (!isClickInsideDesktop && !isClickInsideMobile) {
-        closeAllDropdowns();
-      }
+      const inDesktop = desktopNavRef.current && desktopNavRef.current.contains(event.target);
+      const inMobile  = mobileNavRef.current  && mobileNavRef.current.contains(event.target);
+      if (!inDesktop && !inMobile) closeAll();
     };
-
-    // Aggiungi l'event listener solo se almeno un dropdown è aperto
     if (quizDropdownOpen || friendsDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
-
-    // Cleanup function per rimuovere l'event listener
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [quizDropdownOpen, friendsDropdownOpen]);
 
-  // Funzione per aprire solo un dropdown alla volta
-  const toggleQuizDropdown = () => {
-    setQuizDropdownOpen(!quizDropdownOpen);
-    if (friendsDropdownOpen) {
-      setFriendsDropdownOpen(false);
-    }
-  };
+  const toggleQuiz    = () => { setQuizDropdownOpen(v => !v);    if (friendsDropdownOpen) setFriendsDropdownOpen(false); };
+  const toggleFriends = () => { setFriendsDropdownOpen(v => !v); if (quizDropdownOpen)    setQuizDropdownOpen(false); };
+  const closeAll      = () => { setQuizDropdownOpen(false); setFriendsDropdownOpen(false); };
 
-  const toggleFriendsDropdown = () => {
-    setFriendsDropdownOpen(!friendsDropdownOpen);
-    if (quizDropdownOpen) {
-      setQuizDropdownOpen(false);
-    }
-  };
-
-  const closeAllDropdowns = () => {
-    setQuizDropdownOpen(false);
-    setFriendsDropdownOpen(false);
-  };
-
+  /* ── Public sidebar (not logged in) ── */
   if (!isLoggedIn) {
-    // Public navbar - unchanged
     return (
       <>
-        {/* Desktop Navbar */}
         <aside className="sidebar-desktop">
-          <div className="sidebar-content">
-            {/* Logo */}
-            <Link className="sidebar-brand" to="/">
-              <div className="brand-logo">
-                <span className="brand-icon">🧠</span>
-              </div>
-              <span className="brand-text">AI Quiz</span>
+          <Link className="sidebar-brand" to="/">
+            <BrandMark />
+            <span className="brand-text">quiz<em>AI</em></span>
+          </Link>
+
+          <nav className="sidebar-nav">
+            <Link to="/"         className={`nav-item${isActive("/") ? " active" : ""}`}>
+              <span className="nav-icon"><IcHome /></span>
+              <span className="nav-text">Home</span>
             </Link>
-
-            {/* Navigation Menu for non-authenticated users */}
-            <nav className="sidebar-nav">
-              <Link
-                to="/"
-                className={`nav-item ${isActive("/") ? "active" : ""}`}
-              >
-                <span className="nav-icon">🏠</span>
-                <span className="nav-text">Home</span>
-              </Link>
-
-              <Link
-                to="/login"
-                className={`nav-item ${isActive("/login") ? "active" : ""}`}
-              >
-                <span className="nav-icon">🔑</span>
-                <span className="nav-text">Accedi</span>
-              </Link>
-
-              <Link
-                to="/register"
-                className={`nav-item ${isActive("/register") ? "active" : ""}`}
-              >
-                <span className="nav-icon">📝</span>
-                <span className="nav-text">Registrati</span>
-              </Link>
-            </nav>
-          </div>
+            <Link to="/login"    className={`nav-item${isActive("/login") ? " active" : ""}`}>
+              <span className="nav-icon"><IcLogin /></span>
+              <span className="nav-text">Accedi</span>
+            </Link>
+            <Link to="/register" className={`nav-item${isActive("/register") ? " active" : ""}`}>
+              <span className="nav-icon"><IcRegister /></span>
+              <span className="nav-text">Registrati</span>
+            </Link>
+          </nav>
         </aside>
 
-        {/* Mobile Bottom Navigation */}
         <nav className="sidebar-mobile">
-          <Link
-            to="/"
-            className={`mobile-nav-item ${isActive("/") ? "active" : ""}`}
-          >
-            <span className="mobile-nav-icon">🏠</span>
+          <Link to="/"         className={`mobile-nav-item${isActive("/") ? " active" : ""}`}>
+            <span className="mobile-nav-icon"><IcHome /></span>
             <span className="mobile-nav-text">Home</span>
           </Link>
-
-          <Link
-            to="/login"
-            className={`mobile-nav-item ${isActive("/login") ? "active" : ""}`}
-          >
-            <span className="mobile-nav-icon">🔑</span>
+          <Link to="/login"    className={`mobile-nav-item${isActive("/login") ? " active" : ""}`}>
+            <span className="mobile-nav-icon"><IcLogin /></span>
             <span className="mobile-nav-text">Accedi</span>
           </Link>
-
-          <Link
-            to="/register"
-            className={`mobile-nav-item ${
-              isActive("/register") ? "active" : ""
-            }`}
-          >
-            <span className="mobile-nav-icon">📝</span>
+          <Link to="/register" className={`mobile-nav-item${isActive("/register") ? " active" : ""}`}>
+            <span className="mobile-nav-icon"><IcRegister /></span>
             <span className="mobile-nav-text">Registrati</span>
           </Link>
         </nav>
@@ -129,221 +155,127 @@ export default function Navbar({ isLoggedIn, onLogout }) {
     );
   }
 
-  // Authenticated navbar with fixed dropdowns
+  /* ── Authenticated sidebar ── */
+  const quizActive    = ["/quizzes", "/quizzes/create", "/attempted-quizzes", "/liked-quizzes"].some(p => location.pathname.startsWith(p) || isActive(p));
+  const friendsActive = ["/friendship"].some(p => location.pathname.startsWith(p));
+
   return (
     <>
-      {/* Desktop Sidebar */}
       <aside className="sidebar-desktop" ref={desktopNavRef}>
-        <div className="sidebar-content">
-          {/* Logo */}
-          <Link className="sidebar-brand" to="/">
-            <div className="brand-logo">
-              <span className="brand-icon">🧠</span>
-            </div>
-            <span className="brand-text">AI Quiz</span>
+        <Link className="sidebar-brand" to="/">
+          <BrandMark />
+          <span className="brand-text">quiz<em>AI</em></span>
+        </Link>
+
+        <nav className="sidebar-nav">
+          {/* Home */}
+          <Link to="/" className={`nav-item${isActive("/") ? " active" : ""}`}>
+            <span className="nav-icon"><IcHome /></span>
+            <span className="nav-text">Per te</span>
           </Link>
 
-          {/* Navigation Menu */}
-          <nav className="sidebar-nav">
-            <Link
-              to="/"
-              className={`nav-item ${isActive("/") ? "active" : ""}`}
-            >
-              <span className="nav-icon">🏠</span>
-              <span className="nav-text">Per te</span>
-            </Link>
-
-            {/* Quiz Dropdown */}
-            <div className="nav-dropdown">
-              <button
-                className={`nav-item dropdown-toggle ${
-                  quizDropdownOpen ? "active" : ""
-                }`}
-                onClick={toggleQuizDropdown}
-              >
-                <span className="nav-icon">📚</span>
-                <span className="nav-text">Quiz</span>
-              </button>
-
-              {quizDropdownOpen && (
-                <div className="dropdown-menu">
-                  <Link
-                    to="/quizzes"
-                    className="nav-item"
-                    onClick={closeAllDropdowns}
-                  >
-                    I miei Quiz
-                  </Link>
-                  <Link
-                    to="/attempted-quizzes"
-                    className="nav-item"
-                    onClick={closeAllDropdowns}
-                  >
-                    Quiz Provati
-                  </Link>
-                  <Link
-                    to="/liked-quizzes"
-                    className="nav-item"
-                    onClick={closeAllDropdowns}
-                  >
-                    Quiz Piaciuti
-                  </Link>
-                  <Link
-                    to="/quizzes/create"
-                    className="nav-item"
-                    onClick={closeAllDropdowns}
-                  >
-                    <span className="nav-icon">✨</span>
-                    Crea quiz
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Friends Dropdown */}
-            <div className="nav-dropdown">
-              <button
-                className={`nav-item dropdown-toggle ${
-                  friendsDropdownOpen ? "active" : ""
-                }`}
-                onClick={toggleFriendsDropdown}
-              >
-                <span className="nav-icon">👥</span>
-                <span className="nav-text">Amicizie</span>
-              </button>
-
-              {friendsDropdownOpen && (
-                <div className="dropdown-menu">
-                  <Link
-                    to="/friendship/requests"
-                    className="nav-item"
-                    onClick={closeAllDropdowns}
-                  >
-                    <span className="dropdown-icon">📨</span>
-                    Richieste
-                  </Link>
-                  <Link
-                    to="/friendship/friends"
-                    className="nav-item"
-                    onClick={closeAllDropdowns}
-                  >
-                    <span className="dropdown-icon">🤝</span>
-                    Amici
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            <Link
-              to="/settings"
-              className="nav-item"
-            >
-              <span className="nav-icon">🛠️</span>
-              <span className="nav-text">Impostazioni</span>
-            </Link>
-
-            <button onClick={onLogout} className="nav-item logout-btn">
-              <span className="nav-icon">🚪</span>
-              <span className="nav-text">Logout</span>
+          {/* Quiz dropdown */}
+          <div className={`nav-dropdown${quizDropdownOpen ? " open" : ""}`}>
+            <button className={`nav-item nav-dd-toggle${quizActive ? " active" : ""}`} onClick={toggleQuiz}>
+              <span className="nav-icon"><IcQuiz /></span>
+              <span className="nav-text">Quiz</span>
+              <span className="nav-dd-arrow"><IcArrow /></span>
             </button>
-          </nav>
-        </div>
+            {quizDropdownOpen && (
+              <div className="nav-dd-panel">
+                <Link to="/quizzes"           className="nav-item" onClick={closeAll}>I miei Quiz</Link>
+                <Link to="/attempted-quizzes" className="nav-item" onClick={closeAll}>Quiz provati</Link>
+                <Link to="/liked-quizzes"     className="nav-item" onClick={closeAll}>Quiz piaciuti</Link>
+                <Link to="/quizzes/create"    className="nav-item" onClick={closeAll}>Crea quiz</Link>
+              </div>
+            )}
+          </div>
+
+          {/* Friends dropdown */}
+          <div className={`nav-dropdown${friendsDropdownOpen ? " open" : ""}`}>
+            <button className={`nav-item nav-dd-toggle${friendsActive ? " active" : ""}`} onClick={toggleFriends}>
+              <span className="nav-icon"><IcFriends /></span>
+              <span className="nav-text">Amicizie</span>
+              <span className="nav-dd-arrow"><IcArrow /></span>
+            </button>
+            {friendsDropdownOpen && (
+              <div className="nav-dd-panel">
+                <Link to="/friendship/requests" className="nav-item" onClick={closeAll}>Richieste</Link>
+                <Link to="/friendship/friends"  className="nav-item" onClick={closeAll}>Amici</Link>
+              </div>
+            )}
+          </div>
+
+          {/* Create */}
+          <Link to="/quizzes/create" className={`nav-item${isActive("/quizzes/create") ? " active" : ""}`}>
+            <span className="nav-icon"><IcCreate /></span>
+            <span className="nav-text">Crea</span>
+          </Link>
+
+          {/* Profile */}
+          <Link to="/profile" className={`nav-item${location.pathname.startsWith("/profile") ? " active" : ""}`}>
+            <span className="nav-icon"><IcProfile /></span>
+            <span className="nav-text">Profilo</span>
+          </Link>
+
+          {/* Settings */}
+          <Link to="/settings" className={`nav-item${isActive("/settings") ? " active" : ""}`}>
+            <span className="nav-icon"><IcSettings /></span>
+            <span className="nav-text">Impostazioni</span>
+          </Link>
+
+          {/* Logout */}
+          <button onClick={onLogout} className="nav-item logout-btn">
+            <span className="nav-icon"><IcLogout /></span>
+            <span className="nav-text">Logout</span>
+          </button>
+        </nav>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
+      {/* ── Mobile bottom navigation ── */}
       <nav className="sidebar-mobile" ref={mobileNavRef}>
-        <Link
-          to="/"
-          className={`mobile-nav-item ${isActive("/") ? "active" : ""}`}
-        >
-          <span className="mobile-nav-icon">🏠</span>
+        <Link to="/" className={`mobile-nav-item${isActive("/") ? " active" : ""}`}>
+          <span className="mobile-nav-icon"><IcHome /></span>
           <span className="mobile-nav-text">Per te</span>
         </Link>
 
-        {/* Mobile Quiz Dropdown */}
+        {/* Mobile quiz dropdown */}
         <div className="mobile-nav-dropdown">
-          <button
-            className={`mobile-nav-item ${quizDropdownOpen ? "active" : ""}`}
-            onClick={toggleQuizDropdown}
-          >
-            <span className="mobile-nav-icon">📚</span>
+          <button className={`mobile-nav-item${quizDropdownOpen ? " active" : ""}`} onClick={toggleQuiz}>
+            <span className="mobile-nav-icon"><IcQuiz /></span>
             <span className="mobile-nav-text">Quiz</span>
           </button>
-
           {quizDropdownOpen && (
             <div className="mobile-dropdown-menu">
-              <Link
-                to="/quizzes"
-                className="mobile-dropdown-item"
-                onClick={closeAllDropdowns}
-              >
-                I miei Quiz
-              </Link>
-              <Link
-                to="/attempted-quizzes"
-                className="mobile-dropdown-item"
-                onClick={closeAllDropdowns}
-              >
-                Quiz provati
-              </Link>
-              <Link
-                to="/liked-quizzes"
-                className="mobile-dropdown-item"
-                onClick={closeAllDropdowns}
-              >
-                Quiz piaciuti
-              </Link>
-              <Link
-                to="/quizzes/create"
-                className="mobile-dropdown-item"
-                onClick={closeAllDropdowns}
-              >
-                Crea quiz
-              </Link>
+              <Link to="/quizzes"           className="mobile-dropdown-item" onClick={closeAll}>I miei Quiz</Link>
+              <Link to="/attempted-quizzes" className="mobile-dropdown-item" onClick={closeAll}>Quiz provati</Link>
+              <Link to="/liked-quizzes"     className="mobile-dropdown-item" onClick={closeAll}>Quiz piaciuti</Link>
+              <Link to="/quizzes/create"    className="mobile-dropdown-item" onClick={closeAll}>Crea quiz</Link>
             </div>
           )}
         </div>
 
-        {/* Mobile Friends Dropdown */}
+        {/* Mobile friends dropdown */}
         <div className="mobile-nav-dropdown">
-          <button
-            className={`mobile-nav-item ${friendsDropdownOpen ? "active" : ""}`}
-            onClick={toggleFriendsDropdown}
-          >
-            <span className="mobile-nav-icon">👥</span>
+          <button className={`mobile-nav-item${friendsDropdownOpen ? " active" : ""}`} onClick={toggleFriends}>
+            <span className="mobile-nav-icon"><IcFriends /></span>
             <span className="mobile-nav-text">Amici</span>
           </button>
-
           {friendsDropdownOpen && (
             <div className="mobile-dropdown-menu">
-              <Link
-                to="/friendship/requests"
-                className="mobile-dropdown-item"
-                onClick={closeAllDropdowns}
-              >
-                📨 Richieste
-              </Link>
-              <Link
-                to="/friendship/friends"
-                className="mobile-dropdown-item"
-                onClick={closeAllDropdowns}
-              >
-                🤝 Amici
-              </Link>
+              <Link to="/friendship/requests" className="mobile-dropdown-item" onClick={closeAll}>Richieste</Link>
+              <Link to="/friendship/friends"  className="mobile-dropdown-item" onClick={closeAll}>Amici</Link>
             </div>
           )}
         </div>
 
-        <Link
-          to="/settings"
-          className="mobile-nav-item"
-        >
-          <span className="mobile-nav-icon">🛠️</span>
-          <span className="mobile-nav-text">Impostazioni</span>
+        <Link to="/profile" className={`mobile-nav-item${location.pathname.startsWith("/profile") ? " active" : ""}`}>
+          <span className="mobile-nav-icon"><IcProfile /></span>
+          <span className="mobile-nav-text">Profilo</span>
         </Link>
 
         <button onClick={onLogout} className="mobile-nav-item logout-btn">
-          <span className="mobile-nav-icon">🚪</span>
+          <span className="mobile-nav-icon"><IcLogout /></span>
           <span className="mobile-nav-text">Esci</span>
         </button>
       </nav>

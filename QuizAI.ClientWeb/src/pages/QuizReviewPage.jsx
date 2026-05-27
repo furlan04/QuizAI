@@ -51,14 +51,14 @@ export default function QuizReviewPage() {
   const getAnswerStatus = (question) => {
     if (question.isCorrect) {
       return {
-        icon: '✅',
+        icon: '+',
         class: 'text-success',
         badge: 'bg-success bg-opacity-10 text-success',
         text: 'Corretta'
       };
     } else {
       return {
-        icon: '❌',
+        icon: 'x',
         class: 'text-danger',
         badge: 'bg-danger bg-opacity-10 text-danger',
         text: 'Sbagliata'
@@ -77,9 +77,9 @@ export default function QuizReviewPage() {
 
   const getOptionIcon = (question, optionIndex) => {
     if (optionIndex === question.correctAnswerIndex) {
-      return '✅';
+      return '✓';
     } else if (optionIndex === question.selectedAnswerIndex && !question.isCorrect) {
-      return '❌';
+      return '✗';
     }
     return '';
   };
@@ -146,7 +146,7 @@ export default function QuizReviewPage() {
       {/* Header Section */}
       <div className="row align-items-center mb-5">
         <div className="col-lg-8">
-          <h1 className="display-5 fw-bold text-primary mb-2">📖 Revisione Quiz</h1>
+          <h1 className="display-5 fw-bold text-primary mb-2">Revisione Quiz</h1>
           <p className="lead text-muted mb-0">
             Analizza le tue risposte e impara dai tuoi errori
           </p>
@@ -256,7 +256,7 @@ export default function QuizReviewPage() {
 
           {/* Answer Explanation */}
           <div className="mt-4 p-3 bg-light rounded-3">
-            <h6 className="text-primary mb-2">📝 Analisi della risposta:</h6>
+            <h6 className="text-primary mb-2">Analisi della risposta:</h6>
             <div className="row">
               <div className="col-md-6">
                 <p className="mb-1">
@@ -301,13 +301,13 @@ export default function QuizReviewPage() {
         <div className="col-12 text-center">
           <div className="d-flex gap-3 justify-content-center flex-wrap">
             <Link to={`/quiz/${reviewData.quizId}`} className="btn btn-primary btn-lg">
-              🎮 Gioca di nuovo
+              Gioca di nuovo
             </Link>
             <Link to={`/attempts/${reviewData.quizId}`} className="btn btn-outline-primary btn-lg">
-              📊 Torna ai tentativi
+              Torna ai tentativi
             </Link>
             <Link to="/quizzes" className="btn btn-outline-secondary btn-lg">
-              🏠 Torna ai quiz
+              Torna ai quiz
             </Link>
           </div>
         </div>

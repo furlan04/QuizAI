@@ -2,261 +2,313 @@ import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
-    <div className="homepage">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-background">
-          <div className="hero-gradient"></div>
-          <div className="hero-pattern"></div>
-        </div>
-        
-        <div className="hero-content">
-          <div className="container">
-            <div className="hero-grid">
-              <div className="hero-text">
-                <div className="hero-badge">
-                  <span className="badge-icon">🚀</span>
-                  <span>Nuova Piattaforma AI</span>
-                </div>
-                
-                <h1 className="hero-title">
-                  Crea, Condividi e
-                  <span className="gradient-text"> Impara</span>
-                  <br />
-                  con Quiz Intelligenti
-                </h1>
-                
-                <p className="hero-description">
-                  La prima piattaforma sociale che combina l'intelligenza artificiale 
-                  con l'apprendimento collaborativo. Crea quiz personalizzati, 
-                  sfida i tuoi amici e cresci insieme.
-                </p>
-                
-                <div className="hero-actions">
-                  <Link to="/register" className="btn btn-primary btn-hero">
-                    <span className="btn-icon">✨</span>
-                    Inizia Gratis
-                  </Link>
-                  <Link to="/login" className="btn btn-outline btn-hero">
-                    <span className="btn-icon">🔑</span>
-                    Accedi
-                  </Link>
-                </div>
-                
-                <div className="hero-stats">
-                  <div className="stat">
-                    <span className="stat-number">10K+</span>
-                    <span className="stat-label">Utenti Attivi</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-number">50K+</span>
-                    <span className="stat-label">Quiz Creati</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-number">1M+</span>
-                    <span className="stat-label">Domande AI</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="hero-visual">
-                <div className="quiz-preview">
-                  <div className="quiz-card-preview">
-                    <div className="quiz-header">
-                      <div className="quiz-avatar">
-                        <span>🧠</span>
-                      </div>
-                      <div className="quiz-info">
-                        <h4>Quiz di Storia</h4>
-                        <p>Creato da @mario_rossi</p>
-                      </div>
-                      <div className="quiz-badge">
-                        <span>AI</span>
-                      </div>
-                    </div>
-                    <div className="quiz-question">
-                      <p>Chi ha dipinto la Cappella Sistina?</p>
-                    </div>
-                    <div className="quiz-options">
-                      <div className="option">A) Leonardo da Vinci</div>
-                      <div className="option correct">B) Michelangelo</div>
-                      <div className="option">C) Raffaello</div>
-                      <div className="option">D) Botticelli</div>
-                    </div>
-                  </div>
-                  
-                  <div className="floating-elements">
-                    <div className="floating-icon">📚</div>
-                    <div className="floating-icon">🎯</div>
-                    <div className="floating-icon">🏆</div>
-                    <div className="floating-icon">💡</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px 64px" }}>
 
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Perché Scegliere la Nostra Piattaforma?
-            </h2>
-            <p className="section-subtitle">
-              Esperienza il futuro dell'apprendimento sociale con funzionalità AI all'avanguardia
-            </p>
+      {/* Hero */}
+      <div style={{
+        marginTop: 48,
+        marginBottom: 48,
+        background: "#fff",
+        border: "2.5px solid var(--ink)",
+        borderRadius: "var(--radius-lg)",
+        boxShadow: "var(--shadow-hard-xl)",
+        overflow: "hidden",
+      }}>
+        {/* Banner stripe */}
+        <div style={{
+          height: 12,
+          background: "var(--violet)",
+          backgroundImage: "repeating-linear-gradient(90deg, var(--violet) 0 32px, var(--coral) 32px 64px, var(--lime) 64px 96px, var(--sky) 96px 128px)",
+        }} />
+
+        <div style={{ padding: "48px 48px 40px" }}>
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "var(--lime)",
+            border: "2px solid var(--ink)",
+            borderRadius: 100,
+            padding: "5px 14px",
+            marginBottom: 24,
+            boxShadow: "3px 3px 0 0 var(--ink)",
+          }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink)" }}>
+              Powered by AI
+            </span>
           </div>
-          
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>🤖</span>
+
+          <h1 style={{
+            fontFamily: "'Bricolage Grotesque', sans-serif",
+            fontWeight: 800,
+            fontSize: "clamp(2rem, 5vw, 3.2rem)",
+            lineHeight: 1.1,
+            letterSpacing: "-.03em",
+            color: "var(--ink)",
+            margin: "0 0 20px",
+          }}>
+            Crea, Condividi e<br />
+            <span style={{ color: "var(--violet)" }}>Impara</span> con Quiz Intelligenti
+          </h1>
+
+          <p style={{ fontSize: 17, color: "var(--ink-soft)", lineHeight: 1.6, maxWidth: 520, marginBottom: 32 }}>
+            Genera quiz con l&apos;intelligenza artificiale, sfida i tuoi amici e
+            monitora i tuoi progressi in tempo reale.
+          </p>
+
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <Link
+              to="/register"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "var(--violet)",
+                color: "#fff",
+                border: "2.5px solid var(--ink)",
+                borderRadius: "var(--radius-sm)",
+                padding: "13px 26px",
+                fontFamily: "'Bricolage Grotesque', sans-serif",
+                fontWeight: 800,
+                fontSize: 16,
+                letterSpacing: "-.01em",
+                textDecoration: "none",
+                boxShadow: "var(--shadow-hard)",
+                transition: "transform .1s, box-shadow .1s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-2px,-2px)"; e.currentTarget.style.boxShadow = "6px 6px 0 0 var(--ink)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--shadow-hard)"; }}
+            >
+              Inizia Gratis
+            </Link>
+            <Link
+              to="/login"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: "transparent",
+                color: "var(--ink)",
+                border: "2.5px solid var(--ink)",
+                borderRadius: "var(--radius-sm)",
+                padding: "13px 26px",
+                fontFamily: "'Bricolage Grotesque', sans-serif",
+                fontWeight: 700,
+                fontSize: 16,
+                textDecoration: "none",
+                boxShadow: "var(--shadow-hard)",
+                transition: "transform .1s, box-shadow .1s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-2px,-2px)"; e.currentTarget.style.boxShadow = "6px 6px 0 0 var(--ink)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--shadow-hard)"; }}
+            >
+              Accedi
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginBottom: 48 }}>
+        {[
+          {
+            color: "var(--violet)",
+            label: "Generazione AI",
+            desc: "Descrivi un argomento e l'AI crea domande pertinenti istantaneamente.",
+            stat: "+300%",
+            statLabel: "Velocità di creazione",
+          },
+          {
+            color: "var(--coral)",
+            label: "Apprendimento Sociale",
+            desc: "Connettiti con gli amici, condividi quiz e costruisci una community.",
+            stat: "95%",
+            statLabel: "Soddisfazione utenti",
+          },
+          {
+            color: "var(--lime)",
+            label: "Analisi Avanzate",
+            desc: "Monitora i progressi, traccia le performance e scopri dove migliorare.",
+            stat: "Real-time",
+            statLabel: "Feedback istantaneo",
+          },
+        ].map((f) => (
+          <div
+            key={f.label}
+            style={{
+              background: "#fff",
+              border: "2.5px solid var(--ink)",
+              borderRadius: "var(--radius)",
+              boxShadow: "var(--shadow-hard)",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ height: 8, background: f.color }} />
+            <div style={{ padding: "22px 22px 20px" }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: ".12em",
+                textTransform: "uppercase",
+                color: "var(--ink-soft)",
+                marginBottom: 8,
+              }}>
+                {f.label}
               </div>
-              <h3 className="feature-title">Generazione AI</h3>
-              <p className="feature-description">
-                Crea quiz coinvolgenti istantaneamente con la nostra AI avanzata 
-                che si adatta ai tuoi contenuti e genera domande pertinenti.
+              <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.55, marginBottom: 16 }}>
+                {f.desc}
               </p>
-              <div className="feature-highlight">
-                <span>+300%</span>
-                <span>Velocità di Creazione</span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span style={{
+                  fontFamily: "'Bricolage Grotesque', sans-serif",
+                  fontWeight: 800,
+                  fontSize: 22,
+                  letterSpacing: "-.02em",
+                  color: "var(--ink)",
+                }}>
+                  {f.stat}
+                </span>
+                <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{f.statLabel}</span>
               </div>
             </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>👥</span>
+          </div>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div style={{
+        background: "#fff",
+        border: "2.5px solid var(--ink)",
+        borderRadius: "var(--radius-lg)",
+        boxShadow: "var(--shadow-hard-lg)",
+        padding: "40px 40px 36px",
+        marginBottom: 48,
+      }}>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: ".12em",
+          textTransform: "uppercase",
+          color: "var(--ink-soft)",
+          marginBottom: 8,
+        }}>
+          Come funziona
+        </div>
+        <h2 style={{
+          fontFamily: "'Bricolage Grotesque', sans-serif",
+          fontWeight: 800,
+          fontSize: "1.9rem",
+          letterSpacing: "-.02em",
+          color: "var(--ink)",
+          marginBottom: 32,
+        }}>
+          Tre semplici passi
+        </h2>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 24 }}>
+          {[
+            { n: "01", title: "Crea un account", desc: "Registrati gratis e unisciti alla community.", color: "var(--violet)" },
+            { n: "02", title: "Genera un Quiz", desc: "Scrivi un argomento, l'AI pensa al resto.", color: "var(--coral)" },
+            { n: "03", title: "Condividi e Sfida", desc: "Invita gli amici e scala la classifica.", color: "var(--lime)" },
+          ].map((s) => (
+            <div key={s.n}>
+              <div style={{
+                width: 44,
+                height: 44,
+                background: s.color,
+                border: "2.5px solid var(--ink)",
+                borderRadius: "var(--radius-sm)",
+                boxShadow: "3px 3px 0 0 var(--ink)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 700,
+                fontSize: 14,
+                color: "var(--ink)",
+                marginBottom: 16,
+              }}>
+                {s.n}
               </div>
-              <h3 className="feature-title">Apprendimento Sociale</h3>
-              <p className="feature-description">
-                Connettiti con gli amici, condividi i tuoi quiz e sfida gli altri. 
-                Costruisci una community intorno alla conoscenza e alla competizione amichevole.
+              <h3 style={{
+                fontFamily: "'Bricolage Grotesque', sans-serif",
+                fontWeight: 800,
+                fontSize: 17,
+                letterSpacing: "-.01em",
+                color: "var(--ink)",
+                marginBottom: 6,
+              }}>
+                {s.title}
+              </h3>
+              <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.55, margin: 0 }}>
+                {s.desc}
               </p>
-              <div className="feature-highlight">
-                <span>95%</span>
-                <span>Soddisfazione Utenti</span>
-              </div>
             </div>
-            
-            <div className="feature-card">
-              <div className="feature-icon">
-                <span>📊</span>
-              </div>
-              <h3 className="feature-title">Analisi Avanzate</h3>
-              <p className="feature-description">
-                Monitora i tuoi progressi di apprendimento, traccia le performance 
-                nei quiz e scopri aree di miglioramento con analisi dettagliate.
-              </p>
-              <div className="feature-highlight">
-                <span>Real-time</span>
-                <span>Feedback</span>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-      </section>
+      </div>
 
-      {/* How It Works Section */}
-      <section className="how-it-works-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">Come Funziona</h2>
-            <p className="section-subtitle">Inizia in soli tre semplici passaggi</p>
-          </div>
-          
-          <div className="steps-container">
-            <div className="step">
-              <div className="step-number">
-                <span>1</span>
-              </div>
-              <div className="step-content">
-                <h3 className="step-title">Crea il Tuo Account</h3>
-                <p className="step-description">
-                  Registrati gratuitamente e unisciti alla nostra community 
-                  di studenti e creatori.
-                </p>
-              </div>
-              <div className="step-visual">
-                <div className="step-icon">👤</div>
-              </div>
-            </div>
-            
-            <div className="step">
-              <div className="step-number">
-                <span>2</span>
-              </div>
-              <div className="step-content">
-                <h3 className="step-title">Genera Quiz AI</h3>
-                <p className="step-description">
-                  Usa la nostra AI per creare quiz coinvolgenti o gioca 
-                  con quelli esistenti della community.
-                </p>
-              </div>
-              <div className="step-visual">
-                <div className="step-icon">🎯</div>
-              </div>
-            </div>
-            
-            <div className="step">
-              <div className="step-number">
-                <span>3</span>
-              </div>
-              <div className="step-content">
-                <h3 className="step-title">Connetti e Condividi</h3>
-                <p className="step-description">
-                  Condividi i tuoi quiz, sfida gli amici e cresci la tua rete.
-                </p>
-              </div>
-              <div className="step-visual">
-                <div className="step-icon">🤝</div>
-              </div>
-            </div>
-          </div>
+      {/* CTA */}
+      <div style={{
+        background: "var(--ink)",
+        border: "2.5px solid var(--ink)",
+        borderRadius: "var(--radius-lg)",
+        boxShadow: "var(--shadow-hard-xl)",
+        padding: "40px 40px",
+        textAlign: "center",
+      }}>
+        <h2 style={{
+          fontFamily: "'Bricolage Grotesque', sans-serif",
+          fontWeight: 800,
+          fontSize: "1.8rem",
+          letterSpacing: "-.02em",
+          color: "#fff",
+          marginBottom: 12,
+        }}>
+          Pronto a iniziare?
+        </h2>
+        <p style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginBottom: 28 }}>
+          Unisciti alla community e inizia a creare quiz potenziati dall&apos;AI.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <Link
+            to="/register"
+            style={{
+              background: "var(--lime)",
+              color: "var(--ink)",
+              border: "2.5px solid rgba(255,255,255,.3)",
+              borderRadius: "var(--radius-sm)",
+              padding: "13px 26px",
+              fontFamily: "'Bricolage Grotesque', sans-serif",
+              fontWeight: 800,
+              fontSize: 15,
+              textDecoration: "none",
+              boxShadow: "4px 4px 0 0 rgba(255,255,255,.18)",
+            }}
+          >
+            Crea Account Gratuito
+          </Link>
+          <Link
+            to="/quizzes"
+            style={{
+              background: "transparent",
+              color: "#fff",
+              border: "2px solid rgba(255,255,255,.35)",
+              borderRadius: "var(--radius-sm)",
+              padding: "13px 26px",
+              fontFamily: "'Bricolage Grotesque', sans-serif",
+              fontWeight: 700,
+              fontSize: 15,
+              textDecoration: "none",
+            }}
+          >
+            Esplora Quiz
+          </Link>
         </div>
-      </section>
+      </div>
 
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="container">
-          <div className="cta-content">
-            <h2 className="cta-title">Pronto a Iniziare ad Imparare?</h2>
-            <p className="cta-description">
-              Unisciti a migliaia di utenti che stanno già creando, condividendo 
-              e imparando con quiz potenziati dall'AI.
-            </p>
-            <div className="cta-actions">
-              <Link to="/register" className="btn btn-primary btn-cta">
-                <span className="btn-icon">🚀</span>
-                Crea Account Gratuito
-              </Link>
-              <Link to="/quizzes" className="btn btn-outline btn-cta">
-                <span className="btn-icon">🔍</span>
-                Esplora Quiz
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="homepage-footer">
-        <div className="container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <div className="brand-logo">
-                <span className="brand-icon">🧠</span>
-              </div>
-              <span className="brand-text">AI Quiz</span>
-            </div>
-            <p className="footer-text">
-              © 2024 AI Quiz Social Network. Costruito con React e potenziato dall'AI.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

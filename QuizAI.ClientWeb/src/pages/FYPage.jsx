@@ -6,18 +6,15 @@ export default function FYPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const buildLocation = () => {
-      return `/User/LoadFeed`;
-    };
-    setLocation(buildLocation());
+    setLocation("/User/LoadFeed");
     setLoading(false);
-  }, [location]);
-  
+  }, []);
+
   if (loading) {
     return (
       <div className="quiz-list-container">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
+          <div className="loading-spinner" />
           <p className="loading-text">Caricamento quiz...</p>
         </div>
       </div>
@@ -26,16 +23,12 @@ export default function FYPage() {
 
   return (
     <div className="quiz-list-container">
-      {/* Header Section */}
-      <div className="quiz-list-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1 className="page-title">Per te</h1>
-          </div>
-        </div>
+      <div className="section-head" style={{ marginTop: 0 }}>
+        <h2>Per te</h2>
+        <a href="/quizzes">Tutti i quiz</a>
       </div>
 
-      <QuizList location={location}></QuizList>
+      <QuizList location={location} />
     </div>
   );
 }

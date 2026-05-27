@@ -1,26 +1,20 @@
 import { useState, useEffect } from "react";
-import { 
-  getFriendshipRequests, 
-  sendFriendshipRequest, 
-  acceptFriendshipRequest 
-} from "../services/FriendshipService";
+import { getFriendshipRequests, sendFriendshipRequest, acceptFriendshipRequest } from "../services/FriendshipService";
 import { getAuthToken } from "../services/CommonService";
 
 export default function FriendshipRequestsPage() {
-  const [email, setEmail] = useState("");
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [email, setEmail]         = useState("");
+  const [requests, setRequests]   = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [message, setMessage]     = useState("");
   const [messageType, setMessageType] = useState("");
 
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const token = getAuthToken();
-      const data = await getFriendshipRequests(token);
+      const data = await getFriendshipRequests(getAuthToken());
       setRequests(data);
-    } catch (error) {
-      console.error(error);
+    } catch {
       setMessage("Errore nel caricamento delle richieste");
       setMessageType("error");
     } finally {
@@ -31,16 +25,13 @@ export default function FriendshipRequestsPage() {
   const sendRequest = async (e) => {
     e.preventDefault();
     if (!email.trim()) return;
-
     setLoading(true);
     try {
-      const token = getAuthToken();
-      await sendFriendshipRequest(email, token);
+      await sendFriendshipRequest(email, getAuthToken());
       setMessage("Richiesta di amicizia inviata con successo!");
       setMessageType("success");
       setEmail("");
     } catch (error) {
-      console.error(error);
       setMessage(error.message || "Errore nell'invio della richiesta");
       setMessageType("error");
     } finally {
@@ -51,13 +42,11 @@ export default function FriendshipRequestsPage() {
   const acceptRequest = async (friendshipId) => {
     setLoading(true);
     try {
-      const token = getAuthToken();
-      await acceptFriendshipRequest(friendshipId, token);
+      await acceptFriendshipRequest(friendshipId, getAuthToken());
       setMessage("Richiesta di amicizia accettata!");
       setMessageType("success");
       fetchRequests();
-    } catch (error) {
-      console.error(error);
+    } catch {
       setMessage("Errore nell'accettare la richiesta");
       setMessageType("error");
     } finally {
@@ -65,112 +54,92 @@ export default function FriendshipRequestsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  useEffect(() => { fetchRequests(); }, []);
 
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(() => {
-        setMessage("");
-        setMessageType("");
-      }, 3000);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => { setMessage(""); setMessageType(""); }, 3000);
+      return () => clearTimeout(t);
     }
   }, [message]);
 
   return (
     <div className="friendship-requests-container">
+      {/* Header */}
       <div className="friendship-header">
-        <h1 className="page-title">Gestisci Richieste di Amicizia</h1>
+        <h1 className="page-title">Richieste di amicizia</h1>
         <p className="page-subtitle">Invia e gestisci le richieste di amicizia</p>
       </div>
 
       <div className="friendship-grid">
-        {/* Send Request Card */}
+        {/* Send request card */}
         <div className="friendship-card send-request-card">
           <div className="card-header">
-            <div className="header-icon">➕</div>
-            <h2 className="card-title">Invia Richiesta</h2>
+            <h2 className="card-title">Invia richiesta</h2>
             <p className="card-subtitle">Aggiungi un nuovo amico alla tua rete</p>
           </div>
-          
+
           <div className="card-content">
             <form onSubmit={sendRequest} className="request-form">
-              <div className="form-group">
-                <label className="form-label">Email dell'utente</label>
-                <div className="input-container">
-                  <div className="input-icon">📧</div>
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="es. nome@dominio.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="form-hint">
-                  💡 Inserisci l'email della persona a cui vuoi inviare la richiesta
-                </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Email dell&apos;utente</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="nome@esempio.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <p className="form-hint">
+                  Inserisci l&apos;email esatta dell&apos;utente
+                </p>
               </div>
-              
-              <button 
-                type="submit" 
+
+              <button
+                type="submit"
                 className="btn btn-primary btn-send-request"
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <div className="loading-spinner"></div>
-                    Invio in corso...
+                    <div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2.5, borderColor: "rgba(255,255,255,.3)", borderTopColor: "#fff" }} />
+                    Invio...
                   </>
                 ) : (
-                  <>
-                    <span className="btn-icon">🚀</span>
-                    Invia Richiesta
-                  </>
+                  "Invia richiesta"
                 )}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Incoming Requests Card */}
+        {/* Incoming requests card */}
         <div className="friendship-card incoming-requests-card">
-          <div className="card-header">
-            <div className="header-content">
-              <div className="header-icon">📥</div>
-              <div className="header-text">
-                <h2 className="card-title">Richieste in Arrivo</h2>
-                <p className="card-subtitle">
-                  {requests.length} richiesta{requests.length !== 1 ? 'e' : ''} in attesa
-                </p>
-              </div>
+          <div className="card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <h2 className="card-title">Richieste in arrivo</h2>
+              <p className="card-subtitle">
+                {requests.length} {requests.length === 1 ? "richiesta" : "richieste"} in attesa
+              </p>
             </div>
-            <button 
-              onClick={fetchRequests}
-              className="btn btn-outline btn-refresh"
-              disabled={loading}
-            >
-              <span className="btn-icon">🔄</span>
+            <button onClick={fetchRequests} className="btn btn-outline btn-refresh" disabled={loading}>
               Aggiorna
             </button>
           </div>
-          
+
           <div className="card-content">
             {loading && requests.length === 0 ? (
-              <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p className="loading-text">Caricamento richieste...</p>
+              <div className="loading-state" style={{ minHeight: 120 }}>
+                <div className="loading-spinner" />
+                <p className="loading-text">Caricamento...</p>
               </div>
             ) : requests.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">📭</div>
-                <h3 className="empty-title">Nessuna richiesta</h3>
-                <p className="empty-message">
-                  Non hai richieste di amicizia in arrivo al momento
+              <div className="empty-state" style={{ minHeight: 120, background: "var(--cream)", border: "none", boxShadow: "none" }}>
+                <div className="empty-title" style={{ fontSize: "1.1rem" }}>Nessuna richiesta</div>
+                <p className="empty-message" style={{ fontSize: "0.9rem" }}>
+                  Non hai richieste di amicizia in arrivo al momento.
                 </p>
               </div>
             ) : (
@@ -178,27 +147,26 @@ export default function FriendshipRequestsPage() {
                 {requests.map((request) => (
                   <div key={request.id} className="request-item">
                     <div className="request-avatar">
-                      <span className="avatar-text">
-                        {(request.email || '?').slice(0,2).toUpperCase()}
+                      <span className="avatar-text" style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 15, color: "#fff" }}>
+                        {(request.email || "?").slice(0, 2).toUpperCase()}
                       </span>
                     </div>
-                    
+
                     <div className="request-info">
                       <h4 className="request-email">{request.email}</h4>
                       {request.sentAt && (
                         <p className="request-date">
-                          Inviata il {new Date(request.sentAt).toLocaleDateString('it-IT')}
+                          {new Date(request.sentAt).toLocaleDateString("it-IT")}
                         </p>
                       )}
                     </div>
-                    
+
                     <div className="request-actions">
                       <button
+                        className="btn btn-accept"
                         onClick={() => acceptRequest(request.id)}
-                        className="btn btn-success btn-accept"
                         disabled={loading}
                       >
-                        <span className="btn-icon">✅</span>
                         Accetta
                       </button>
                     </div>
@@ -210,13 +178,10 @@ export default function FriendshipRequestsPage() {
         </div>
       </div>
 
-      {/* Feedback Messages */}
+      {/* Feedback alert */}
       {message && (
-        <div className={`alert ${messageType === 'success' ? 'alert-success' : 'alert-error'}`}>
+        <div className={`alert ${messageType === "success" ? "alert-success" : "alert-error"}`}>
           <div className="alert-content">
-            <span className="alert-icon">
-              {messageType === 'success' ? '✅' : '❌'}
-            </span>
             <span className="alert-text">{message}</span>
           </div>
         </div>

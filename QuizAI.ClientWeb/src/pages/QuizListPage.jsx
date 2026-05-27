@@ -49,7 +49,6 @@ export default function QuizListPage() {
           </div>
           {isMyQuizzes && (
             <Link to="/quizzes/create" className="btn btn-primary btn-create">
-              <span className="btn-icon">✨</span>
               Crea Nuovo Quiz
             </Link>
           )}

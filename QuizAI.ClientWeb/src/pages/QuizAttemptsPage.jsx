@@ -109,17 +109,14 @@ export default function QuizAttemptsPage() {
     return (
       <div className="container mt-5">
         <div className="text-center py-5">
-          <div className="mb-4">
-            <span className="display-1 text-muted">📊</span>
-          </div>
           <h2 className="text-muted mb-3">Nessun tentativo trovato</h2>
           <p className="text-muted mb-4">Non hai ancora completato questo quiz.</p>
           <div className="d-flex gap-3 justify-content-center">
             <Link to={`/quiz/${quizId}`} className="btn btn-primary">
-              🎮 Gioca ora
+              Gioca ora
             </Link>
             <Link to="/quizzes" className="btn btn-outline-primary">
-              ← Torna ai Quiz
+              Torna ai Quiz
             </Link>
           </div>
         </div>
@@ -132,7 +129,7 @@ export default function QuizAttemptsPage() {
       {/* Header Section */}
       <div className="row align-items-center mb-5">
         <div className="col-lg-8">
-          <h1 className="display-5 fw-bold text-primary mb-2">📊 I Miei Tentativi</h1>
+          <h1 className="display-5 fw-bold text-primary mb-2">I Miei Tentativi</h1>
           <p className="lead text-muted mb-0">
             Monitora i tuoi progressi e migliora le tue performance
           </p>
@@ -140,10 +137,10 @@ export default function QuizAttemptsPage() {
         <div className="col-lg-4 text-lg-end">
           <div className="d-flex gap-2 justify-content-lg-end">
             <Link to={`/quiz/${quizId}`} className="btn btn-primary">
-              🎮 Gioca di nuovo
+              Gioca di nuovo
             </Link>
             <Link to="/quizzes" className="btn btn-outline-primary">
-              ← Torna ai Quiz
+              Torna ai Quiz
             </Link>
           </div>
         </div>
@@ -255,18 +252,16 @@ export default function QuizAttemptsPage() {
                     </td>
                     <td className="text-center">
                       <span className={`badge rounded-pill px-3 py-2 ${getScoreBadge(attempt.percentage)}`}>
-                        {attempt.percentage >= 80 ? '🟢 Eccellente' : 
-                         attempt.percentage >= 60 ? '🟡 Buono' : '🔴 Da migliorare'}
+                        {attempt.percentage >= 80 ? 'Eccellente' :
+                         attempt.percentage >= 60 ? 'Buono' : 'Da migliorare'}
                       </span>
                     </td>
                     <td className="text-center">
                       <div className="d-flex gap-2 justify-content-center">
                         <Link to={`/quiz/${quizId}`} className="btn btn-outline-primary btn-sm">
-                          <span className="me-1">🔄</span>
                           Riprova
                         </Link>
                         <Link to={`/review/${attempt.id}`} className="btn btn-outline-info btn-sm">
-                          <span className="me-1">📖</span>
                           Rivedi
                         </Link>
                       </div>
@@ -284,26 +279,22 @@ export default function QuizAttemptsPage() {
         <div className="col-lg-8">
           <div className="card border-0 bg-light bg-opacity-50">
             <div className="card-body">
-              <h5 className="card-title text-primary mb-3">💡 Suggerimenti per migliorare</h5>
+              <h5 className="card-title text-primary mb-3">Suggerimenti per migliorare</h5>
               <ul className="list-unstyled mb-0">
                 {quizInfo && quizInfo.avgPercentage < 80 && (
                   <li className="mb-2">
-                    <span className="text-warning me-2">⚠️</span>
                     La tua media è del {quizInfo.avgPercentage}%. Prova a rivedere le domande sbagliate.
                   </li>
                 )}
                 {quizInfo && quizInfo.totalAttempts < 3 && (
                   <li className="mb-2">
-                    <span className="text-info me-2">💡</span>
-                    Hai fatto solo {quizInfo.totalAttempts} tentativo{quizInfo.totalAttempts > 1 ? 'i' : 'o'}. 
+                    Hai fatto solo {quizInfo.totalAttempts} tentativo{quizInfo.totalAttempts > 1 ? 'i' : 'o'}.
                     Più tentativi ti aiuteranno a migliorare!
                   </li>
                 )}
                 {quizInfo && quizInfo.bestPercentage >= 90 && (
                   <li className="mb-2">
-                    <span className="text-success me-2">🎉</span>
-                    Ottimo lavoro! Hai già raggiunto il {quizInfo.bestPercentage}%. 
-                    Continua così!
+                    Ottimo lavoro! Hai già raggiunto il {quizInfo.bestPercentage}%. Continua così!
                   </li>
                 )}
               </ul>
@@ -313,17 +304,17 @@ export default function QuizAttemptsPage() {
         <div className="col-lg-4">
           <div className="card border-0 bg-primary bg-opacity-10">
             <div className="card-body text-center">
-              <h6 className="text-primary mb-2">📈 Prossimo obiettivo</h6>
+              <h6 className="text-primary mb-2">Prossimo obiettivo</h6>
               {quizInfo && (
                 <p className="mb-2">
                   {quizInfo.bestPercentage < 100 ? 
                     `Raggiungi il ${Math.min(100, quizInfo.bestPercentage + 10)}%` : 
-                    'Hai già raggiunto il 100%! 🎯'
+                    'Hai già raggiunto il 100%!'
                   }
                 </p>
               )}
               <Link to={`/quiz/${quizId}`} className="btn btn-primary btn-sm">
-                🎯 Sfida te stesso
+                Sfida te stesso
               </Link>
             </div>
           </div>
