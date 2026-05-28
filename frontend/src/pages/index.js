@@ -1,0 +1,15 @@
+export { default as FYPage } from "./FYPage";
+export { default as HomePage } from "./HomePage";
+export { default as LoginPage } from "./LoginPage";
+export { default as RegisterPage } from "./RegisterPage";
+export { default as QuizCreatePage } from "./QuizCreatePage";
+export { default as QuizPlayPage } from "./QuizPlayPage";
+export { default as QuizReviewPage } from "./QuizReviewPage";
+export { default as QuizAttemptsPage } from "./QuizAttemptsPage";
+export { default as LeaderboardPage } from "./LeaderboardPage";
+export { default as FriendsListPage } from "./FriendsListPage";
+export { default as FriendshipRequestsPage } from "./FriendshipRequestsPage";
+export { default as SettingsPage } from "./SettingsPage";
+export { default as ProfilePage } from "./ProfilePage";
+export { default as QuizListPage } from "./QuizListPage";
+export { default as LikedQuizzesPage } from "./LikedQuizzesPage";
