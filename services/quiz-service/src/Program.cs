@@ -40,6 +40,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         o.MetadataAddress     = $"{authServiceUrl}/.well-known/openid-configuration";
         o.RequireHttpsMetadata = false;
+        o.MapInboundClaims     = false; // mantieni i claim originali: sub, email, username
         o.TokenValidationParameters = new()
         {
             ValidIssuer   = jwtIssuer,

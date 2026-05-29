@@ -1,50 +1,26 @@
-import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import QuizList from "../components/QuizList";
+import { getCurrentUser } from "../services/CommonService";
 
 export default function QuizListPage() {
-  const [location, setLocation] = useState([]);
   const { userId } = useParams();
-  const [loading, setLoading] = useState(true);
+  const me = getCurrentUser();
 
-  useEffect(() => {
-    const buildLocation = () => {
-      if (userId) {
-        return `/Quiz?userId=${userId}`;
-      } else {
-        return "/Quiz";
-      }
-    };
-    setLocation(buildLocation());
-    setLoading(false);
-  }, [location, userId]);
-
+  // Senza parametro → i miei quiz (filtro per createdBy === mio id)
+  const creatorId = userId || me?.userId || null;
   const isMyQuizzes = !userId;
-  const pageTitle = isMyQuizzes ? "I miei Quiz" : `Quiz dell'utente`;
-
-  if (loading) {
-    return (
-      <div className="quiz-list-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Caricamento quiz...</p>
-        </div>
-      </div>
-    );
-  }
+  const pageTitle = isMyQuizzes ? "I miei Quiz" : "Quiz dell'utente";
 
   return (
     <div className="quiz-list-container">
-      {/* Header Section */}
       <div className="quiz-list-header">
         <div className="header-content">
           <div className="header-text">
             <h1 className="page-title">{pageTitle}</h1>
             <p className="page-subtitle">
-              {isMyQuizzes 
-                ? "Gestisci e monitora i tuoi quiz creati" 
-                : "Esplora i quiz creati da questo utente"
-              }
+              {isMyQuizzes
+                ? "Gestisci e monitora i tuoi quiz creati"
+                : "Esplora i quiz creati da questo utente"}
             </p>
           </div>
           {isMyQuizzes && (
@@ -55,7 +31,7 @@ export default function QuizListPage() {
         </div>
       </div>
 
-      <QuizList location={location}></QuizList>
+      <QuizList creatorId={creatorId} />
     </div>
   );
 }

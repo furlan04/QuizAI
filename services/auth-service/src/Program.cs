@@ -1,7 +1,10 @@
+using System.Text.Json;
 using AuthService.Auth;
 using AuthService.Identity;
 using AuthService.Jwt;
 using AuthService.Keys;
+using AuthService.Messaging;
+using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -11,10 +14,13 @@ var cfg = builder.Configuration;
 
 var mysqlUrl = cfg["MYSQL_URL"]
     ?? "Server=localhost;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;";
+var mqUrl = cfg["RABBITMQ_URL"] ?? "amqp://guest:guest@localhost:5672/";
 
 // ── MySQL + Identity ──────────────────────────────────────────────────────────
+// Versione fissa: evita la connessione eager di AutoDetect durante la configurazione DI
+var serverVersion = new MySqlServerVersion(new Version(8, 4, 0));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(mysqlUrl, ServerVersion.AutoDetect(mysqlUrl)));
+    options.UseMySql(mysqlUrl, serverVersion));
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
@@ -31,6 +37,23 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 builder.Services.AddSingleton<RsaKeyProvider>();
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService.Auth.AuthService>();
+builder.Services.AddScoped<IUserRegisteredPublisher, UserRegisteredPublisher>();
+
+// ── MassTransit / RabbitMQ ───────────────────────────────────────────────────
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((ctx, mqCfg) =>
+    {
+        mqCfg.Host(new Uri(mqUrl));
+        mqCfg.UseRawJsonSerializer(RawSerializerOptions.AnyMessageType, isDefault: true);
+        mqCfg.ConfigureJsonSerializerOptions(opts =>
+        {
+            opts.PropertyNamingPolicy        = JsonNamingPolicy.SnakeCaseLower;
+            opts.PropertyNameCaseInsensitive = true;
+            return opts;
+        });
+    });
+});
 
 // ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -66,11 +89,27 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 
 var app = builder.Build();
 
-// ── Auto-migrate MySQL on startup ─────────────────────────────────────────────
+// ── Auto-migrate MySQL on startup (con retry: MySQL può non essere subito pronto) ──
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    const int maxAttempts = 15;
+    for (var attempt = 1; ; attempt++)
+    {
+        try
+        {
+            await db.Database.MigrateAsync();
+            break;
+        }
+        catch (Exception ex) when (attempt < maxAttempts)
+        {
+            logger.LogWarning("MySQL non pronto (tentativo {Attempt}/{Max}): {Msg}. Riprovo in 4s...",
+                attempt, maxAttempts, ex.Message);
+            await Task.Delay(4000);
+        }
+    }
 }
 
 app.UseSwagger();

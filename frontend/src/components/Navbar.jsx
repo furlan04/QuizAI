@@ -185,7 +185,6 @@ export default function Navbar({ isLoggedIn, onLogout }) {
               <div className="nav-dd-panel">
                 <Link to="/quizzes"           className="nav-item" onClick={closeAll}>I miei Quiz</Link>
                 <Link to="/attempted-quizzes" className="nav-item" onClick={closeAll}>Quiz provati</Link>
-                <Link to="/liked-quizzes"     className="nav-item" onClick={closeAll}>Quiz piaciuti</Link>
                 <Link to="/quizzes/create"    className="nav-item" onClick={closeAll}>Crea quiz</Link>
               </div>
             )}
@@ -249,7 +248,6 @@ export default function Navbar({ isLoggedIn, onLogout }) {
             <div className="mobile-dropdown-menu">
               <Link to="/quizzes"           className="mobile-dropdown-item" onClick={closeAll}>I miei Quiz</Link>
               <Link to="/attempted-quizzes" className="mobile-dropdown-item" onClick={closeAll}>Quiz provati</Link>
-              <Link to="/liked-quizzes"     className="mobile-dropdown-item" onClick={closeAll}>Quiz piaciuti</Link>
               <Link to="/quizzes/create"    className="mobile-dropdown-item" onClick={closeAll}>Crea quiz</Link>
             </div>
           )}

@@ -36,7 +36,7 @@ export const startSession = async (quizId, token) => {
     const response = await fetch(`${QUIZ_URL}/sessions`, {
       method: 'POST',
       headers: createAuthHeaders(token),
-      body: JSON.stringify({ quiz_id: quizId }),
+      body: JSON.stringify({ quizId }),
     });
     handleHttpError(response);
     return await response.json();
@@ -54,7 +54,7 @@ export const answerQuestion = async (sessionId, questionIndex, selectedIndex, to
     const response = await fetch(`${QUIZ_URL}/sessions/${sessionId}/answer`, {
       method: 'PUT',
       headers: createAuthHeaders(token),
-      body: JSON.stringify({ question_index: questionIndex, selected_index: selectedIndex }),
+      body: JSON.stringify({ questionIndex, selectedIndex }),
     });
     handleHttpError(response);
     return await response.json();

@@ -12,6 +12,19 @@ export const isAuthenticated = () => {
   return !!token;
 };
 
+// Decodifica il payload del JWT → claim dell'utente corrente.
+// Ritorna { userId, email, username } oppure null.
+export const getCurrentUser = () => {
+  const token = getAuthToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return { userId: payload.sub, email: payload.email, username: payload.username };
+  } catch {
+    return null;
+  }
+};
+
 // Utility per rimuovere il token e fare logout
 export const logout = () => {
   sessionStorage.removeItem(getConfig('AUTH_CONFIG.TOKEN_KEY'));

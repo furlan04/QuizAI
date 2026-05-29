@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { getFriendshipRequests, sendFriendshipRequest, acceptFriendshipRequest } from "../services/FriendshipService";
+import { getFriendshipRequests, sendFriendshipRequest, respondFriendshipRequest } from "../services/FriendshipService";
 import { getAuthToken } from "../services/CommonService";
 
 export default function FriendshipRequestsPage() {
-  const [email, setEmail]         = useState("");
+  const [username, setUsername]   = useState("");
   const [requests, setRequests]   = useState([]);
   const [loading, setLoading]     = useState(false);
   const [message, setMessage]     = useState("");
@@ -13,7 +13,7 @@ export default function FriendshipRequestsPage() {
     setLoading(true);
     try {
       const data = await getFriendshipRequests(getAuthToken());
-      setRequests(data);
+      setRequests(Array.isArray(data) ? data : []);
     } catch {
       setMessage("Errore nel caricamento delle richieste");
       setMessageType("error");
@@ -24,38 +24,35 @@ export default function FriendshipRequestsPage() {
 
   const sendRequest = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!username.trim()) return;
     setLoading(true);
-    try {
-      await sendFriendshipRequest(email, getAuthToken());
-      setMessage("Richiesta di amicizia inviata con successo!");
+    const res = await sendFriendshipRequest(username.trim(), getAuthToken());
+    setLoading(false);
+    if (res.success) {
+      setMessage("Richiesta di amicizia inviata!");
       setMessageType("success");
-      setEmail("");
-    } catch (error) {
-      setMessage(error.message || "Errore nell'invio della richiesta");
+      setUsername("");
+    } else {
+      setMessage(res.message || "Errore nell'invio della richiesta");
       setMessageType("error");
-    } finally {
-      setLoading(false);
     }
   };
 
-  const acceptRequest = async (friendshipId) => {
+  const respond = async (friendshipId, action) => {
     setLoading(true);
-    try {
-      await acceptFriendshipRequest(friendshipId, getAuthToken());
-      setMessage("Richiesta di amicizia accettata!");
+    const res = await respondFriendshipRequest(friendshipId, action, getAuthToken());
+    setLoading(false);
+    if (res.success) {
+      setMessage(action === "accept" ? "Richiesta accettata!" : "Richiesta rifiutata");
       setMessageType("success");
       fetchRequests();
-    } catch {
-      setMessage("Errore nell'accettare la richiesta");
+    } else {
+      setMessage(res.message || "Errore nella risposta");
       setMessageType("error");
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => { fetchRequests(); }, []);
-
   useEffect(() => {
     if (message) {
       const t = setTimeout(() => { setMessage(""); setMessageType(""); }, 3000);
@@ -65,57 +62,41 @@ export default function FriendshipRequestsPage() {
 
   return (
     <div className="friendship-requests-container">
-      {/* Header */}
       <div className="friendship-header">
         <h1 className="page-title">Richieste di amicizia</h1>
         <p className="page-subtitle">Invia e gestisci le richieste di amicizia</p>
       </div>
 
       <div className="friendship-grid">
-        {/* Send request card */}
+        {/* Invia richiesta */}
         <div className="friendship-card send-request-card">
           <div className="card-header">
             <h2 className="card-title">Invia richiesta</h2>
-            <p className="card-subtitle">Aggiungi un nuovo amico alla tua rete</p>
+            <p className="card-subtitle">Aggiungi un nuovo amico tramite username</p>
           </div>
-
           <div className="card-content">
             <form onSubmit={sendRequest} className="request-form">
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Email dell&apos;utente</label>
+                <label className="form-label">Username dell&apos;utente</label>
                 <input
-                  type="email"
+                  type="text"
                   className="form-control"
-                  placeholder="nome@esempio.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="es. mario_rossi"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={loading}
                 />
-                <p className="form-hint">
-                  Inserisci l&apos;email esatta dell&apos;utente
-                </p>
+                <p className="form-hint">Inserisci lo username esatto dell&apos;utente</p>
               </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary btn-send-request"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2.5, borderColor: "rgba(255,255,255,.3)", borderTopColor: "#fff" }} />
-                    Invio...
-                  </>
-                ) : (
-                  "Invia richiesta"
-                )}
+              <button type="submit" className="btn btn-primary btn-send-request" disabled={loading}>
+                {loading ? "Invio..." : "Invia richiesta"}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Incoming requests card */}
+        {/* Richieste in arrivo */}
         <div className="friendship-card incoming-requests-card">
           <div className="card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
@@ -124,9 +105,7 @@ export default function FriendshipRequestsPage() {
                 {requests.length} {requests.length === 1 ? "richiesta" : "richieste"} in attesa
               </p>
             </div>
-            <button onClick={fetchRequests} className="btn btn-outline btn-refresh" disabled={loading}>
-              Aggiorna
-            </button>
+            <button onClick={fetchRequests} className="btn btn-outline btn-refresh" disabled={loading}>Aggiorna</button>
           </div>
 
           <div className="card-content">
@@ -138,36 +117,29 @@ export default function FriendshipRequestsPage() {
             ) : requests.length === 0 ? (
               <div className="empty-state" style={{ minHeight: 120, background: "var(--cream)", border: "none", boxShadow: "none" }}>
                 <div className="empty-title" style={{ fontSize: "1.1rem" }}>Nessuna richiesta</div>
-                <p className="empty-message" style={{ fontSize: "0.9rem" }}>
-                  Non hai richieste di amicizia in arrivo al momento.
-                </p>
+                <p className="empty-message" style={{ fontSize: "0.9rem" }}>Non hai richieste in arrivo al momento.</p>
               </div>
             ) : (
               <div className="requests-list">
-                {requests.map((request) => (
-                  <div key={request.id} className="request-item">
+                {requests.map((req) => (
+                  <div key={req.friendshipId} className="request-item">
                     <div className="request-avatar">
                       <span className="avatar-text" style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 15, color: "#fff" }}>
-                        {(request.email || "?").slice(0, 2).toUpperCase()}
+                        {(req.username || "?").slice(0, 2).toUpperCase()}
                       </span>
                     </div>
-
                     <div className="request-info">
-                      <h4 className="request-email">{request.email}</h4>
-                      {request.sentAt && (
-                        <p className="request-date">
-                          {new Date(request.sentAt).toLocaleDateString("it-IT")}
-                        </p>
+                      <h4 className="request-email">{req.username}</h4>
+                      {req.createdAt && (
+                        <p className="request-date">{new Date(req.createdAt).toLocaleDateString("it-IT")}</p>
                       )}
                     </div>
-
-                    <div className="request-actions">
-                      <button
-                        className="btn btn-accept"
-                        onClick={() => acceptRequest(request.id)}
-                        disabled={loading}
-                      >
+                    <div className="request-actions" style={{ display: "flex", gap: 6 }}>
+                      <button className="btn btn-accept" onClick={() => respond(req.friendshipId, "accept")} disabled={loading}>
                         Accetta
+                      </button>
+                      <button className="btn btn-outline" onClick={() => respond(req.friendshipId, "reject")} disabled={loading}>
+                        Rifiuta
                       </button>
                     </div>
                   </div>
@@ -178,12 +150,9 @@ export default function FriendshipRequestsPage() {
         </div>
       </div>
 
-      {/* Feedback alert */}
       {message && (
         <div className={`alert ${messageType === "success" ? "alert-success" : "alert-error"}`}>
-          <div className="alert-content">
-            <span className="alert-text">{message}</span>
-          </div>
+          <div className="alert-content"><span className="alert-text">{message}</span></div>
         </div>
       )}
     </div>

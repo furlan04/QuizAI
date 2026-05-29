@@ -23,7 +23,7 @@ export const createChallenge = async (username, quizId, token) => {
     const response = await fetch(`${USER_URL}/users/me/challenges`, {
       method: 'POST',
       headers: createAuthHeaders(token),
-      body: JSON.stringify({ username, quiz_id: quizId }),
+      body: JSON.stringify({ username, quizId }),
     });
     const data = await response.json();
     if (response.ok) return { success: true, ...data };

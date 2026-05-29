@@ -2,6 +2,7 @@ using AuthService.Auth;
 using AuthService.Auth.Dtos;
 using AuthService.Identity;
 using AuthService.Jwt;
+using AuthService.Messaging;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 
@@ -11,6 +12,7 @@ public class AuthServiceTests
 {
     private readonly Mock<UserManager<AppUser>> _userManager;
     private readonly Mock<IJwtTokenGenerator> _jwt = new();
+    private readonly Mock<IUserRegisteredPublisher> _publisher = new();
     private readonly IAuthService _sut;
 
     public AuthServiceTests()
@@ -22,7 +24,7 @@ public class AuthServiceTests
         _jwt.Setup(j => j.Generate(It.IsAny<AppUser>()))
             .Returns(("tok", DateTime.UtcNow.AddHours(24)));
 
-        _sut = new AuthService.Auth.AuthService(_userManager.Object, _jwt.Object);
+        _sut = new AuthService.Auth.AuthService(_userManager.Object, _jwt.Object, _publisher.Object);
     }
 
     [Fact]

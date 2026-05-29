@@ -1,6 +1,7 @@
 using AuthService.Auth.Dtos;
 using AuthService.Identity;
 using AuthService.Jwt;
+using AuthService.Messaging;
 using Microsoft.AspNetCore.Identity;
 
 namespace AuthService.Auth;
@@ -9,11 +10,16 @@ public class AuthService : IAuthService
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly IJwtTokenGenerator _jwt;
+    private readonly IUserRegisteredPublisher _publisher;
 
-    public AuthService(UserManager<AppUser> userManager, IJwtTokenGenerator jwt)
+    public AuthService(
+        UserManager<AppUser> userManager,
+        IJwtTokenGenerator jwt,
+        IUserRegisteredPublisher publisher)
     {
         _userManager = userManager;
         _jwt         = jwt;
+        _publisher   = publisher;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -34,6 +40,9 @@ public class AuthService : IAuthService
         var result = await _userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
             throw new ConflictException(result.Errors.First().Description);
+
+        // Notifica user-service di creare subito il profilo
+        await _publisher.PublishAsync(new UserRegisteredMessage(user.Id, user.UserName!, user.Email!));
 
         var (token, expiresAt) = _jwt.Generate(user);
         return new AuthResponse(user.Id, user.UserName!, user.Email!, token, expiresAt);

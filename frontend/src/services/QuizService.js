@@ -12,7 +12,7 @@ export const generateQuiz = async (topic, difficulty, numQuestions, token) => {
     const response = await fetch(`${QUIZ_URL}/quizzes/generate`, {
       method: 'POST',
       headers: createAuthHeaders(token),
-      body: JSON.stringify({ topic, difficulty, num_questions: numQuestions }),
+      body: JSON.stringify({ topic, difficulty, numQuestions }),
     });
     const data = await response.json();
     if (response.ok) return { success: true, ...data };

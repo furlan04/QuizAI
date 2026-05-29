@@ -20,17 +20,19 @@ services:
 
   mongodb:
     image: mongo:7
+    # Replica set a nodo singolo: necessario per le transazioni MongoDB (sessions/complete)
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: quizai
     volumes:
       - mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      # Inizializza il replica set al primo avvio, poi verifica che sia pronto
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok }\""]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 20s
 
   mysql:
     image: mysql:8.4
@@ -59,8 +61,11 @@ services:
       - ../services/auth-service/.env
     environment:
       MYSQL_URL: "Server=mysql;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
     depends_on:
       mysql:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5001' 2>/dev/null"]
@@ -83,7 +88,7 @@ services:
     env_file:
       - ../services/quiz-service/.env
     environment:
-      MONGODB_URL: "mongodb://mongodb:27017"
+      MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       AUTH_SERVICE_URL: "http://auth-service:5001"
     depends_on:
@@ -114,7 +119,7 @@ services:
     env_file:
       - ../services/user-service/.env
     environment:
-      MONGODB_URL: "mongodb://mongodb:27017"
+      MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       AUTH_SERVICE_URL: "http://auth-service:5001"
     depends_on:
@@ -146,7 +151,7 @@ services:
       - ../services/ai-agent-service/.env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
-      MONGODB_URL: "mongodb://mongodb:27017"
+      MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
     depends_on:
       rabbitmq:
         condition: service_healthy

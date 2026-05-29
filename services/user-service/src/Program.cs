@@ -41,6 +41,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         o.MetadataAddress      = $"{authServiceUrl}/.well-known/openid-configuration";
         o.RequireHttpsMetadata = false;
+        o.MapInboundClaims     = false; // mantieni i claim originali: sub, email, username
         o.TokenValidationParameters = new()
         {
             ValidIssuer   = jwtIssuer,
@@ -53,6 +54,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<QuizCompletedConsumer>();
+    x.AddConsumer<UserRegisteredConsumer>();
 
     x.UsingRabbitMq((ctx, mqCfg) =>
     {
@@ -70,6 +72,10 @@ builder.Services.AddMassTransit(x =>
         mqCfg.ReceiveEndpoint("quiz.completed", e =>
         {
             e.ConfigureConsumer<QuizCompletedConsumer>(ctx);
+        });
+        mqCfg.ReceiveEndpoint("user.registered", e =>
+        {
+            e.ConfigureConsumer<UserRegisteredConsumer>(ctx);
         });
     });
 });

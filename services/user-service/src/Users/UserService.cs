@@ -22,8 +22,17 @@ public class UserService : IUserService
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
         };
-        await _repo.UpsertAsync(user);
-        return user;
+
+        try
+        {
+            await _repo.UpsertAsync(user);
+            return user;
+        }
+        catch (MongoDB.Driver.MongoWriteException)
+        {
+            // Creato in concorrenza (es. dal consumer user.registered): rileggi
+            return await _repo.GetByIdAsync(userId) ?? user;
+        }
     }
 
     public async Task<User> UpdateAsync(string userId, UpdateProfileRequest request)

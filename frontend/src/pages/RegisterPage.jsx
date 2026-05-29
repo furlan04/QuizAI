@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { register } from "../services/AuthService";
 
 export default function RegisterPage() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -43,10 +44,17 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      setMessage("Username: 3-20 caratteri, solo lettere, numeri e underscore");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const result = await register(email, password);
+      const result = await register(username, email, password);
       if (result.success) {
-        setMessage("Registrazione avvenuta! Controlla la tua email per confermare.");
+        setMessage("Registrazione avvenuta! Ora puoi accedere.");
+        setUsername("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
@@ -90,6 +98,24 @@ export default function RegisterPage() {
           <div className="auth-form-container">
             <form onSubmit={handleRegister} className="auth-form">
               <div className="form-group">
+                <label className="form-label">Username</label>
+                <div className="input-container">
+                  <div className="input-icon">👤</div>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="es. mario_rossi"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-hint">
+                  💡 3-20 caratteri: lettere, numeri e underscore
+                </div>
+              </div>
+
+              <div className="form-group">
                 <label className="form-label">Email</label>
                 <div className="input-container">
                   <div className="input-icon">📧</div>
@@ -103,7 +129,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="form-hint">
-                  💡 Usa un'email valida per confermare il tuo account
+                  💡 Usa un'email valida
                 </div>
               </div>
 

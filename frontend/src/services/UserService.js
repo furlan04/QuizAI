@@ -36,7 +36,7 @@ export const updateUserProfile = async (token, { bio, avatarUrl } = {}) => {
     const response = await fetch(`${USER_URL}/users/me`, {
       method: 'PUT',
       headers: createAuthHeaders(token),
-      body: JSON.stringify({ bio, avatar_url: avatarUrl }),
+      body: JSON.stringify({ bio, avatarUrl }),
     });
     handleHttpError(response);
     return await response.json();
