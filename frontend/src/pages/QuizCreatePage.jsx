@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { generateQuiz } from "../services/QuizService";
+import { generateQuiz, getQuizById } from "../services/QuizService";
 import { getAuthToken } from "../services/CommonService";
 
 const DIFFICULTIES = [
@@ -9,14 +9,37 @@ const DIFFICULTIES = [
   { value: "hard",   label: "Difficile" },
 ];
 
+const LOADING_PHRASES = [
+  "Penso alle domande...",
+  "Consulto le mie conoscenze...",
+  "Bilancio la difficoltà...",
+  "Scelgo le risposte giuste...",
+  "Aggiungo qualche tranello...",
+  "Rifinisco le spiegazioni...",
+  "Assegno i tag tematici...",
+  "Quasi pronto...",
+];
+
 export default function QuizCreatePage() {
-  const [topic, setTopic]             = useState("");
-  const [difficulty, setDifficulty]   = useState("medium");
+  const [topic, setTopic]               = useState("");
+  const [difficulty, setDifficulty]     = useState("medium");
   const [numQuestions, setNumQuestions] = useState(5);
-  const [message, setMessage]         = useState("");
-  const [loading, setLoading]         = useState(false);
-  const [isError, setIsError]         = useState(false);
+  const [message, setMessage]           = useState("");
+  const [isError, setIsError]           = useState(false);
+  // phase: 'form' | 'submitting' | 'generating' | 'failed'
+  const [phase, setPhase]               = useState("form");
+  const [phraseIndex, setPhraseIndex]   = useState(0);
   const navigate = useNavigate();
+  const pollRef = useRef(null);
+
+  // Rotazione delle frasi durante il caricamento
+  useEffect(() => {
+    if (phase !== "generating" && phase !== "submitting") return;
+    const t = setInterval(() => {
+      setPhraseIndex((i) => (i + 1) % LOADING_PHRASES.length);
+    }, 2600);
+    return () => clearInterval(t);
+  }, [phase]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -26,22 +49,111 @@ export default function QuizCreatePage() {
       setMessage("Devi effettuare il login per creare un quiz.");
       return;
     }
-    setLoading(true);
     setMessage("");
     setIsError(false);
+    setPhase("submitting");
 
     const result = await generateQuiz(topic, difficulty, Number(numQuestions), token);
-    setLoading(false);
 
-    if (result.success && result.quizId) {
-      // La generazione è asincrona: torna ai propri quiz, comparirà quando sarà pronto
-      navigate("/quizzes");
-    } else {
+    if (!result.success || !result.quizId) {
       setIsError(true);
       setMessage(result.message || "Errore durante la generazione del quiz");
+      setPhase("form");
+      return;
     }
+
+    // Polling finché il quiz non è pronto (o fallisce), con timeout di 60s
+    setPhase("generating");
+    const quizId = result.quizId;
+    const deadline = Date.now() + 60_000;
+
+    const poll = async () => {
+      if (Date.now() > deadline) {
+        setIsError(true);
+        setMessage("Timeout: la generazione sta impiegando troppo tempo. Riprova più tardi.");
+        setPhase("failed");
+        return;
+      }
+      const data = await getQuizById(quizId, getAuthToken());
+      if (data?.generating || data?.status === "generating") {
+        pollRef.current = setTimeout(poll, 2500);
+        return;
+      }
+      if (data?.status === "failed" || data?.error) {
+        setIsError(true);
+        setMessage(data.error || "La generazione del quiz è fallita");
+        setPhase("failed");
+        return;
+      }
+      // Pronto → vai ai propri quiz
+      navigate("/quizzes");
+    };
+    poll();
   };
 
+  useEffect(() => () => { if (pollRef.current) clearTimeout(pollRef.current); }, []);
+
+  // ── Schermata di caricamento ──
+  if (phase === "submitting" || phase === "generating") {
+    return (
+      <div className="quiz-create-container">
+        <style>{`
+          @keyframes qg-orbit { to { transform: rotate(360deg); } }
+          @keyframes qg-pulse { 0%,100% { transform: scale(1); opacity:.9 } 50% { transform: scale(1.12); opacity:1 } }
+          @keyframes qg-fade  { 0% { opacity:0; transform: translateY(6px) } 15%,85% { opacity:1; transform:none } 100% { opacity:0; transform: translateY(-6px) } }
+          @keyframes qg-dot   { 0%,80%,100% { opacity:.25 } 40% { opacity:1 } }
+        `}</style>
+        <div className="quiz-create-card" style={{ textAlign: "center", padding: "56px 32px" }}>
+          {/* Anello orbitante con nucleo pulsante */}
+          <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 28px" }}>
+            <div style={{
+              position: "absolute", inset: 0, borderRadius: "50%",
+              border: "4px solid var(--cream,#efe9da)",
+              borderTopColor: "var(--violet,#7c5cff)",
+              borderRightColor: "var(--coral,#ff6b5e)",
+              animation: "qg-orbit 1.1s linear infinite",
+            }} />
+            <div style={{
+              position: "absolute", inset: 30, borderRadius: "50%",
+              background: "var(--lime,#d6f25b)",
+              border: "2.5px solid var(--ink,#1a1726)",
+              animation: "qg-pulse 1.6s ease-in-out infinite",
+            }} />
+          </div>
+
+          <h1 className="create-title" style={{ marginBottom: 10 }}>Sto creando il tuo quiz</h1>
+
+          {/* Frase a rotazione */}
+          <p
+            key={phraseIndex}
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 15, color: "var(--ink-soft,#6b6578)",
+              minHeight: 24, animation: "qg-fade 2.6s ease-in-out",
+            }}
+          >
+            {LOADING_PHRASES[phraseIndex]}
+          </p>
+
+          {/* Puntini animati */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 18 }}>
+            {[0, 1, 2].map((i) => (
+              <span key={i} style={{
+                width: 9, height: 9, borderRadius: "50%", background: "var(--ink,#1a1726)",
+                animation: `qg-dot 1.4s ease-in-out ${i * 0.2}s infinite`,
+              }} />
+            ))}
+          </div>
+
+          <p className="form-hint" style={{ marginTop: 26 }}>
+            Può richiedere qualche secondo. Non chiudere la pagina.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Form (anche stato 'failed' torna qui con messaggio) ──
   return (
     <div className="quiz-create-container">
       <div className="quiz-create-card">
@@ -101,13 +213,8 @@ export default function QuizCreatePage() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-create-quiz" disabled={loading}>
-              {loading ? (
-                <>
-                  <div className="loading-spinner" style={{ width: 18, height: 18, borderWidth: 2.5 }} />
-                  Generazione in corso...
-                </>
-              ) : "Genera Quiz"}
+            <button type="submit" className="btn btn-primary btn-create-quiz">
+              Genera Quiz
             </button>
           </form>
 

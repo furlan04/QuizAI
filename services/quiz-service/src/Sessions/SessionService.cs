@@ -136,7 +136,8 @@ public class SessionService : ISessionService
 
             await usersCol.UpdateOneAsync(txSession,
                 u => u.Id == userId,
-                Builders<UserMongo>.Update.Push(u => u.Attempts, attempt));
+                Builders<UserMongo>.Update.Push(u => u.Attempts, attempt),
+                new UpdateOptions { IsUpsert = true });
 
             var entry = new LeaderboardEntryDoc
             {
