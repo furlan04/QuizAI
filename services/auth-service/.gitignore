@@ -1,0 +1,11 @@
+.env
+bin/
+obj/
+keys/*.pem
+*.user
+.vs/
+.idea/
+.vscode/
+TestResults/
+appsettings.Development.json
+*.pem

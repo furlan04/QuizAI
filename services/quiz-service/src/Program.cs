@@ -1,10 +1,7 @@
-using System.Text;
 using System.Text.Json;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
-using QuizService.Auth;
 using QuizService.Messaging.Consumers;
 using QuizService.Messaging.Publishers;
 using QuizService.Quizzes;
@@ -16,13 +13,12 @@ using QuizService.Users;
 var builder = WebApplication.CreateBuilder(args);
 
 var cfg = builder.Configuration;
-var mongoUrl  = cfg["MONGODB_URL"]       ?? "mongodb://localhost:27017";
-var mongoDb   = cfg["MONGODB_DB"]        ?? "quizai";
-var mqUrl     = cfg["RABBITMQ_URL"]      ?? "amqp://guest:guest@localhost:5672/";
-var jwtSecret = cfg["JWT_SECRET"]        ?? throw new Exception("JWT_SECRET required");
-var jwtIssuer = cfg["JWT_ISSUER"]        ?? "quizai";
-var jwtAud    = cfg["JWT_AUDIENCE"]      ?? "quizai";
-var jwtExpiry = int.Parse(cfg["JWT_EXPIRY_HOURS"] ?? "24");
+var mongoUrl      = cfg["MONGODB_URL"]       ?? "mongodb://localhost:27017";
+var mongoDb       = cfg["MONGODB_DB"]        ?? "quizai";
+var mqUrl         = cfg["RABBITMQ_URL"]      ?? "amqp://guest:guest@localhost:5672/";
+var authServiceUrl = cfg["AUTH_SERVICE_URL"] ?? "http://localhost:5001";
+var jwtIssuer     = cfg["JWT_ISSUER"]        ?? "quizai";
+var jwtAudience   = cfg["JWT_AUDIENCE"]      ?? "quizai";
 
 // ── MongoDB ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
@@ -33,23 +29,22 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<IQuizRepository, QuizRepository>();
 builder.Services.AddSingleton<ISessionRepository, SessionRepository>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
-builder.Services.AddSingleton<JwtTokenGenerator>();
 builder.Services.AddScoped<IQuizGenerationPublisher, QuizGenerationPublisher>();
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 
-// ── JWT Authentication ───────────────────────────────────────────────────────
+// ── JWT Authentication via JWKS (auth-service) ───────────────────────────────
+// auth-service espone GET /.well-known/openid-configuration → jwks_uri
+// JwtBearer recupera automaticamente la chiave pubblica RSA senza riavvii
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+    .AddJwtBearer(o =>
     {
-        ValidateIssuer           = true,
-        ValidateAudience         = true,
-        ValidateLifetime         = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer              = jwtIssuer,
-        ValidAudience            = jwtAud,
-        IssuerSigningKey         = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSecret)),
+        o.MetadataAddress     = $"{authServiceUrl}/.well-known/openid-configuration";
+        o.RequireHttpsMetadata = false;
+        o.TokenValidationParameters = new()
+        {
+            ValidIssuer   = jwtIssuer,
+            ValidAudience = jwtAudience,
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -62,12 +57,10 @@ builder.Services.AddMassTransit(x =>
     {
         mqCfg.Host(new Uri(mqUrl));
 
-        // Raw JSON — no MassTransit envelope so Python can produce/consume natively
         mqCfg.UseRawJsonSerializer(RawSerializerOptions.AnyMessageType, isDefault: true);
         mqCfg.UseRawJsonDeserializer(RawSerializerOptions.AnyMessageType, isDefault: true);
         mqCfg.ConfigureJsonSerializerOptions(opts =>
         {
-            // snake_case ↔ PascalCase for Python compatibility
             opts.PropertyNamingPolicy        = JsonNamingPolicy.SnakeCaseLower;
             opts.PropertyNameCaseInsensitive = true;
             return opts;
@@ -82,10 +75,38 @@ builder.Services.AddMassTransit(x =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(o =>
+{
+    o.SwaggerDoc("v1", new() { Title = "QuizAI — Quiz Service", Version = "v1" });
+    o.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name         = "Authorization",
+        Type         = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme       = "bearer",
+        BearerFormat = "JWT",
+        In           = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description  = "Token JWT ottenuto da auth-service POST /auth/login",
+    });
+    o.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            []
+        }
+    });
+});
+
 var app = builder.Build();
 
-// ── MongoDB indexes ───────────────────────────────────────────────────────────
 await CreateIndexesAsync(app.Services);
+
+app.UseSwagger();
+app.UseSwaggerUI(o => o.SwaggerEndpoint("/swagger/v1/swagger.json", "Quiz Service v1"));
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -94,7 +115,6 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();
 
-// ─────────────────────────────────────────────────────────────────────────────
 static async Task CreateIndexesAsync(IServiceProvider sp)
 {
     var db = sp.GetRequiredService<IMongoDatabase>();
@@ -102,18 +122,14 @@ static async Task CreateIndexesAsync(IServiceProvider sp)
     var sessions = db.GetCollection<Session>("sessions");
     await sessions.Indexes.CreateManyAsync(
     [
-        new CreateIndexModel<Session>(
-            Builders<Session>.IndexKeys.Ascending(s => s.UserId)),
-        new CreateIndexModel<Session>(
-            Builders<Session>.IndexKeys.Ascending(s => s.QuizId)),
+        new CreateIndexModel<Session>(Builders<Session>.IndexKeys.Ascending(s => s.UserId)),
+        new CreateIndexModel<Session>(Builders<Session>.IndexKeys.Ascending(s => s.QuizId)),
     ]);
 
     var quizzes = db.GetCollection<Quiz>("quizzes");
     await quizzes.Indexes.CreateManyAsync(
     [
-        new CreateIndexModel<Quiz>(
-            Builders<Quiz>.IndexKeys.Ascending(q => q.Status)),
-        new CreateIndexModel<Quiz>(
-            Builders<Quiz>.IndexKeys.Ascending(q => q.CreatedBy)),
+        new CreateIndexModel<Quiz>(Builders<Quiz>.IndexKeys.Ascending(q => q.Status)),
+        new CreateIndexModel<Quiz>(Builders<Quiz>.IndexKeys.Ascending(q => q.CreatedBy)),
     ]);
 }
