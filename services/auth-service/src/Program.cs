@@ -60,6 +60,10 @@ builder.Services.AddSwaggerGen(o =>
 
 builder.Services.AddControllers();
 
+// ── CORS (frontend) ─────────────────────────────────────────────────────────
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 // ── Auto-migrate MySQL on startup ─────────────────────────────────────────────
@@ -73,6 +77,7 @@ app.UseSwagger();
 app.UseSwaggerUI(o =>
     o.SwaggerEndpoint("/swagger/v1/swagger.json", "Auth Service v1"));
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

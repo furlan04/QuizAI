@@ -11,8 +11,24 @@ from jsonschema import ValidationError, validate
 
 logger = logging.getLogger(__name__)
 
-# shared/contracts/events/ is 4 levels up from this file
-_SCHEMAS_DIR = Path(__file__).parents[4] / "shared" / "contracts" / "events"
+def _resolve_schemas_dir() -> Path:
+    """
+    Locates shared/contracts/events/ across layouts:
+      - Docker:  /app/shared/contracts/events  (shared copied next to src/)
+      - Local:   <repo>/shared/contracts/events (4 levels up from this file)
+    Walks up from this file looking for a 'shared/contracts/events' directory.
+    """
+    suffix = Path("shared") / "contracts" / "events"
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        candidate = parent / suffix
+        if candidate.is_dir():
+            return candidate
+    # Last-resort fallback (Docker layout): /app/shared/contracts/events
+    return Path("/app") / suffix
+
+
+_SCHEMAS_DIR = _resolve_schemas_dir()
 
 
 @lru_cache(maxsize=None)

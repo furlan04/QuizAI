@@ -9,6 +9,7 @@ export * from './FriendshipService';
 export * from './UserService';
 export * from './CommonService';
 export * from './LikeService';
+export * from './ChallengeService';
 
 // Servizi di utilità
 export { default as NotificationService } from './NotificationService';

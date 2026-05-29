@@ -98,6 +98,9 @@ builder.Services.AddSwaggerGen(o =>
     });
 });
 
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 await CreateIndexesAsync(app.Services);
@@ -105,6 +108,7 @@ await CreateIndexesAsync(app.Services);
 app.UseSwagger();
 app.UseSwaggerUI(o => o.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service v1"));
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
