@@ -32,7 +32,8 @@ services:
 
   ai-agent:
     build:
-      context: ../services/ai-agent-service
+      context: ..
+      dockerfile: services/ai-agent-service/Dockerfile
     ports:
       - "8000:8000"
     env_file:
@@ -47,6 +48,9 @@ services:
         - action: sync
           path: ../services/ai-agent-service/src
           target: /app/src
+        - action: sync
+          path: ../shared
+          target: /app/shared
 
   # quiz-service:
   #   build:

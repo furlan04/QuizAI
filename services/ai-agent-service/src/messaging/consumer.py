@@ -10,6 +10,7 @@ from aio_pika.abc import AbstractIncomingMessage
 
 from ..config import settings
 from ..contracts.events import QuizGenerateEvent
+from ..contracts.schema_validator import validate_input, ContractViolationError
 from .handlers.quiz_generation_handler import handle_quiz_generate
 
 logger = logging.getLogger(__name__)
@@ -20,11 +21,20 @@ async def _process_message(
     channel: aio_pika.abc.AbstractChannel,
 ) -> None:
     """
-    Deserialises the message, delegates to the handler, then acks.
-    Any exception propagates → the consumer nacks and RabbitMQ requeues.
+    Deserialises the message, validates it against the JSON Schema contract,
+    delegates to the handler, then acks.
+    ContractViolationError nacks without requeue — malformed messages are dead-lettered.
+    Any other exception requeues for retry.
     """
+    body = json.loads(message.body)
+    try:
+        validate_input(body)
+    except ContractViolationError as exc:
+        logger.error("Input contract violation — discarding message: %s", exc)
+        await message.nack(requeue=False)
+        return
+
     async with message.process(requeue=True):
-        body = json.loads(message.body)
         event = QuizGenerateEvent(**body)
         await handle_quiz_generate(event, channel)
 
