@@ -17,6 +17,7 @@ import {
   FYPage,
   ProfilePage,
   QuizListPage,
+  QuizDetailPage,
   LikedQuizzesPage,
   ConfirmEmailPage,
 } from "./pages";
@@ -86,25 +87,34 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
-        {/* Rotta per i quiz di un utente specifico */}
-        <Route 
-          path="/quizzes/:userId" 
+        {/* Lista quiz di un utente specifico (rotta separata per evitare collisione con il dettaglio) */}
+        <Route
+          path="/users/:userId/quizzes"
           element={
             <ProtectedRoute isLoggedIn={isLoggedIn}>
               <QuizListPage />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/quizzes/create" 
+        <Route
+          path="/quizzes/create"
           element={
             <ProtectedRoute isLoggedIn={isLoggedIn}>
               <QuizCreatePage/>
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/quiz/:id" 
+        {/* Dettaglio di un quiz specifico */}
+        <Route
+          path="/quizzes/:id"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <QuizDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/quiz/:id"
           element={
             <ProtectedRoute isLoggedIn={isLoggedIn}>
               <QuizPlayPage />

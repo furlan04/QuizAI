@@ -1,7 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUserProfile, getSpecificUserProfile } from "../services/UserService";
-import { sendFriendshipRequest } from "../services/FriendshipService";
+import {
+  sendFriendshipRequest,
+  respondFriendshipRequest,
+  removeFriendship,
+  getFriendshipStatus,
+} from "../services/FriendshipService";
 import { getAuthToken, getCurrentUser } from "../services/CommonService";
 import "../styles/settings.css";
 
@@ -18,9 +23,18 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
-  const [friendMsg, setFriendMsg] = useState("");
+  // friendship: { status: 'none'|'pending_sent'|'pending_received'|'accepted'|'self', friendshipId? }
+  const [friendship, setFriendship] = useState(null);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionMsg, setActionMsg]   = useState("");
 
   const isSelf = !usernameParam || (me && usernameParam === me.username);
+
+  const refreshFriendship = useCallback(async (username) => {
+    if (isSelf || !username) return;
+    const status = await getFriendshipStatus(username, getAuthToken());
+    if (status && status.status) setFriendship(status);
+  }, [isSelf]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,6 +45,7 @@ export default function ProfilePage() {
           : await getSpecificUserProfile(usernameParam, getAuthToken());
         setProfile(data);
         setError(null);
+        if (!isSelf) await refreshFriendship(data.username);
       } catch {
         setError("Errore nel recupero del profilo.");
       } finally {
@@ -41,10 +56,41 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usernameParam]);
 
-  const addFriend = async () => {
-    const res = await sendFriendshipRequest(profile.username, getAuthToken());
-    setFriendMsg(res.success ? "Richiesta inviata!" : (res.message || "Errore"));
+  const runAction = async (fn, successMsg) => {
+    setActionBusy(true);
+    setActionMsg("");
+    try {
+      const res = await fn();
+      if (res?.success === false) {
+        setActionMsg(res.message || "Operazione fallita");
+      } else {
+        setActionMsg(successMsg);
+        try { await refreshFriendship(profile.username); } catch { /* ignora refresh */ }
+      }
+    } catch (err) {
+      console.error("Errore azione amicizia:", err);
+      setActionMsg(err?.message || "Errore di connessione al server");
+    } finally {
+      setActionBusy(false);
+    }
   };
+
+  const sendRequest = () => runAction(
+    () => sendFriendshipRequest(profile.username, getAuthToken()),
+    "Richiesta inviata"
+  );
+  const acceptRequest = () => runAction(
+    () => respondFriendshipRequest(friendship.friendshipId, "accept", getAuthToken()),
+    "Richiesta accettata"
+  );
+  const rejectRequest = () => runAction(
+    () => respondFriendshipRequest(friendship.friendshipId, "reject", getAuthToken()),
+    "Richiesta rifiutata"
+  );
+  const removeFriend = () => runAction(
+    () => removeFriendship(profile.username, getAuthToken()),
+    "Amicizia rimossa"
+  );
 
   if (loading) {
     return (
@@ -69,6 +115,44 @@ export default function ProfilePage() {
 
   const creatorId = profile.id || profile.userId;
   const bannerColor = BANNER_COLORS[(profile.username?.charCodeAt(0) ?? 0) % BANNER_COLORS.length];
+
+  const renderFriendshipActions = () => {
+    if (isSelf) return null;
+    if (!friendship) return null;
+
+    switch (friendship.status) {
+      case "accepted":
+        return (
+          <button className="btn btn-action btn-outline" onClick={removeFriend} disabled={actionBusy}>
+            Rimuovi amicizia
+          </button>
+        );
+      case "pending_sent":
+        return (
+          <button className="btn btn-action btn-secondary" disabled>
+            Richiesta inviata
+          </button>
+        );
+      case "pending_received":
+        return (
+          <>
+            <button className="btn btn-action btn-primary" onClick={acceptRequest} disabled={actionBusy}>
+              Accetta richiesta
+            </button>
+            <button className="btn btn-action btn-outline" onClick={rejectRequest} disabled={actionBusy}>
+              Rifiuta
+            </button>
+          </>
+        );
+      case "none":
+      default:
+        return (
+          <button className="btn btn-action btn-primary" onClick={sendRequest} disabled={actionBusy}>
+            Aggiungi amico
+          </button>
+        );
+    }
+  };
 
   return (
     <div className="user-settings-container">
@@ -106,7 +190,7 @@ export default function ProfilePage() {
             <div className="actions-card">
               <h2 className="actions-title">Azioni profilo</h2>
               <div className="actions-grid">
-                <button className="btn btn-primary btn-action" onClick={() => navigate(`/quizzes/${creatorId}`)}>
+                <button className="btn btn-primary btn-action" onClick={() => navigate(`/users/${creatorId}/quizzes`)}>
                   Vedi Quiz
                 </button>
 
@@ -114,12 +198,14 @@ export default function ProfilePage() {
                   <button className="btn btn-action btn-secondary" onClick={() => navigate("/settings")}>
                     Impostazioni account
                   </button>
-                ) : (
-                  <button className="btn btn-action btn-primary" onClick={addFriend} disabled={!!friendMsg}>
-                    {friendMsg || "Aggiungi amico"}
-                  </button>
-                )}
+                ) : renderFriendshipActions()}
               </div>
+
+              {actionMsg && (
+                <div style={{ marginTop: 12, fontSize: 13, color: "var(--ink-soft)" }}>
+                  {actionMsg}
+                </div>
+              )}
             </div>
           </div>
         </div>

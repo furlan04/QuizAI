@@ -42,6 +42,16 @@ public class UsersController : ControllerBase
         catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
     }
 
+    [HttpGet("users/by-id/{userId}")]
+    public async Task<IActionResult> GetByUserId(string userId)
+    {
+        try
+        {
+            return Ok(await _service.GetPublicProfileByIdAsync(userId));
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+    }
+
     private (string Id, string Email, string Username) GetClaims() => (
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")!,
         User.FindFirstValue("email") ?? "",

@@ -59,6 +59,10 @@ services:
       - "5001:5001"
     env_file:
       - ../services/auth-service/.env
+    volumes:
+      # Persiste le chiavi RSA tra i restart: senza questo, ogni rebuild rigenera
+      # le chiavi e invalida tutti i JWT in circolazione (utenti devono ri-loggarsi).
+      - auth_keys:/app/keys
     environment:
       MYSQL_URL: "Server=mysql;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
@@ -201,3 +205,4 @@ volumes:
   rabbitmq_data:
   mongo_data:
   mysql_data:
+  auth_keys:

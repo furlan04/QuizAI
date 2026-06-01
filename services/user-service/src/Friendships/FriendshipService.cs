@@ -103,4 +103,28 @@ public class FriendshipService : IFriendshipService
 
         await _repo.DeleteBetweenUsersAsync(userId, target.Id);
     }
+
+    public async Task<FriendshipStatusDetail> GetStatusAsync(string currentUserId, string targetUsername)
+    {
+        var target = await _users.GetByUsernameAsync(targetUsername)
+            ?? throw new KeyNotFoundException($"User '{targetUsername}' not found.");
+
+        if (target.Id == currentUserId)
+            return new FriendshipStatusDetail("self", null);
+
+        var friendship = await _repo.GetBetweenUsersAsync(currentUserId, target.Id);
+        if (friendship is null)
+            return new FriendshipStatusDetail("none", null);
+
+        if (friendship.Status == "accepted")
+            return new FriendshipStatusDetail("accepted", friendship.Id);
+
+        if (friendship.Status == "pending")
+            return new FriendshipStatusDetail(
+                friendship.RequesterId == currentUserId ? "pending_sent" : "pending_received",
+                friendship.Id);
+
+        // status rejected o altro: trattalo come nessuna relazione attiva
+        return new FriendshipStatusDetail("none", null);
+    }
 }

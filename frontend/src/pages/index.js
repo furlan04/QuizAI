@@ -12,5 +12,6 @@ export { default as FriendshipRequestsPage } from "./FriendshipRequestsPage";
 export { default as SettingsPage } from "./SettingsPage";
 export { default as ProfilePage } from "./ProfilePage";
 export { default as QuizListPage } from "./QuizListPage";
+export { default as QuizDetailPage } from "./QuizDetailPage";
 export { default as LikedQuizzesPage } from "./LikedQuizzesPage";
 export { default as ConfirmEmailPage } from "./ConfirmEmailPage";

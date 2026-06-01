@@ -30,6 +30,19 @@ export const getSpecificUserProfile = async (username, token) => {
   }
 };
 
+/** Profilo pubblico per userId (utile come fallback quando si ha solo l'id). */
+export const getProfileByUserId = async (userId, token) => {
+  try {
+    const response = await fetch(`${USER_URL}/users/by-id/${encodeURIComponent(userId)}`, {
+      headers: createAuthHeaders(token),
+    });
+    handleHttpError(response);
+    return await response.json();
+  } catch (error) {
+    return handleNetworkError(error);
+  }
+};
+
 /** Aggiorna bio e avatar_url dell'utente autenticato (user-service). */
 export const updateUserProfile = async (token, { bio, avatarUrl } = {}) => {
   try {

@@ -30,8 +30,16 @@ export const logout = () => {
   sessionStorage.removeItem(getConfig('AUTH_CONFIG.TOKEN_KEY'));
 };
 
-// Utility per gestire gli errori HTTP comuni
+// Utility per gestire gli errori HTTP comuni.
+// Su 401 fa auto-logout: svuota il token e reindirizza al login.
 export const handleHttpError = (response) => {
+  if (response.status === 401) {
+    sessionStorage.removeItem(getConfig('AUTH_CONFIG.TOKEN_KEY'));
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.replace('/login');
+    }
+    throw new Error('Sessione scaduta. Effettua di nuovo il login.');
+  }
   if (!response.ok) {
     throw new Error(`Errore HTTP: ${response.status}`);
   }

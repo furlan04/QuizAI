@@ -8,4 +8,5 @@ public interface IUserService
     Task<User> GetOrCreateAsync(string userId, string email, string username);
     Task<User> UpdateAsync(string userId, UpdateProfileRequest request);
     Task<PublicProfileResponse> GetPublicProfileAsync(string username);
+    Task<PublicProfileResponse> GetPublicProfileByIdAsync(string userId);
 }

@@ -63,6 +63,22 @@ export const respondFriendshipRequest = async (friendshipId, action, token) => {
 export const acceptFriendshipRequest = (friendshipId, token) =>
   respondFriendshipRequest(friendshipId, 'accept', token);
 
+/**
+ * Stato della relazione con un utente.
+ * @returns { status: 'none'|'pending_sent'|'pending_received'|'accepted'|'self', friendshipId?: string }
+ */
+export const getFriendshipStatus = async (username, token) => {
+  try {
+    const response = await fetch(`${USER_URL}/users/me/friends/status/${encodeURIComponent(username)}`, {
+      headers: createAuthHeaders(token),
+    });
+    handleHttpError(response);
+    return await response.json();
+  } catch (error) {
+    return handleNetworkError(error);
+  }
+};
+
 export const removeFriendship = async (username, token) => {
   try {
     const response = await fetch(`${USER_URL}/users/me/friends/${username}`, {
