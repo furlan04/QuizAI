@@ -1,0 +1,42 @@
+name: ai-agent-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/ai-agent-service/**"
+      - "shared/contracts/events/**"
+      - ".github/workflows/ai-agent-service.yml"
+  pull_request:
+    paths:
+      - "services/ai-agent-service/**"
+      - "shared/contracts/events/**"
+      - ".github/workflows/ai-agent-service.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ai-agent-service
+    env:
+      # I test mockano GROQ, ma config.py richiede che la variabile sia presente
+      GROQ_API_KEY: "test-key-not-used"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: services/ai-agent-service/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-mock
+
+      - name: Run tests
+        run: pytest -q

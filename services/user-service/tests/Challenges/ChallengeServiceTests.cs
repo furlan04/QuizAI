@@ -14,14 +14,11 @@ public class ChallengeServiceTests
     private readonly Mock<IChallengeRepository> _repo = new();
     private readonly Mock<IFriendshipRepository> _friendships = new();
     private readonly Mock<IUserRepository> _users = new();
-    private readonly Mock<ChallengeCreatedPublisher> _publisher;
+    private readonly Mock<IChallengeCreatedPublisher> _publisher = new();
     private readonly IChallengeService _sut;
 
     public ChallengeServiceTests()
     {
-        _publisher = new Mock<ChallengeCreatedPublisher>(
-            Mock.Of<MassTransit.ISendEndpointProvider>());
-
         _sut = new ChallengeService(
             _repo.Object, _friendships.Object,
             _users.Object, _publisher.Object);
