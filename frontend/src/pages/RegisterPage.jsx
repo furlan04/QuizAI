@@ -53,7 +53,7 @@ export default function RegisterPage() {
     try {
       const result = await register(username, email, password);
       if (result.success) {
-        setMessage("Registrazione avvenuta! Ora puoi accedere.");
+        setMessage(result.message || "Registrazione completata. Controlla la tua email per confermare l'account.");
         setUsername("");
         setEmail("");
         setPassword("");
@@ -228,10 +228,10 @@ export default function RegisterPage() {
             </div>
 
             {message && (
-              <div className={`alert ${message.includes('successo') || message.includes('avvenuta') ? 'alert-success' : 'alert-info'}`}>
+              <div className={`alert ${/successo|avvenuta|completata/i.test(message) ? 'alert-success' : 'alert-info'}`}>
                 <div className="alert-content">
                   <span className="alert-icon">
-                    {message.includes('successo') || message.includes('avvenuta') ? '✅' : 'ℹ️'}
+                    {/successo|avvenuta|completata/i.test(message) ? '✅' : 'ℹ️'}
                   </span>
                   <span className="alert-text">{message}</span>
                 </div>

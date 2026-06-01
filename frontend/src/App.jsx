@@ -18,6 +18,7 @@ import {
   ProfilePage,
   QuizListPage,
   LikedQuizzesPage,
+  ConfirmEmailPage,
 } from "./pages";
 import {
   Navbar,
@@ -64,15 +65,18 @@ export default function App() {
             </PublicRoute>
           } 
         />
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <PublicRoute isLoggedIn={isLoggedIn}>
               <LoginPage setIsLoggedIn={setIsLoggedIn} />
             </PublicRoute>
-          } 
+          }
         />
-        
+
+        {/* Conferma email (pubblica, accessibile da link in email) */}
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+
         {/* Rotte per i quiz */}
         <Route 
           path="/quizzes" 

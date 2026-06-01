@@ -62,6 +62,16 @@ services:
     environment:
       MYSQL_URL: "Server=mysql;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      # Google login (lascia vuoto per disabilitare)
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      # SMTP per email di conferma (vuoto → log in console, dev mode)
+      SMTP_HOST:      "${SMTP_HOST:-}"
+      SMTP_PORT:      "${SMTP_PORT:-587}"
+      SMTP_USER:      "${SMTP_USER:-}"
+      SMTP_PASS:      "${SMTP_PASS:-}"
+      SMTP_FROM:      "${SMTP_FROM:-}"
+      SMTP_FROM_NAME: "${SMTP_FROM_NAME:-QuizAI}"
     depends_on:
       mysql:
         condition: service_healthy
@@ -176,6 +186,7 @@ services:
         REACT_APP_AUTH_SERVICE_URL: http://localhost:5001
         REACT_APP_QUIZ_SERVICE_URL: http://localhost:8080
         REACT_APP_USER_SERVICE_URL: http://localhost:5002
+        REACT_APP_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
     ports:
       - "3000:3000"
     depends_on:

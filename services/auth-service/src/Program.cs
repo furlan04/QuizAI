@@ -1,5 +1,6 @@
 using System.Text.Json;
 using AuthService.Auth;
+using AuthService.Email;
 using AuthService.Identity;
 using AuthService.Jwt;
 using AuthService.Keys;
@@ -29,6 +30,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     options.Password.RequireUppercase       = false;
     options.Password.RequireNonAlphanumeric = false;
     options.User.RequireUniqueEmail         = true;
+    options.SignIn.RequireConfirmedEmail    = true; // login bloccato finché email non confermata
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
@@ -38,6 +40,14 @@ builder.Services.AddSingleton<RsaKeyProvider>();
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService.Auth.AuthService>();
 builder.Services.AddScoped<IUserRegisteredPublisher, UserRegisteredPublisher>();
+builder.Services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
+
+// ── Email sender ────────────────────────────────────────────────────────────
+// Se SMTP_HOST è configurato → invia davvero; altrimenti logga in console (dev)
+if (!string.IsNullOrWhiteSpace(cfg["SMTP_HOST"]))
+    builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+else
+    builder.Services.AddSingleton<IEmailSender, LoggerEmailSender>();
 
 // ── MassTransit / RabbitMQ ───────────────────────────────────────────────────
 builder.Services.AddMassTransit(x =>

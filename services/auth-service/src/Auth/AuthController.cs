@@ -12,9 +12,8 @@ public class AuthController : ControllerBase
     public AuthController(IAuthService auth) => _auth = auth;
 
     [HttpPost("register")]
-    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         try
@@ -24,7 +23,7 @@ public class AuthController : ControllerBase
         }
         catch (ConflictException ex)
         {
-            return Conflict(new { error = ex.Message });
+            return Conflict(new { code = ex.Code, error = ex.Message });
         }
     }
 
@@ -39,7 +38,46 @@ public class AuthController : ControllerBase
         }
         catch (UnauthorizedException ex)
         {
-            return Unauthorized(new { error = ex.Message });
+            return Unauthorized(new { code = ex.Code, error = ex.Message });
+        }
+    }
+
+    [HttpPost("confirm-email")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)
+    {
+        try
+        {
+            await _auth.ConfirmEmailAsync(request);
+            return NoContent();
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { code = ex.Code, error = ex.Message });
+        }
+    }
+
+    [HttpPost("resend-confirmation")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationRequest request)
+    {
+        await _auth.ResendConfirmationAsync(request);
+        return NoContent();
+    }
+
+    [HttpPost("google")]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        try
+        {
+            return Ok(await _auth.LoginWithGoogleAsync(request));
+        }
+        catch (UnauthorizedException ex)
+        {
+            return Unauthorized(new { code = ex.Code, error = ex.Message });
         }
     }
 }
