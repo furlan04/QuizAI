@@ -1,0 +1,14 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+langchain==0.3.13
+langchain-groq==0.2.3
+langgraph==0.2.59
+instructor==1.7.2
+groq==0.13.0
+aio-pika==9.5.1
+motor==3.6.0
+tenacity==9.0.0
+python-dotenv==1.0.1
+jsonschema==4.23.0

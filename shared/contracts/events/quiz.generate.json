@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "quiz.generate",
+  "title": "QuizGenerateEvent",
+  "description": "Pubblicato dal Quiz Service su quiz.generate per richiedere la generazione di un quiz.",
+  "type": "object",
+  "required": ["quiz_id", "topic", "difficulty", "num_questions", "user_id"],
+  "additionalProperties": false,
+  "properties": {
+    "quiz_id": {
+      "type": "string",
+      "description": "ID univoco del quiz, generato dal Quiz Service."
+    },
+    "topic": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Argomento del quiz."
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard"],
+      "description": "Livello di difficoltà."
+    },
+    "num_questions": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Numero di domande da generare."
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID dell'utente che ha richiesto il quiz."
+    }
+  }
+}

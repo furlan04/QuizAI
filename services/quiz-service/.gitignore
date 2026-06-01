@@ -1,0 +1,34 @@
+# Environment
+.env
+
+# Build output
+bin/
+obj/
+
+# User-specific Visual Studio files
+*.user
+*.suo
+.vs/
+*.userprefs
+
+# NuGet
+*.nupkg
+.nuget/
+packages/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+coverage*/
+
+# Publish output
+publish/
+
+# Rider / JetBrains
+.idea/
+
+# VSCode
+.vscode/
+
+appsettings.Development.json

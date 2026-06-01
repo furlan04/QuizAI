@@ -1,0 +1,203 @@
+services:
+
+  # ── Infrastruttura ─────────────────────────────────────────────────────────
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7
+    # Replica set a nodo singolo: necessario per le transazioni MongoDB (sessions/complete)
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      # Inizializza il replica set al primo avvio, poi verifica che sia pronto
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}).ok }\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  mysql:
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: quizai_auth
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Microservizi ────────────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    env_file:
+      - ../services/auth-service/.env
+    environment:
+      MYSQL_URL: "Server=mysql;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      # Google login (lascia vuoto per disabilitare)
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      # SMTP per email di conferma (vuoto → log in console, dev mode)
+      SMTP_HOST:      "${SMTP_HOST:-}"
+      SMTP_PORT:      "${SMTP_PORT:-587}"
+      SMTP_USER:      "${SMTP_USER:-}"
+      SMTP_PASS:      "${SMTP_PASS:-}"
+      SMTP_FROM:      "${SMTP_FROM:-}"
+      SMTP_FROM_NAME: "${SMTP_FROM_NAME:-QuizAI}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5001' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../services/auth-service/src
+          target: /app/src
+
+  quiz-service:
+    build:
+      context: ../services/quiz-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../services/quiz-service/.env
+    environment:
+      MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      AUTH_SERVICE_URL: "http://auth-service:5001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../services/quiz-service/src
+          target: /app/src
+
+  user-service:
+    build:
+      context: ../services/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5002"
+    env_file:
+      - ../services/user-service/.env
+    environment:
+      MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      AUTH_SERVICE_URL: "http://auth-service:5001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5002' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../services/user-service/src
+          target: /app/src
+
+  ai-agent:
+    build:
+      context: ..
+      dockerfile: services/ai-agent-service/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../services/ai-agent-service/.env
+    environment:
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+      MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ../services/ai-agent-service/src
+          target: /app/src
+        - action: sync
+          path: ../shared
+          target: /app/shared
+
+  # ── Frontend ────────────────────────────────────────────────────────────────
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_AUTH_SERVICE_URL: http://localhost:5001
+        REACT_APP_QUIZ_SERVICE_URL: http://localhost:8080
+        REACT_APP_USER_SERVICE_URL: http://localhost:5002
+        REACT_APP_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+    ports:
+      - "3000:3000"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      quiz-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+
+volumes:
+  rabbitmq_data:
+  mongo_data:
+  mysql_data:
