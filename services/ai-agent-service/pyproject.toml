@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+filterwarnings = [
+    # pydantic v1 compat shim triggers this on Python 3.13 — not our code
+    "ignore:Failing to pass a value to the 'type_params':DeprecationWarning",
+]

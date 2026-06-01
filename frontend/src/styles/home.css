@@ -1,0 +1,442 @@
+/* ============================================================
+   QuizAI — Homepage pubblica & Autenticazione
+   HomePage, LoginPage, RegisterPage
+   ============================================================ */
+
+/* ── Homepage wrapper ── */
+.homepage { min-height: 100vh; background: var(--cream); }
+
+/* ── Hero ── */
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-background { position: absolute; inset: 0; z-index: 0; }
+
+.hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    rgba(124,91,255,.08) 0%,
+    rgba(255,107,139,.08) 50%,
+    rgba(197,242,107,.08) 100%);
+}
+
+.hero-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(124,91,255,.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,107,139,.1) 0%, transparent 50%);
+}
+
+.hero-content { position: relative; z-index: 1; width: 100%; }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  min-height: 80vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.hero-text { max-width: 560px; }
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: var(--violet);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .85rem;
+  margin-bottom: 1.5rem;
+  border: var(--b) solid var(--ink);
+  box-shadow: var(--shadow-hard);
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: .04em;
+}
+
+.badge-icon { font-size: 1rem; }
+
+.hero-title {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 3.4rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+  letter-spacing: -.03em;
+}
+
+.gradient-text { color: var(--violet); }
+
+.hero-description {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin-bottom: 2rem;
+  max-width: 460px;
+}
+
+.hero-actions { display: flex; gap: 12px; margin-bottom: 2.5rem; flex-wrap: wrap; }
+
+.btn-hero {
+  padding: 14px 26px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 16px;
+  min-width: 160px;
+  box-shadow: 5px 5px 0 0 var(--ink);
+}
+
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+
+.stat { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.stat-number {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--violet);
+  line-height: 1;
+  letter-spacing: -.02em;
+}
+.stat-label { font-size: .85rem; color: var(--ink-soft); font-weight: 600; margin-top: 2px; }
+
+/* Hero visual (anteprima quiz) */
+.hero-visual { position: relative; display: flex; justify-content: center; align-items: center; }
+
+.quiz-preview { position: relative; max-width: 380px; width: 100%; }
+
+.quiz-card-preview {
+  background: #fff;
+  border: var(--b) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hard-xl);
+  overflow: hidden;
+  transform: rotate(-2deg);
+  transition: transform .3s ease;
+}
+
+.quiz-card-preview:hover { transform: rotate(0deg) scale(1.02); }
+
+.quiz-header-preview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--violet);
+  border-bottom: var(--b) solid var(--ink);
+}
+
+.quiz-avatar {
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  border: 2px solid rgba(255,255,255,.4);
+}
+
+.quiz-info { flex: 1; }
+.quiz-info h4 { margin: 0; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 1rem; color: #fff; }
+.quiz-info p  { margin: 0; font-size: .8rem; color: rgba(255,255,255,.75); }
+
+.quiz-badge {
+  background: var(--lime);
+  color: var(--ink);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  border: 1.5px solid var(--ink);
+}
+
+.quiz-question { padding: 1.25rem; border-bottom: var(--bb) solid rgba(26,23,38,.1); }
+.quiz-question p { margin: 0; font-weight: 700; color: var(--ink); font-size: 1rem; line-height: 1.4; }
+.quiz-options { padding: 1.25rem; }
+
+.option {
+  padding: .625rem 1rem;
+  margin-bottom: .5rem;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--ink);
+}
+.option.correct { background: var(--lime); color: var(--ink); border-color: var(--ink); font-weight: 700; }
+
+.floating-elements { position: absolute; inset: 0; pointer-events: none; }
+.floating-icon { position: absolute; font-size: 1.8rem; animation: float 3s ease-in-out infinite; }
+.floating-icon:nth-child(1) { top: 10%;    left: -10%;  animation-delay: 0s; }
+.floating-icon:nth-child(2) { top: 20%;    right: -15%; animation-delay: .5s; }
+.floating-icon:nth-child(3) { bottom: 30%; left: -5%;   animation-delay: 1s; }
+.floating-icon:nth-child(4) { bottom: 10%; right: -10%; animation-delay: 1.5s; }
+
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+
+/* ── Features ── */
+.features-section { padding: 6rem 0; background: #fff; border-top: var(--b) solid var(--ink); }
+
+.section-header   { text-align: center; margin-bottom: 3.5rem; }
+.section-title    { font-family: "Bricolage Grotesque", sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--ink); margin-bottom: .75rem; letter-spacing: -.03em; }
+.section-subtitle { font-size: 1.1rem; color: var(--ink-soft); max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.feature-card {
+  background: #fff;
+  border: var(--b) solid var(--ink);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2.2rem;
+  box-shadow: var(--shadow-hard);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.feature-card:hover  { transform: translate(-2px,-2px); box-shadow: var(--shadow-hard-lg); }
+.feature-card::before { display: none; }
+
+.feature-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--cream);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-hard);
+}
+
+.feature-title       { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--ink); margin-bottom: .75rem; letter-spacing: -.02em; }
+.feature-description { color: var(--ink-soft); line-height: 1.6; margin-bottom: 1.25rem; font-size: .95rem; }
+
+.feature-highlight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: .875rem;
+  background: var(--cream);
+  border: var(--b) solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hard);
+}
+.feature-highlight span:first-child { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--violet); }
+.feature-highlight span:last-child  { font-size: .85rem; color: var(--ink-soft); font-weight: 600; }
+
+/* ── Come funziona ── */
+.how-it-works-section { padding: 6rem 0; background: var(--cream); border-top: var(--b) solid var(--ink); }
+
+.steps-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.step { display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+.step-number {
+  width: 70px;
+  height: 70px;
+  background: var(--ink);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--lime);
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-hard);
+}
+
+.step-title       { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--ink); margin-bottom: .75rem; }
+.step-description { color: var(--ink-soft); line-height: 1.6; }
+.step-visual      { width: 90px; height: 90px; background: var(--cream); border: var(--b) solid var(--ink); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-top: 1rem; box-shadow: var(--shadow-hard); }
+
+/* ── CTA ── */
+.cta-section    { padding: 6rem 0; background: var(--ink); color: #fff; text-align: center; border-top: var(--b) solid var(--ink); }
+.cta-content    { max-width: 560px; margin: 0 auto; padding: 0 2rem; }
+.cta-title      { font-family: "Bricolage Grotesque", sans-serif; font-size: 2.4rem; font-weight: 800; margin-bottom: .875rem; letter-spacing: -.03em; }
+.cta-description { font-size: 1.1rem; margin-bottom: 2rem; opacity: .8; line-height: 1.6; }
+.cta-actions    { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.btn-cta {
+  padding: 14px 26px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 16px;
+  min-width: 180px;
+}
+
+.btn-cta.btn-outline {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255,255,255,.5);
+  box-shadow: none;
+}
+.btn-cta.btn-outline:hover { background: rgba(255,255,255,.1); box-shadow: none; transform: none; }
+
+/* ── Footer ── */
+.homepage-footer { background: #fff; border-top: var(--b) solid var(--ink); padding: 1.5rem 0; }
+.footer-content  { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+.footer-brand    { display: flex; align-items: center; gap: 10px; }
+.footer-text     { color: var(--ink-soft); margin: 0; font-size: .9rem; }
+
+/* ── Public navbar ── */
+.public-navbar {
+  background: var(--cream);
+  border-bottom: var(--bb) solid var(--ink);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.public-navbar-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1.4rem;
+  transition: color .15s;
+  font-family: "Bricolage Grotesque", sans-serif;
+}
+.navbar-brand:hover { color: var(--violet); }
+
+.brand-logo-pub {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--lime);
+  display: grid;
+  place-items: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: 3px 3px 0 0 var(--coral);
+  transform: rotate(-4deg);
+}
+
+.navbar-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ── Auth (login / registrazione) ── */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem;
+}
+
+.auth-background { position: absolute; inset: 0; z-index: 0; }
+
+.auth-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(124,91,255,.08) 0%, rgba(255,107,139,.08) 100%);
+}
+
+.auth-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(124,91,255,.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,107,139,.08) 0%, transparent 50%);
+}
+
+.auth-content { position: relative; z-index: 1; width: 100%; max-width: 440px; }
+
+.auth-card {
+  background: #fff;
+  border: var(--b) solid var(--ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hard-xl);
+  overflow: hidden;
+}
+
+.auth-header {
+  padding: 2.5rem 2rem 1.75rem;
+  text-align: center;
+  border-bottom: var(--bb) solid rgba(26,23,38,.1);
+}
+
+.auth-logo     { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 1.5rem; }
+.auth-title    { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--ink); margin: 0 0 4px; letter-spacing: -.03em; }
+.auth-subtitle { font-size: 1rem; color: var(--ink-soft); margin: 0; }
+
+.auth-form-container { padding: 2rem; }
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+
+.btn-auth {
+  padding: 14px 1.5rem;
+  font-size: 15px;
+  font-weight: 700;
+  width: 100%;
+  margin-top: 4px;
+  background: var(--violet);
+  color: #fff;
+  box-shadow: 5px 5px 0 0 var(--ink);
+}
+.btn-auth:hover:not(:disabled) { box-shadow: 6px 6px 0 0 var(--ink); }
+
+.auth-divider { position: relative; text-align: center; margin: 1.25rem 0; }
+.auth-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1.5px; background: rgba(26,23,38,.12); }
+.auth-divider span    { background: #fff; padding: 0 1rem; color: var(--ink-soft); font-size: .85rem; font-weight: 600; }
+
+.auth-footer      { text-align: center; }
+.auth-switch-text { color: var(--ink-soft); font-size: .9rem; margin: 0; }
+.auth-link        { color: var(--violet); text-decoration: none; font-weight: 700; margin-left: .35rem; }
+.auth-link:hover  { text-decoration: underline; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .hero-grid     { grid-template-columns: 1fr; gap: 3rem; text-align: center; }
+  .hero-title    { font-size: 2.8rem; }
+  .features-grid { grid-template-columns: 1fr; }
+  .steps-container { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+@media (max-width: 768px) {
+  .hero-title    { font-size: 2.2rem; }
+  .hero-actions  { flex-direction: column; align-items: center; }
+  .btn-hero      { width: 100%; max-width: 280px; }
+}

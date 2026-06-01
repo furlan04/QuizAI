@@ -1,0 +1,23 @@
+from pydantic import BaseModel, Field
+from typing import Literal, Optional
+from .models import Question
+
+
+class QuizGenerateEvent(BaseModel):
+    """Incoming event from quiz.generate queue."""
+
+    quiz_id: str
+    topic: str = Field(max_length=200)
+    difficulty: Literal["easy", "medium", "hard"]
+    num_questions: int = Field(ge=1, le=20)
+    user_id: str
+
+
+class QuizGeneratedEvent(BaseModel):
+    """Outgoing event published to quiz.generated queue."""
+
+    quiz_id: str
+    status: Literal["ready", "failed"]
+    questions: list[Question] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    error: Optional[str] = None

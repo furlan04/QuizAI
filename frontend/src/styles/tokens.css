@@ -1,0 +1,96 @@
+/* ============================================================
+   QuizAI — Design Tokens
+   Variabili CSS, reset base, tipografia globale
+   ============================================================ */
+
+:root {
+  /* ── Palette ── */
+  --cream:       #FAF6EB;
+  --cream-2:     #F2EBD8;
+  --ink:         #1A1726;
+  --ink-2:       #2C2740;
+  --ink-soft:    #5A536D;
+
+  --violet:      #7C5BFF;
+  --violet-deep: #5B3FE0;
+  --coral:       #FF6B8B;
+  --lime:        #C5F26B;
+  --sky:         #7CC7FF;
+  --butter:      #FFD66B;
+  --mint:        #8EE7C8;
+
+  /* ── Shadows ── */
+  --shadow-hard:    4px 4px 0 0 var(--ink);
+  --shadow-hard-lg: 8px 8px 0 0 var(--ink);
+  --shadow-hard-xl: 12px 12px 0 0 var(--ink);
+
+  /* ── Borders ── */
+  --b:  2.5px;
+  --bb: 1.5px;
+
+  /* ── Radius ── */
+  --radius-sm: 10px;
+  --radius:    18px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+
+  /* ── Spacing ── */
+  --pad:    24px;
+  --side-w: 248px;
+
+  /* ── Legacy aliases (Bootstrap / pagine non aggiornate) ── */
+  --primary-color:       var(--violet);
+  --primary-hover:       var(--violet-deep);
+  --secondary-color:     var(--coral);
+  --accent-color:        var(--lime);
+  --background-color:    var(--cream);
+  --surface-color:       #ffffff;
+  --text-primary:        var(--ink);
+  --text-secondary:      var(--ink-soft);
+  --text-hint:           #9A94AD;
+  --border-color:        rgba(26,23,38,.18);
+  --shadow-light:        var(--shadow-hard);
+  --shadow-medium:       var(--shadow-hard);
+  --shadow-heavy:        var(--shadow-hard-lg);
+  --border-radius:       var(--radius);
+  --border-radius-small: var(--radius-sm);
+  --transition:          all 0.15s ease;
+}
+
+/* ── Reset ── */
+*,*::before,*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "DM Sans", "Helvetica Neue", system-ui, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color: var(--ink);
+  background: var(--cream);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(124,91,255,.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255,107,139,.08), transparent 60%),
+    var(--cream);
+}
+
+code {
+  font-family: "JetBrains Mono", source-code-pro, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ── Typography helpers ── */
+.display { font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif; letter-spacing: -.02em; }
+.mono    { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+
+::selection { background: var(--lime); color: var(--ink); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(26,23,38,.15); border-radius: 6px; border: 2px solid var(--cream); }
+::-webkit-scrollbar-thumb:hover { background: rgba(26,23,38,.28); }
