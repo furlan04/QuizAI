@@ -1,0 +1,37 @@
+name: quiz-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/quiz-service/**"
+      - ".github/workflows/quiz-service.yml"
+  pull_request:
+    paths:
+      - "services/quiz-service/**"
+      - ".github/workflows/quiz-service.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/quiz-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-quiz-${{ hashFiles('services/quiz-service/**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-quiz-
+
+      - run: dotnet restore
+      - run: dotnet build --configuration Release --no-restore
+      - run: dotnet test --configuration Release --no-build --logger "console;verbosity=normal"
