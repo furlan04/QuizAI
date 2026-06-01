@@ -17,13 +17,13 @@ public class ChallengeService : IChallengeService
     private readonly IChallengeRepository _repo;
     private readonly IFriendshipRepository _friendships;
     private readonly IUserRepository _users;
-    private readonly ChallengeCreatedPublisher _publisher;
+    private readonly IChallengeCreatedPublisher _publisher;
 
     public ChallengeService(
         IChallengeRepository repo,
         IFriendshipRepository friendships,
         IUserRepository users,
-        ChallengeCreatedPublisher publisher)
+        IChallengeCreatedPublisher publisher)
     {
         _repo        = repo;
         _friendships = friendships;

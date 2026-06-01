@@ -33,7 +33,7 @@ builder.Services.AddSingleton<IChallengeRepository, ChallengeRepository>();
 builder.Services.AddScoped<IUserService, UserService.Users.UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
-builder.Services.AddScoped<ChallengeCreatedPublisher>();
+builder.Services.AddScoped<IChallengeCreatedPublisher, ChallengeCreatedPublisher>();
 
 // ── JWT via JWKS (auth-service) ──────────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
