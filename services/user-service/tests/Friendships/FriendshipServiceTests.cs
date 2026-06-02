@@ -61,6 +61,27 @@ public class FriendshipServiceTests
     }
 
     [Fact]
+    public async Task SendRequest_PreviouslyRejected_DeletesOldAndResendsAsPending()
+    {
+        _users.Setup(r => r.GetByUsernameAsync("bob"))
+            .ReturnsAsync(MakeUser("bob-id", "bob"));
+        // Vecchia richiesta rifiutata, in direzione opposta (bob aveva chiesto ad alice).
+        _repo.Setup(r => r.GetBetweenUsersAsync("alice-id", "bob-id"))
+            .ReturnsAsync(new Friendship
+                { Id = "old", RequesterId = "bob-id", AddresseeId = "alice-id", Status = "rejected" });
+        _repo.Setup(r => r.DeleteBetweenUsersAsync("alice-id", "bob-id")).Returns(Task.CompletedTask);
+        _repo.Setup(r => r.CreateAsync(It.IsAny<Friendship>())).ReturnsAsync("f2");
+
+        var result = await _sut.SendRequestAsync("alice-id", "bob");
+
+        result.Status.Should().Be("pending");
+        result.FriendshipId.Should().Be("f2");
+        _repo.Verify(r => r.DeleteBetweenUsersAsync("alice-id", "bob-id"), Times.Once);
+        _repo.Verify(r => r.CreateAsync(It.Is<Friendship>(f =>
+            f.RequesterId == "alice-id" && f.AddresseeId == "bob-id" && f.Status == "pending")), Times.Once);
+    }
+
+    [Fact]
     public async Task SendRequest_UnknownUser_ThrowsKeyNotFound()
     {
         _users.Setup(r => r.GetByUsernameAsync("ghost"))
