@@ -7,23 +7,20 @@ import {
   removeFriendship,
   getFriendshipStatus,
 } from "../services/FriendshipService";
-import { getCurrentUser } from "../services/CommonService";
-import "../styles/settings.css";
+import { useAuth } from "../auth/AuthContext";
+import { Button, Card, Spinner } from "../components/ui";
 
 const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
-
-const BANNER_COLORS = ["var(--coral)", "var(--violet)", "var(--sky)", "var(--butter)", "var(--mint)"];
+const BANNER_COLORS = ["bg-coral", "bg-violet", "bg-sky", "bg-butter", "bg-mint"];
 
 export default function ProfilePage() {
-  // il parametro route è lo username (profilo pubblico)
   const { userId: usernameParam } = useParams();
   const navigate = useNavigate();
-  const me = getCurrentUser();
+  const { user: me } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
-  // friendship: { status: 'none'|'pending_sent'|'pending_received'|'accepted'|'self', friendshipId? }
   const [friendship, setFriendship] = useState(null);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionMsg, setActionMsg]   = useState("");
@@ -33,16 +30,14 @@ export default function ProfilePage() {
   const refreshFriendship = useCallback(async (username) => {
     if (isSelf || !username) return;
     const status = await getFriendshipStatus(username);
-    if (status && status.status) setFriendship(status);
+    if (status?.status) setFriendship(status);
   }, [isSelf]);
 
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const data = isSelf
-          ? await getUserProfile()
-          : await getSpecificUserProfile(usernameParam);
+        const data = isSelf ? await getUserProfile() : await getSpecificUserProfile(usernameParam);
         setProfile(data);
         setError(null);
         if (!isSelf) await refreshFriendship(data.username);
@@ -61,54 +56,38 @@ export default function ProfilePage() {
     setActionMsg("");
     try {
       const res = await fn();
-      if (res?.success === false) {
-        setActionMsg(res.message || "Operazione fallita");
-      } else {
+      if (res?.success === false) setActionMsg(res.message || "Operazione fallita");
+      else {
         setActionMsg(successMsg);
-        try { await refreshFriendship(profile.username); } catch { /* ignora refresh */ }
+        try { await refreshFriendship(profile.username); } catch { /* */ }
       }
     } catch (err) {
-      console.error("Errore azione amicizia:", err);
-      setActionMsg(err?.message || "Errore di connessione al server");
+      setActionMsg(err?.message || "Errore di connessione");
     } finally {
       setActionBusy(false);
     }
   };
 
-  const sendRequest = () => runAction(
-    () => sendFriendshipRequest(profile.username),
-    "Richiesta inviata"
-  );
-  const acceptRequest = () => runAction(
-    () => respondFriendshipRequest(friendship.friendshipId, "accept"),
-    "Richiesta accettata"
-  );
-  const rejectRequest = () => runAction(
-    () => respondFriendshipRequest(friendship.friendshipId, "reject"),
-    "Richiesta rifiutata"
-  );
-  const removeFriend = () => runAction(
-    () => removeFriendship(profile.username),
-    "Amicizia rimossa"
-  );
+  const sendRequest = () => runAction(() => sendFriendshipRequest(profile.username), "Richiesta inviata");
+  const acceptRequest = () => runAction(() => respondFriendshipRequest(friendship.friendshipId, "accept"), "Richiesta accettata");
+  const rejectRequest = () => runAction(() => respondFriendshipRequest(friendship.friendshipId, "reject"), "Richiesta rifiutata");
+  const removeFriend  = () => runAction(() => removeFriendship(profile.username), "Amicizia rimossa");
 
   if (loading) {
     return (
-      <div className="user-settings-container">
-        <div className="loading-container">
-          <div className="loading-spinner" />
-          <p className="loading-text">Caricamento profilo...</p>
-        </div>
+      <div className="max-w-3xl mx-auto px-6 py-20 flex flex-col items-center gap-3">
+        <Spinner />
+        <p className="text-ink-soft">Caricamento profilo...</p>
       </div>
     );
   }
 
   if (error || !profile) {
     return (
-      <div className="user-settings-container">
-        <div className="empty-state">
-          <div className="empty-title">{error || "Profilo non trovato"}</div>
-        </div>
+      <div className="max-w-3xl mx-auto px-6 py-10">
+        <Card className="p-8 text-center">
+          <div className="font-display font-extrabold text-xl">{error || "Profilo non trovato"}</div>
+        </Card>
       </div>
     );
   }
@@ -117,99 +96,68 @@ export default function ProfilePage() {
   const bannerColor = BANNER_COLORS[(profile.username?.charCodeAt(0) ?? 0) % BANNER_COLORS.length];
 
   const renderFriendshipActions = () => {
-    if (isSelf) return null;
-    if (!friendship) return null;
-
+    if (isSelf || !friendship) return null;
     switch (friendship.status) {
       case "accepted":
-        return (
-          <button className="btn btn-action btn-outline" onClick={removeFriend} disabled={actionBusy}>
-            Rimuovi amicizia
-          </button>
-        );
+        return <Button variant="outline" onClick={removeFriend} disabled={actionBusy}>Rimuovi amicizia</Button>;
       case "pending_sent":
-        return (
-          <button className="btn btn-action btn-secondary" disabled>
-            Richiesta inviata
-          </button>
-        );
+        return <Button variant="secondary" disabled>Richiesta inviata</Button>;
       case "pending_received":
         return (
           <>
-            <button className="btn btn-action btn-primary" onClick={acceptRequest} disabled={actionBusy}>
-              Accetta richiesta
-            </button>
-            <button className="btn btn-action btn-outline" onClick={rejectRequest} disabled={actionBusy}>
-              Rifiuta
-            </button>
+            <Button onClick={acceptRequest} disabled={actionBusy}>Accetta</Button>
+            <Button variant="outline" onClick={rejectRequest} disabled={actionBusy}>Rifiuta</Button>
           </>
         );
-      case "none":
       default:
-        return (
-          <button className="btn btn-action btn-primary" onClick={sendRequest} disabled={actionBusy}>
-            Aggiungi amico
-          </button>
-        );
+        return <Button onClick={sendRequest} disabled={actionBusy}>Aggiungi amico</Button>;
     }
   };
 
   return (
-    <div className="user-settings-container">
-      <div className="settings-content">
-        <div className="profile-card">
-          <div className="profile-header" style={{
-            background: bannerColor,
-            backgroundImage: "repeating-linear-gradient(135deg, rgba(0,0,0,.1) 0 16px, transparent 16px 34px)",
-          }}>
-            <div className="profile-avatar">
-              <span className="avatar-text">{getInitials(profile.username)}</span>
-            </div>
-            <div className="profile-info">
-              <h2 className="profile-title">{profile.username}</h2>
-              <p className="profile-subtitle">{isSelf ? "Il tuo profilo" : "Profilo pubblico"}</p>
-            </div>
+    <div className="max-w-3xl mx-auto px-6 py-8">
+      <Card>
+        {/* Header con banner */}
+        <div
+          className={`${bannerColor} p-6 flex items-center gap-4 border-b-3 border-ink`}
+          style={{ backgroundImage: "repeating-linear-gradient(135deg, rgba(0,0,0,.1) 0 16px, transparent 16px 34px)" }}
+        >
+          <div className="w-16 h-16 rounded-full bg-white border-3 border-ink grid place-items-center font-display font-extrabold text-xl shrink-0">
+            {getInitials(profile.username)}
           </div>
-
-          {profile.bio && (
-            <div style={{ padding: "16px 22px", borderBottom: "1.5px solid rgba(26,23,38,.12)" }}>
-              <div style={{ fontWeight: 700, color: "var(--ink)" }}>{profile.bio}</div>
-            </div>
-          )}
-
-          {isSelf && profile.email && (
-            <div style={{ padding: "16px 22px", borderBottom: "1.5px solid rgba(26,23,38,.12)" }}>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--ink-soft)", marginBottom: 4 }}>
-                Email
-              </div>
-              <div style={{ fontWeight: 700, wordBreak: "break-all", color: "var(--ink)" }}>{profile.email}</div>
-            </div>
-          )}
-
-          <div className="profile-content">
-            <div className="actions-card">
-              <h2 className="actions-title">Azioni profilo</h2>
-              <div className="actions-grid">
-                <button className="btn btn-primary btn-action" onClick={() => navigate(`/users/${creatorId}/quizzes`)}>
-                  Vedi Quiz
-                </button>
-
-                {isSelf ? (
-                  <button className="btn btn-action btn-secondary" onClick={() => navigate("/settings")}>
-                    Impostazioni account
-                  </button>
-                ) : renderFriendshipActions()}
-              </div>
-
-              {actionMsg && (
-                <div style={{ marginTop: 12, fontSize: 13, color: "var(--ink-soft)" }}>
-                  {actionMsg}
-                </div>
-              )}
-            </div>
+          <div>
+            <h2 className="font-display font-extrabold text-2xl leading-tight">{profile.username}</h2>
+            <p className="text-sm text-ink-soft">{isSelf ? "Il tuo profilo" : "Profilo pubblico"}</p>
           </div>
         </div>
-      </div>
+
+        {/* Bio */}
+        {profile.bio && (
+          <div className="px-6 py-4 border-b-2 border-ink/10">
+            <div className="font-semibold">{profile.bio}</div>
+          </div>
+        )}
+
+        {/* Email (solo self) */}
+        {isSelf && profile.email && (
+          <div className="px-6 py-4 border-b-2 border-ink/10">
+            <div className="text-xs font-mono font-bold uppercase tracking-wider text-ink-soft mb-1">Email</div>
+            <div className="font-bold break-all">{profile.email}</div>
+          </div>
+        )}
+
+        {/* Azioni */}
+        <div className="p-6">
+          <h2 className="font-display font-extrabold text-lg mb-4">Azioni profilo</h2>
+          <div className="flex gap-3 flex-wrap">
+            <Button onClick={() => navigate(`/users/${creatorId}/quizzes`)}>Vedi Quiz</Button>
+            {isSelf ? (
+              <Button variant="secondary" onClick={() => navigate("/settings")}>Impostazioni account</Button>
+            ) : renderFriendshipActions()}
+          </div>
+          {actionMsg && <p className="mt-3 text-sm text-ink-soft">{actionMsg}</p>}
+        </div>
+      </Card>
     </div>
   );
 }

@@ -3,21 +3,20 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { getQuizById } from "../services/QuizService";
 import { getLeaderboard, getMyAttempts } from "../services/QuizAttemptService";
 import { getProfileByUserId } from "../services/UserService";
-import { getCurrentUser } from "../services/CommonService";
+import { useAuth } from "../auth/AuthContext";
+import { Button, Card, Chip, Spinner } from "../components/ui";
 
 const DIFFICULTY_LABEL = { easy: "Facile", medium: "Medio", hard: "Difficile" };
+const POS_ICON = ["🥇", "🥈", "🥉"];
 
 const formatDate = (d) =>
-  new Date(d).toLocaleDateString("it-IT", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-
+  new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
 const getInitials = (s) => (s ? s.slice(0, 2).toUpperCase() : "?");
 
 export default function QuizDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const me = getCurrentUser();
+  const { user: me } = useAuth();
 
   const [quiz, setQuiz] = useState(null);
   const [creatorUsername, setCreatorUsername] = useState(null);
@@ -28,25 +27,19 @@ export default function QuizDetailPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      setLoading(true);
-      setError(null);
+      setLoading(true); setError(null);
       try {
         const quizData = await getQuizById(id);
-
         if (quizData?.generating || quizData?.status === "generating") {
           setError("Quiz ancora in generazione. Riprova tra qualche secondo.");
-          setQuiz(null);
           return;
         }
         if (quizData?.status === "failed" || quizData?.error) {
           setError(quizData.error || "Quiz non disponibile.");
-          setQuiz(null);
           return;
         }
-
         setQuiz(quizData);
 
-        // Risolvi username del creatore: campo diretto, o fallback via userId per i quiz vecchi
         let username = quizData.createdByUsername || null;
         if (!username && quizData.createdBy) {
           const profile = await getProfileByUserId(quizData.createdBy).catch(() => null);
@@ -54,7 +47,6 @@ export default function QuizDetailPage() {
         }
         setCreatorUsername(username);
 
-        // Leaderboard e tentativo personale in parallelo (best-effort)
         const [lb, attempt] = await Promise.allSettled([
           getLeaderboard(id),
           getMyAttempts(id),
@@ -72,10 +64,10 @@ export default function QuizDetailPage() {
 
   if (loading) {
     return (
-      <div className="quiz-list-container">
-        <div className="loading-state">
-          <div className="loading-spinner" />
-          <p className="loading-text">Caricamento quiz...</p>
+      <div className="max-w-4xl mx-auto px-6 py-20">
+        <div className="flex flex-col items-center gap-3">
+          <Spinner />
+          <p className="text-ink-soft">Caricamento quiz...</p>
         </div>
       </div>
     );
@@ -83,181 +75,120 @@ export default function QuizDetailPage() {
 
   if (error || !quiz) {
     return (
-      <div className="quiz-list-container">
-        <div className="error-state">
-          <div className="error-title">{error || "Quiz non trovato"}</div>
-          <Link to="/quizzes" className="btn btn-primary" style={{ marginTop: 16 }}>
-            Torna ai Quiz
-          </Link>
-        </div>
+      <div className="max-w-4xl mx-auto px-6 py-10">
+        <Card className="p-8 text-center">
+          <div className="font-display font-extrabold text-xl mb-4">{error || "Quiz non trovato"}</div>
+          <Button as={Link} to="/quizzes">Torna ai Quiz</Button>
+        </Card>
       </div>
     );
   }
 
   const topLeaderboard = leaderboard.slice(0, 5);
-  const myAttemptScore = myAttempt ? myAttempt.score : null;
   const myAttemptTotal = myAttempt ? myAttempt.answers.length : null;
 
   return (
-    <div className="quiz-list-container" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-5">
+
       {/* Header */}
-      <div style={{
-        background: "#fff", border: "2.5px solid var(--ink)",
-        borderRadius: "var(--radius-lg,16px)", boxShadow: "var(--shadow-hard-lg)",
-        overflow: "hidden",
-      }}>
-        <div style={{ height: 10, background: "var(--violet,#7c5cff)" }} />
-        <div style={{ padding: "24px 28px" }}>
-          <div style={{
-            display: "inline-block", fontFamily: "'JetBrains Mono',monospace",
-            fontSize: 10, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase",
-            background: "var(--lime,#d6f25b)", border: "2px solid var(--ink)",
-            borderRadius: 100, padding: "3px 10px", marginBottom: 14,
-          }}>
-            Quiz AI
-          </div>
-          <h1 style={{
-            fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800,
-            fontSize: "clamp(1.8rem, 4vw, 2.6rem)", lineHeight: 1.1,
-            letterSpacing: "-.02em", margin: "0 0 12px",
-          }}>
+      <Card shadow="lg">
+        <div className="h-2.5 bg-violet" />
+        <div className="p-7">
+          <Chip tone="lime" className="mb-3.5">Quiz AI</Chip>
+          <h1 className="font-display font-extrabold text-3xl md:text-4xl leading-tight tracking-tight mb-3">
             {quiz.title}
           </h1>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 18 }}>
-            <span className="quiz-meta-chip">{DIFFICULTY_LABEL[quiz.difficulty] || quiz.difficulty}</span>
-            <span className="quiz-meta-chip">{quiz.numQuestions} domande</span>
-            <span className="quiz-meta-chip">{formatDate(quiz.createdAt)}</span>
+
+          <div className="flex flex-wrap gap-2.5 mb-4">
+            <Chip mono={false}>{DIFFICULTY_LABEL[quiz.difficulty] || quiz.difficulty}</Chip>
+            <Chip mono={false}>{quiz.numQuestions} domande</Chip>
+            <Chip mono={false}>{formatDate(quiz.createdAt)}</Chip>
           </div>
+
           {quiz.tags?.length > 0 && (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
-              {quiz.tags.map((t) => (
-                <span key={t} style={{
-                  fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700,
-                  background: "var(--cream,#f3f0e7)", border: "1.5px solid var(--ink)",
-                  borderRadius: 100, padding: "3px 9px",
-                }}>{t}</span>
-              ))}
+            <div className="flex flex-wrap gap-1.5 mb-5">
+              {quiz.tags.map((t) => <Chip key={t} size="sm">{t}</Chip>)}
             </div>
           )}
 
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate(`/quiz/${id}`)}
-            style={{ fontSize: 17, padding: "14px 26px" }}
-          >
+          <Button size="lg" onClick={() => navigate(`/quiz/${id}`)}>
             Gioca ora
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      {/* Card creatore */}
+      {/* Creatore */}
       {creatorUsername && (
-        <Link
-          to={`/profile/${creatorUsername}`}
-          style={{
-            display: "flex", alignItems: "center", gap: 14,
-            padding: "14px 18px", background: "#fff",
-            border: "2.5px solid var(--ink)", borderRadius: "var(--radius,12px)",
-            boxShadow: "3px 3px 0 0 var(--ink)", textDecoration: "none",
-            color: "var(--ink)",
-          }}
-        >
-          <div style={{
-            width: 44, height: 44, borderRadius: "50%",
-            background: "var(--sky,#a3c9ff)", border: "2.5px solid var(--ink)",
-            display: "grid", placeItems: "center",
-            fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16,
-          }}>
-            {getInitials(creatorUsername)}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>Creato da</div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{creatorUsername}</div>
-          </div>
-          <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700 }}>
-            Vai al profilo →
-          </span>
+        <Link to={`/profile/${creatorUsername}`} className="no-underline">
+          <Card className="flex items-center gap-3.5 p-3.5 hover:bg-cream">
+            <div className="w-11 h-11 rounded-full bg-sky border-3 border-ink grid place-items-center font-display font-extrabold text-base shrink-0">
+              {getInitials(creatorUsername)}
+            </div>
+            <div className="flex-1">
+              <div className="text-xs text-ink-soft">Creato da</div>
+              <div className="font-extrabold text-base">{creatorUsername}</div>
+            </div>
+            <span className="font-mono text-xs font-bold">Vai al profilo →</span>
+          </Card>
         </Link>
       )}
 
       {/* Tuo tentativo */}
       {myAttempt && (
-        <div style={{
-          padding: "16px 20px", background: "var(--butter,#fff3a3)",
-          border: "2.5px solid var(--ink)", borderRadius: "var(--radius,12px)",
-          boxShadow: "3px 3px 0 0 var(--ink)",
-          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
-          flexWrap: "wrap",
-        }}>
+        <Card bg="bg-butter" className="p-5 flex justify-between items-center gap-3 flex-wrap">
           <div>
-            <div style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 700 }}>Il tuo ultimo tentativo</div>
-            <div style={{ fontWeight: 800, fontSize: 18 }}>
-              {myAttemptScore} / {myAttemptTotal} corrette
+            <div className="text-xs text-ink-soft font-bold">Il tuo ultimo tentativo</div>
+            <div className="font-display font-extrabold text-lg">
+              {myAttempt.score} / {myAttemptTotal} corrette
             </div>
-            <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>
-              {formatDate(myAttempt.completedAt)}
-            </div>
+            <div className="text-xs text-ink-soft">{formatDate(myAttempt.completedAt)}</div>
           </div>
-          <Link to={`/review/${id}`} className="btn btn-outline">Rivedi risposte</Link>
-        </div>
+          <Button as={Link} to={`/review/${id}`} variant="outline">Rivedi risposte</Button>
+        </Card>
       )}
 
-      {/* Leaderboard accorciata */}
-      <div style={{
-        background: "#fff", border: "2.5px solid var(--ink)",
-        borderRadius: "var(--radius,12px)", boxShadow: "3px 3px 0 0 var(--ink)",
-        overflow: "hidden",
-      }}>
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "14px 18px", borderBottom: "2px solid var(--ink)",
-        }}>
-          <h3 style={{ margin: 0, fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 18, fontWeight: 800 }}>
-            🏆 Classifica
-          </h3>
+      {/* Leaderboard */}
+      <Card>
+        <div className="flex justify-between items-center px-5 py-3.5 border-b-2 border-ink">
+          <h3 className="font-display font-extrabold text-lg m-0">🏆 Classifica</h3>
           {leaderboard.length > 5 && (
-            <Link to={`/leaderboard/${id}`} style={{
-              fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700,
-              color: "var(--ink)", textDecoration: "underline",
-            }}>
+            <Link to={`/leaderboard/${id}`} className="font-mono text-xs font-bold underline">
               Vedi tutta →
             </Link>
           )}
         </div>
+
         {topLeaderboard.length === 0 ? (
-          <div style={{ padding: "20px", color: "var(--ink-soft)", textAlign: "center" }}>
+          <div className="p-5 text-ink-soft text-center">
             Nessuno ha ancora completato questo quiz. Sii il primo!
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="flex flex-col">
             {topLeaderboard.map((entry, idx) => {
               const isMe = me && entry.username === me.username;
               return (
                 <div
                   key={idx}
-                  style={{
-                    display: "grid", gridTemplateColumns: "40px 1fr auto",
-                    alignItems: "center", gap: 12,
-                    padding: "10px 18px",
-                    background: isMe ? "var(--lime,#d6f25b)" : "transparent",
-                    borderBottom: idx < topLeaderboard.length - 1 ? "1px solid rgba(26,23,38,.1)" : "none",
-                  }}
+                  className={[
+                    "grid grid-cols-[40px_1fr_auto] items-center gap-3 px-5 py-2.5",
+                    isMe ? "bg-lime" : "",
+                    idx < topLeaderboard.length - 1 ? "border-b border-ink/10" : "",
+                  ].join(" ")}
                 >
-                  <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16 }}>
-                    {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
+                  <span className="font-display font-extrabold text-base">
+                    {POS_ICON[idx] || `#${idx + 1}`}
                   </span>
-                  <span style={{ fontWeight: 700 }}>
-                    {entry.username}{isMe && <small style={{ marginLeft: 6, color: "var(--ink-soft)" }}>(tu)</small>}
+                  <span className="font-bold">
+                    {entry.username}
+                    {isMe && <small className="ml-1.5 text-ink-soft">(tu)</small>}
                   </span>
-                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 800, fontSize: 16 }}>
-                    {entry.score}
-                  </span>
+                  <span className="font-mono font-extrabold text-base">{entry.score}</span>
                 </div>
               );
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

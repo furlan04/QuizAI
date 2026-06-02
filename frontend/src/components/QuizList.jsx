@@ -1,11 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
-import { getQuizzes } from "../services/QuizService";
-
 import { Link } from "react-router-dom";
+import { getQuizzes } from "../services/QuizService";
+import { Button, Card, Chip, Spinner } from "./ui";
 
-const COVER_CLASSES = [
-  "quiz-cover-0", "quiz-cover-1", "quiz-cover-2",
-  "quiz-cover-3", "quiz-cover-4", "quiz-cover-5",
+const COVERS = [
+  "bg-violet",
+  "bg-coral",
+  "bg-lime",
+  "bg-sky",
+  "bg-butter",
+  "bg-mint",
 ];
 
 const DIFFICULTY_LABEL = { easy: "Facile", medium: "Medio", hard: "Difficile" };
@@ -19,18 +23,17 @@ const DIFFICULTIES = [
 /**
  * Lista di quiz pronti.
  * Props:
- *   - creatorId:    se valorizzato, mostra solo i quiz creati da quell'utente (filtro client-side)
+ *   - creatorId:    se valorizzato, filtra client-side per quel creatore
  *   - searchable:   se true (default), mostra la barra di ricerca/filtri
  *   - initialTopic: valore iniziale del topic
  */
 export default function QuizList({ creatorId = null, searchable = true, initialTopic = "" }) {
-  const [topic, setTopic]           = useState(initialTopic);
+  const [topic, setTopic] = useState(initialTopic);
   const [debouncedTopic, setDebouncedTopic] = useState(initialTopic);
   const [difficulty, setDifficulty] = useState("");
-  const [quizzes, setQuizzes]       = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Debounce della ricerca topic per evitare richieste a ogni tasto
   useEffect(() => {
     const t = setTimeout(() => setDebouncedTopic(topic.trim()), 300);
     return () => clearTimeout(t);
@@ -49,11 +52,11 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
         let items = data?.items || [];
         if (creatorId) items = items.filter((q) => q.createdBy === creatorId);
         setQuizzes(items);
-      } catch (error) {
-        console.error("Errore nel caricamento dei quiz:", error);
+      } catch {
         setQuizzes([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchQuizzes();
   }, [creatorId, filter]);
@@ -61,103 +64,90 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
   return (
     <div>
       {searchable && (
-        <div style={{
-          display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20,
-          padding: "14px 16px", background: "#fff",
-          border: "2.5px solid var(--ink)", borderRadius: "var(--radius,12px)",
-          boxShadow: "3px 3px 0 0 var(--ink)",
-        }}>
+        <Card className="flex flex-wrap gap-2.5 p-3.5 mb-5">
           <input
             type="search"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Cerca per argomento..."
-            style={{
-              flex: "1 1 220px", minWidth: 200,
-              fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 700, fontSize: 16,
-              padding: "10px 14px", border: "2px solid var(--ink)",
-              borderRadius: 10, background: "var(--cream,#f3f0e7)",
-            }}
+            className="flex-1 min-w-[200px] font-display font-bold text-base
+                       border-2 border-ink rounded-sm bg-cream
+                       px-3.5 py-2.5
+                       focus:outline-none focus:border-violet focus:bg-white"
           />
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value)}
-            style={{
-              fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 700, fontSize: 15,
-              padding: "10px 14px", border: "2px solid var(--ink)",
-              borderRadius: 10, background: "#fff", cursor: "pointer",
-            }}
+            className="font-display font-bold text-sm
+                       border-2 border-ink rounded-sm bg-white
+                       px-3.5 py-2.5 cursor-pointer
+                       focus:outline-none focus:border-violet"
           >
             {DIFFICULTIES.map((d) => (
               <option key={d.value} value={d.value}>{d.label}</option>
             ))}
           </select>
-        </div>
+        </Card>
       )}
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner" />
-          <p className="loading-text">Caricamento quiz...</p>
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Spinner />
+          <p className="text-ink-soft">Caricamento quiz...</p>
         </div>
       ) : quizzes.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-title">Nessun quiz trovato</div>
-          <p className="empty-message">
-            {topic || difficulty ? "Prova a modificare i filtri." : "Non ci sono quiz da mostrare al momento."}
+        <Card className="text-center p-10">
+          <div className="font-display font-extrabold text-xl mb-2">Nessun quiz trovato</div>
+          <p className="text-ink-soft">
+            {topic || difficulty ? "Prova a modificare i filtri." : "Non ci sono quiz al momento."}
           </p>
-        </div>
+        </Card>
       ) : (
-        <div className="quiz-grid">
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {quizzes.map((quiz, idx) => (
-            <article key={quiz.id} className="quiz-card">
+            <Card key={quiz.id} className="flex flex-col">
               <Link
                 to={`/quizzes/${quiz.id}`}
-                className={`quiz-card-header ${COVER_CLASSES[idx % COVER_CLASSES.length]}`}
-                style={{ textDecoration: "none", display: "block" }}
+                className={`block h-24 relative no-underline ${COVERS[idx % COVERS.length]}`}
+                style={{ backgroundImage: "repeating-linear-gradient(45deg, rgba(0,0,0,.08) 0 12px, transparent 12px 28px)" }}
               >
-                <span className="quiz-ai-badge">AI</span>
+                <div className="absolute top-3 left-3">
+                  <Chip tone="ink">AI</Chip>
+                </div>
               </Link>
 
-              <div className="quiz-card-content">
-                <Link to={`/quizzes/${quiz.id}`} style={{ textDecoration: "none", color: "var(--ink)" }}>
-                  <h3 className="quiz-title">{quiz.title}</h3>
+              <div className="p-5 flex-1">
+                <Link to={`/quizzes/${quiz.id}`} className="no-underline text-ink">
+                  <h3 className="font-display font-extrabold text-lg leading-tight hover:underline">
+                    {quiz.title}
+                  </h3>
                 </Link>
-                <p className="quiz-description">
+                <p className="text-xs text-ink-soft mt-1.5">
                   {DIFFICULTY_LABEL[quiz.difficulty] || quiz.difficulty} · {quiz.numQuestions} domande
                 </p>
                 {quiz.createdByUsername && (
-                  <div style={{ marginTop: 6 }}>
-                    <Link
-                      to={`/profile/${quiz.createdByUsername}`}
-                      style={{
-                        fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700,
-                        color: "var(--ink-soft)", textDecoration: "none",
-                      }}
-                    >
-                      @{quiz.createdByUsername}
-                    </Link>
-                  </div>
+                  <Link
+                    to={`/profile/${quiz.createdByUsername}`}
+                    className="inline-block mt-2 font-mono text-xs font-bold text-ink-soft hover:text-ink no-underline"
+                  >
+                    @{quiz.createdByUsername}
+                  </Link>
                 )}
                 {quiz.tags?.length > 0 && (
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+                  <div className="flex flex-wrap gap-1.5 mt-3">
                     {quiz.tags.slice(0, 3).map((t) => (
-                      <span key={t} style={{
-                        fontFamily: "'JetBrains Mono',monospace", fontSize: 10, fontWeight: 700,
-                        background: "var(--cream,#f3f0e7)", border: "1.5px solid var(--ink)",
-                        borderRadius: 100, padding: "2px 8px",
-                      }}>{t}</span>
+                      <Chip key={t} size="sm">{t}</Chip>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="quiz-card-actions">
-                <Link to={`/quizzes/${quiz.id}`} className="btn btn-primary btn-play">
+              <div className="px-5 pb-5">
+                <Button as={Link} to={`/quizzes/${quiz.id}`} fullWidth>
                   Apri quiz
-                </Link>
+                </Button>
               </div>
-            </article>
+            </Card>
           ))}
         </div>
       )}
