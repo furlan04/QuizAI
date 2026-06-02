@@ -85,8 +85,8 @@ export default function QuizCreatePage() {
         setPhase("failed");
         return;
       }
-      // Pronto → vai ai propri quiz
-      navigate("/quizzes");
+      // Pronto → apri il dettaglio del quiz appena creato
+      navigate(`/quizzes/${quizId}`);
     };
     poll();
   };
