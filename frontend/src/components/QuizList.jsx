@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { getQuizzes } from "../services/QuizService";
-import { getAuthToken } from "../services/CommonService";
+
 import { Link } from "react-router-dom";
 
 const COVER_CLASSES = [
@@ -44,10 +44,8 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
   useEffect(() => {
     const fetchQuizzes = async () => {
       setLoading(true);
-      const token = getAuthToken();
-      if (!token) { setQuizzes([]); setLoading(false); return; }
       try {
-        const data = await getQuizzes(token, filter);
+        const data = await getQuizzes(filter);
         let items = data?.items || [];
         if (creatorId) items = items.filter((q) => q.createdBy === creatorId);
         setQuizzes(items);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateQuiz, getQuizById } from "../services/QuizService";
-import { getAuthToken } from "../services/CommonService";
+
 
 const DIFFICULTIES = [
   { value: "easy",   label: "Facile" },
@@ -43,17 +43,11 @@ export default function QuizCreatePage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    const token = getAuthToken();
-    if (!token) {
-      setIsError(true);
-      setMessage("Devi effettuare il login per creare un quiz.");
-      return;
-    }
     setMessage("");
     setIsError(false);
     setPhase("submitting");
 
-    const result = await generateQuiz(topic, difficulty, Number(numQuestions), token);
+    const result = await generateQuiz(topic, difficulty, Number(numQuestions));
 
     if (!result.success || !result.quizId) {
       setIsError(true);
@@ -74,7 +68,7 @@ export default function QuizCreatePage() {
         setPhase("failed");
         return;
       }
-      const data = await getQuizById(quizId, getAuthToken());
+      const data = await getQuizById(quizId);
       if (data?.generating || data?.status === "generating") {
         pollRef.current = setTimeout(poll, 2500);
         return;

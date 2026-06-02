@@ -11,4 +11,7 @@ public interface IQuizRepository
     Task UpdateFromGeneratedAsync(
         string id, string status, List<Question>? questions,
         List<string>? tags, string? error);
+
+    /// <summary>Batch lookup id → title. Gli id non trovati non sono nel dizionario.</summary>
+    Task<Dictionary<string, string>> GetTitlesByIdsAsync(IEnumerable<string> ids);
 }

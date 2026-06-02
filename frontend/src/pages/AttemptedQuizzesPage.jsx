@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getUserSettings } from "../services/UserService";
-import { getAuthToken } from "../services/CommonService";
+
 
 export default function AttemptedQuizPage() {
   const [attempts, setAttempts] = useState([]);
@@ -11,7 +11,7 @@ export default function AttemptedQuizPage() {
     const fetch = async () => {
       setLoading(true);
       try {
-        const profile = await getUserSettings(getAuthToken()); // quiz-service /users/me
+        const profile = await getUserSettings(); // quiz-service /users/me
         setAttempts(profile?.attempts || []);
       } catch {
         setAttempts([]);
@@ -42,7 +42,7 @@ export default function AttemptedQuizPage() {
         <div className="header-content">
           <div className="header-text">
             <h1 className="page-title">Quiz che hai provato</h1>
-            <p className="page-subtitle">Rivedi i tuoi tentativi e rigioca</p>
+            <p className="page-subtitle">Apri un quiz per vederne il dettaglio</p>
           </div>
         </div>
       </div>
@@ -57,19 +57,25 @@ export default function AttemptedQuizPage() {
         <div className="quiz-grid">
           {attempts.map((a) => (
             <article key={a.quizId} className="quiz-card">
-              <div className="quiz-card-header quiz-cover-2">
+              <Link
+                to={`/quizzes/${a.quizId}`}
+                className="quiz-card-header quiz-cover-2"
+                style={{ textDecoration: "none", display: "block" }}
+              >
                 <span className="quiz-ai-badge">{a.score} pt</span>
-              </div>
+              </Link>
+
               <div className="quiz-card-content">
-                <h3 className="quiz-title">Quiz</h3>
+                <Link to={`/quizzes/${a.quizId}`} style={{ textDecoration: "none", color: "var(--ink)" }}>
+                  <h3 className="quiz-title">{a.quizTitle || "Quiz"}</h3>
+                </Link>
                 <p className="quiz-description">Completato il {formatDate(a.completedAt)}</p>
               </div>
+
               <div className="quiz-card-actions">
-                <Link to={`/quiz/${a.quizId}`} className="btn btn-primary btn-play">Rigioca</Link>
-                <div className="quiz-secondary-actions">
-                  <Link to={`/review/${a.quizId}`} className="btn btn-outline btn-secondary">Rivedi</Link>
-                  <Link to={`/leaderboard/${a.quizId}`} className="btn btn-outline btn-secondary">Classifica</Link>
-                </div>
+                <Link to={`/quizzes/${a.quizId}`} className="btn btn-primary btn-play">
+                  Apri quiz
+                </Link>
               </div>
             </article>
           ))}

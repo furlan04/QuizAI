@@ -7,7 +7,7 @@ import {
   removeFriendship,
   getFriendshipStatus,
 } from "../services/FriendshipService";
-import { getAuthToken, getCurrentUser } from "../services/CommonService";
+import { getCurrentUser } from "../services/CommonService";
 import "../styles/settings.css";
 
 const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
@@ -32,7 +32,7 @@ export default function ProfilePage() {
 
   const refreshFriendship = useCallback(async (username) => {
     if (isSelf || !username) return;
-    const status = await getFriendshipStatus(username, getAuthToken());
+    const status = await getFriendshipStatus(username);
     if (status && status.status) setFriendship(status);
   }, [isSelf]);
 
@@ -41,8 +41,8 @@ export default function ProfilePage() {
       setLoading(true);
       try {
         const data = isSelf
-          ? await getUserProfile(getAuthToken())
-          : await getSpecificUserProfile(usernameParam, getAuthToken());
+          ? await getUserProfile()
+          : await getSpecificUserProfile(usernameParam);
         setProfile(data);
         setError(null);
         if (!isSelf) await refreshFriendship(data.username);
@@ -76,19 +76,19 @@ export default function ProfilePage() {
   };
 
   const sendRequest = () => runAction(
-    () => sendFriendshipRequest(profile.username, getAuthToken()),
+    () => sendFriendshipRequest(profile.username),
     "Richiesta inviata"
   );
   const acceptRequest = () => runAction(
-    () => respondFriendshipRequest(friendship.friendshipId, "accept", getAuthToken()),
+    () => respondFriendshipRequest(friendship.friendshipId, "accept"),
     "Richiesta accettata"
   );
   const rejectRequest = () => runAction(
-    () => respondFriendshipRequest(friendship.friendshipId, "reject", getAuthToken()),
+    () => respondFriendshipRequest(friendship.friendshipId, "reject"),
     "Richiesta rifiutata"
   );
   const removeFriend = () => runAction(
-    () => removeFriendship(profile.username, getAuthToken()),
+    () => removeFriendship(profile.username),
     "Amicizia rimossa"
   );
 

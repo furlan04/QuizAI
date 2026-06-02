@@ -6,7 +6,10 @@
     <RootNamespace>UserService</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.4.4" />
+    <!-- Pin di transitive vulnerabili (advisory upstream non risolti in MongoDB.Driver) -->
+    <PackageReference Include="Snappier" Version="1.3.0" />
+    <PackageReference Include="SharpCompress" Version="0.41.0" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />

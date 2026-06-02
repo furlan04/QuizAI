@@ -1,7 +1,6 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
-import { isAuthenticated, logout } from "./services";
+import { AuthProvider, useAuth } from "./auth/AuthContext";
 import {
   RegisterPage,
   LoginPage,
@@ -30,25 +29,29 @@ import "./styles/App.css";
 import AttemptedQuizPage from "./pages/AttemptedQuizzesPage";
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
+  return (
+    <AuthProvider>
+      <Router>
+        <AppShell />
+      </Router>
+    </AuthProvider>
+  );
+}
 
-  const handleLogout = () => {
-    logout();
-    setIsLoggedIn(false);
-  };
+function AppShell() {
+  const { isAuthenticated: isLoggedIn, logout } = useAuth();
 
-  return (      
-    <Router>
-      <div className={`app-container ${isLoggedIn ? 'authenticated' : 'public'}`}>
-        <Navbar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
-        <main className="main-content">
-          <Routes>
+  return (
+    <div className={`app-container ${isLoggedIn ? 'authenticated' : 'public'}`}>
+      <Navbar />
+      <main className="main-content">
+        <Routes>
         {/* Rotta home - reindirizza ai quiz se loggato */}
         <Route 
           path="/" 
           element={
             isLoggedIn ? (
-              <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <ProtectedRoute>
                 <FYPage />
               </ProtectedRoute>
             ) : (
@@ -61,7 +64,7 @@ export default function App() {
         <Route 
           path="/register" 
           element={
-            <PublicRoute isLoggedIn={isLoggedIn}>
+            <PublicRoute>
               <RegisterPage />
             </PublicRoute>
           } 
@@ -69,8 +72,8 @@ export default function App() {
         <Route
           path="/login"
           element={
-            <PublicRoute isLoggedIn={isLoggedIn}>
-              <LoginPage setIsLoggedIn={setIsLoggedIn} />
+            <PublicRoute>
+              <LoginPage />
             </PublicRoute>
           }
         />
@@ -82,7 +85,7 @@ export default function App() {
         <Route 
           path="/quizzes" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizListPage />
             </ProtectedRoute>
           } 
@@ -91,7 +94,7 @@ export default function App() {
         <Route
           path="/users/:userId/quizzes"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizListPage />
             </ProtectedRoute>
           }
@@ -99,7 +102,7 @@ export default function App() {
         <Route
           path="/quizzes/create"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizCreatePage/>
             </ProtectedRoute>
           }
@@ -108,7 +111,7 @@ export default function App() {
         <Route
           path="/quizzes/:id"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizDetailPage />
             </ProtectedRoute>
           }
@@ -116,7 +119,7 @@ export default function App() {
         <Route
           path="/quiz/:id"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizPlayPage />
             </ProtectedRoute>
           } 
@@ -126,7 +129,7 @@ export default function App() {
         <Route 
           path="/leaderboard/:quizId" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <LeaderboardPage />
             </ProtectedRoute>
           } 
@@ -136,7 +139,7 @@ export default function App() {
         <Route 
           path="/attempts/:quizId" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizAttemptsPage />
             </ProtectedRoute>
           } 
@@ -146,7 +149,7 @@ export default function App() {
         <Route 
           path="/review/:attemptId" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <QuizReviewPage />
             </ProtectedRoute>
           } 
@@ -156,7 +159,7 @@ export default function App() {
         <Route 
           path="/friendship/requests" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <FriendshipRequestsPage />
             </ProtectedRoute>
           } 
@@ -164,7 +167,7 @@ export default function App() {
         <Route 
           path="/friendship/friends" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <FriendsListPage />
             </ProtectedRoute>
           } 
@@ -173,7 +176,7 @@ export default function App() {
         <Route 
           path="/settings" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <SettingsPage />
             </ProtectedRoute>
           } 
@@ -182,7 +185,7 @@ export default function App() {
         <Route 
           path="/profile/:userId" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <ProfilePage />
             </ProtectedRoute>
           } 
@@ -191,7 +194,7 @@ export default function App() {
         <Route 
           path="/profile/" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <ProfilePage />
             </ProtectedRoute>
           } 
@@ -200,7 +203,7 @@ export default function App() {
         <Route 
           path="/liked-quizzes" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <LikedQuizzesPage />
             </ProtectedRoute>
           } 
@@ -208,14 +211,13 @@ export default function App() {
                 <Route 
           path="/attempted-quizzes" 
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <AttemptedQuizPage />
             </ProtectedRoute>
           } 
         />
-          </Routes>
-        </main>
-      </div>
-    </Router>  
+        </Routes>
+      </main>
+    </div>
   );
 }

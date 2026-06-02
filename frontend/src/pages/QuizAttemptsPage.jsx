@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getMyAttempts } from "../services/QuizAttemptService";
-import { getAuthToken } from "../services/CommonService";
+
 
 export default function QuizAttemptsPage() {
   const [attempt, setAttempt] = useState(null);
@@ -14,7 +14,7 @@ export default function QuizAttemptsPage() {
       setLoading(true);
       setNotFound(false);
       try {
-        const data = await getMyAttempts(quizId, getAuthToken());
+        const data = await getMyAttempts(quizId);
         if (data && data.answers) setAttempt(data);
         else setNotFound(true);
       } catch {

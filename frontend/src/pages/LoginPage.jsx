@@ -4,7 +4,10 @@ import { login, googleLogin, resendConfirmation } from "../services/AuthService"
 import { AuthErrorCodes } from "../services/AuthErrorCodes";
 import { getConfig } from "../config/config";
 
-export default function LoginPage({ setIsLoggedIn }) {
+import { useAuth } from "../auth/AuthContext";
+
+export default function LoginPage() {
+  const { login: setAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState(null);
@@ -40,8 +43,7 @@ export default function LoginPage({ setIsLoggedIn }) {
       try {
         const res = await googleLogin(response.credential);
         if (res.success && res.token) {
-          sessionStorage.setItem("jwt", res.token);
-          if (setIsLoggedIn) setIsLoggedIn(true);
+          setAuth(res.token);
           navigate("/");
         } else {
           setError(res.message || "Login Google fallito");
@@ -81,9 +83,8 @@ export default function LoginPage({ setIsLoggedIn }) {
       const result = await login(email, password);
 
       if (result.success && result.token) {
-        sessionStorage.setItem("jwt", result.token);
         setToken(result.token);
-        if (setIsLoggedIn) setIsLoggedIn(true);
+        setAuth(result.token);
         navigate("/");
       } else {
         setError(result.message || "Errore login");

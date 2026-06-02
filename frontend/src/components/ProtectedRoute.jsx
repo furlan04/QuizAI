@@ -1,12 +1,9 @@
-// src/components/ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
-export default function ProtectedRoute({ children, isLoggedIn }) {
-  // Se l'utente non è loggato, reindirizza alla pagina di login
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Se è loggato, mostra il componente figlio
+/** Permette il rendering solo a utenti autenticati, altrimenti redirect a /login. */
+export default function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 }

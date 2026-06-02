@@ -11,7 +11,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.3" />
-    <PackageReference Include="MailKit" Version="4.8.0" />
+    <PackageReference Include="MailKit" Version="4.14.0" />
+    <!-- Pin di MimeKit per chiudere l'advisory transitive -->
+    <PackageReference Include="MimeKit" Version="4.14.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.68.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
   </ItemGroup>

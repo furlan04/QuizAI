@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { getQuizById } from "../services/QuizService";
 import { getLeaderboard, getMyAttempts } from "../services/QuizAttemptService";
 import { getProfileByUserId } from "../services/UserService";
-import { getAuthToken, getCurrentUser } from "../services/CommonService";
+import { getCurrentUser } from "../services/CommonService";
 
 const DIFFICULTY_LABEL = { easy: "Facile", medium: "Medio", hard: "Difficile" };
 
@@ -31,8 +31,7 @@ export default function QuizDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const token = getAuthToken();
-        const quizData = await getQuizById(id, token);
+        const quizData = await getQuizById(id);
 
         if (quizData?.generating || quizData?.status === "generating") {
           setError("Quiz ancora in generazione. Riprova tra qualche secondo.");
@@ -50,15 +49,15 @@ export default function QuizDetailPage() {
         // Risolvi username del creatore: campo diretto, o fallback via userId per i quiz vecchi
         let username = quizData.createdByUsername || null;
         if (!username && quizData.createdBy) {
-          const profile = await getProfileByUserId(quizData.createdBy, token).catch(() => null);
+          const profile = await getProfileByUserId(quizData.createdBy).catch(() => null);
           if (profile?.username) username = profile.username;
         }
         setCreatorUsername(username);
 
         // Leaderboard e tentativo personale in parallelo (best-effort)
         const [lb, attempt] = await Promise.allSettled([
-          getLeaderboard(id, token),
-          getMyAttempts(id, token),
+          getLeaderboard(id),
+          getMyAttempts(id),
         ]);
         if (lb.status === "fulfilled" && Array.isArray(lb.value)) setLeaderboard(lb.value);
         if (attempt.status === "fulfilled" && attempt.value?.answers) setMyAttempt(attempt.value);

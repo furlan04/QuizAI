@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getMyAttempts } from "../services/QuizAttemptService";
 import { getQuizById } from "../services/QuizService";
-import { getAuthToken } from "../services/CommonService";
+
 
 const LETTER = ["A", "B", "C", "D", "E", "F"];
 
@@ -18,10 +18,9 @@ export default function QuizReviewPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const token = getAuthToken();
         const [q, a] = await Promise.all([
-          getQuizById(quizId, token),
-          getMyAttempts(quizId, token),
+          getQuizById(quizId),
+          getMyAttempts(quizId),
         ]);
         if (!q?.questions) throw new Error("Quiz non disponibile");
         if (!a?.answers) throw new Error("Tentativo non trovato");

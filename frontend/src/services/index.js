@@ -1,16 +1,11 @@
-// src/services/index.js
-// File di esportazione centralizzato per tutti i servizi
-
-// Servizi principali
+// Riesporta centralizzati per import comodi
 export * from './AuthService';
+export * from './AuthErrorCodes';
 export * from './QuizService';
 export * from './QuizAttemptService';
 export * from './FriendshipService';
+export * from './ChallengeService';
 export * from './UserService';
 export * from './CommonService';
-export * from './LikeService';
-export * from './ChallengeService';
 
-// Servizi di utilità
-export { default as NotificationService } from './NotificationService';
-export { notify, NOTIFICATION_TYPES } from './NotificationService';
+export { default as NotificationService, notify, NOTIFICATION_TYPES } from './NotificationService';
