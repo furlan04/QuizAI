@@ -1,29 +1,31 @@
-import { useState } from "react";
+import { useState, useReducer } from "react";
 import { Link } from "react-router-dom";
 import { register } from "../services/AuthService";
+import { Brain, User, Mail, Lock, ShieldCheck, Info, Check, X, UserPlus } from "../components/ui/Icon";
+
+const calculatePasswordStrength = (pwd) => {
+  let strength = 0;
+  if (pwd.length >= 8) strength += 1;
+  if (/[A-Z]/.test(pwd)) strength += 1;
+  if (/[a-z]/.test(pwd)) strength += 1;
+  if (/[0-9]/.test(pwd)) strength += 1;
+  if (/[^A-Za-z0-9]/.test(pwd)) strength += 1;
+  return strength;
+};
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  // Campi del form raggruppati in un reducer.
+  const [form, setForm] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    username: "", email: "", password: "", confirmPassword: "",
+  });
+  const { username, email, password, confirmPassword } = form;
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const calculatePasswordStrength = (pwd) => {
-    let strength = 0;
-    if (pwd.length >= 8) strength += 1;
-    if (/[A-Z]/.test(pwd)) strength += 1;
-    if (/[a-z]/.test(pwd)) strength += 1;
-    if (/[0-9]/.test(pwd)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(pwd)) strength += 1;
-    return strength;
-  };
-
   const handlePasswordChange = (e) => {
     const pwd = e.target.value;
-    setPassword(pwd);
+    setForm({ password: pwd });
     setPasswordStrength(calculatePasswordStrength(pwd));
   };
 
@@ -54,10 +56,7 @@ export default function RegisterPage() {
       const result = await register(username, email, password);
       if (result.success) {
         setMessage(result.message || "Registrazione completata. Controlla la tua email per confermare l'account.");
-        setUsername("");
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
+        setForm({ username: "", email: "", password: "", confirmPassword: "" });
         setPasswordStrength(0);
       } else {
         setMessage(result.message || "Errore durante la registrazione");
@@ -87,7 +86,7 @@ export default function RegisterPage() {
           <div className="auth-header">
             <div className="auth-logo">
               <div className="brand-logo">
-                <span className="brand-icon">🧠</span>
+                <span className="brand-icon"><Brain size={22} /></span>
               </div>
               <span className="brand-text">AI Quiz</span>
             </div>
@@ -100,43 +99,43 @@ export default function RegisterPage() {
               <div className="form-group">
                 <label className="form-label">Username</label>
                 <div className="input-container">
-                  <div className="input-icon">👤</div>
+                  <div className="input-icon"><User size={18} /></div>
                   <input
                     type="text"
                     className="form-control"
                     placeholder="es. mario_rossi"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => setForm({ username: e.target.value })}
                     required
                   />
                 </div>
                 <div className="form-hint">
-                  💡 3-20 caratteri: lettere, numeri e underscore
+                  <Info size={14} /> 3-20 caratteri: lettere, numeri e underscore
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Email</label>
                 <div className="input-container">
-                  <div className="input-icon">📧</div>
+                  <div className="input-icon"><Mail size={18} /></div>
                   <input
                     type="email"
                     className="form-control"
                     placeholder="es. nome@dominio.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setForm({ email: e.target.value })}
                     required
                   />
                 </div>
                 <div className="form-hint">
-                  💡 Usa un'email valida
+                  <Info size={14} /> Usa un'email valida
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Password</label>
                 <div className="input-container">
-                  <div className="input-icon">🔒</div>
+                  <div className="input-icon"><Lock size={18} /></div>
                   <input
                     type="password"
                     className="form-control"
@@ -166,31 +165,31 @@ export default function RegisterPage() {
                   </div>
                 )}
                 <div className="form-hint">
-                  🔐 Almeno 8 caratteri, con maiuscole, minuscole, numeri e simboli
+                  <Info size={14} /> Almeno 8 caratteri, con maiuscole, minuscole, numeri e simboli
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Conferma Password</label>
                 <div className="input-container">
-                  <div className="input-icon">🔐</div>
+                  <div className="input-icon"><ShieldCheck size={18} /></div>
                   <input
                     type="password"
                     className="form-control"
                     placeholder="Ripeti la password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => setForm({ confirmPassword: e.target.value })}
                     required
                   />
                 </div>
                 {confirmPassword && password !== confirmPassword && (
                   <div className="form-hint error">
-                    ❌ Le password non coincidono
+                    <X size={14} /> Le password non coincidono
                   </div>
                 )}
                 {confirmPassword && password === confirmPassword && (
                   <div className="form-hint success">
-                    ✅ Le password coincidono
+                    <Check size={14} /> Le password coincidono
                   </div>
                 )}
               </div>
@@ -203,11 +202,11 @@ export default function RegisterPage() {
                 {loading ? (
                   <>
                     <div className="loading-spinner"></div>
-                    Registrazione in corso...
+                    Registrazione in corso…
                   </>
                 ) : (
                   <>
-                    <span className="btn-icon">✨</span>
+                    <span className="btn-icon"><UserPlus size={18} /></span>
                     Registrati
                   </>
                 )}
@@ -231,7 +230,7 @@ export default function RegisterPage() {
               <div className={`alert ${/successo|avvenuta|completata/i.test(message) ? 'alert-success' : 'alert-info'}`}>
                 <div className="alert-content">
                   <span className="alert-icon">
-                    {/successo|avvenuta|completata/i.test(message) ? '✅' : 'ℹ️'}
+                    {/successo|avvenuta|completata/i.test(message) ? <Check size={18} /> : <Info size={18} />}
                   </span>
                   <span className="alert-text">{message}</span>
                 </div>

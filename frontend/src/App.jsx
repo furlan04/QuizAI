@@ -1,30 +1,26 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
-import {
-  RegisterPage,
-  LoginPage,
-  QuizCreatePage,
-  QuizPlayPage,
-  HomePage,
-  FriendshipRequestsPage,
-  FriendsListPage,
-  LeaderboardPage,
-  QuizAttemptsPage,
-  QuizReviewPage,
-  SettingsPage,
-  FYPage,
-  ProfilePage,
-  QuizListPage,
-  QuizDetailPage,
-  LikedQuizzesPage,
-  ConfirmEmailPage,
-} from "./pages";
-import {
-  Navbar,
-  ProtectedRoute,
-  PublicRoute,
-} from "./components";
+import RegisterPage from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import QuizCreatePage from "./pages/QuizCreatePage";
+import QuizPlayPage from "./pages/QuizPlayPage";
+import HomePage from "./pages/HomePage";
+import FriendshipRequestsPage from "./pages/FriendshipRequestsPage";
+import FriendsListPage from "./pages/FriendsListPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import QuizAttemptsPage from "./pages/QuizAttemptsPage";
+import QuizReviewPage from "./pages/QuizReviewPage";
+import SettingsPage from "./pages/SettingsPage";
+import FYPage from "./pages/FYPage";
+import ProfilePage from "./pages/ProfilePage";
+import QuizListPage from "./pages/QuizListPage";
+import QuizDetailPage from "./pages/QuizDetailPage";
+import LikedQuizzesPage from "./pages/LikedQuizzesPage";
+import ConfirmEmailPage from "./pages/ConfirmEmailPage";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 import "./styles/App.css";
 import AttemptedQuizPage from "./pages/AttemptedQuizzesPage";
 

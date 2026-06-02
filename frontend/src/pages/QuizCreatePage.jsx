@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateQuiz, getQuizById } from "../services/QuizService";
 
@@ -24,10 +24,11 @@ export default function QuizCreatePage() {
   const [topic, setTopic]               = useState("");
   const [difficulty, setDifficulty]     = useState("medium");
   const [numQuestions, setNumQuestions] = useState(5);
-  const [message, setMessage]           = useState("");
-  const [isError, setIsError]           = useState(false);
-  // phase: 'form' | 'submitting' | 'generating' | 'failed'
-  const [phase, setPhase]               = useState("form");
+  // Stato di invio/esito raggruppato. phase: 'form' | 'submitting' | 'generating' | 'failed'
+  const [status, setStatus] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    phase: "form", message: "", isError: false,
+  });
+  const { phase, message, isError } = status;
   const [phraseIndex, setPhraseIndex]   = useState(0);
   const navigate = useNavigate();
   const pollRef = useRef(null);
@@ -43,29 +44,23 @@ export default function QuizCreatePage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setIsError(false);
-    setPhase("submitting");
+    setStatus({ message: "", isError: false, phase: "submitting" });
 
     const result = await generateQuiz(topic, difficulty, Number(numQuestions));
 
     if (!result.success || !result.quizId) {
-      setIsError(true);
-      setMessage(result.message || "Errore durante la generazione del quiz");
-      setPhase("form");
+      setStatus({ isError: true, message: result.message || "Errore durante la generazione del quiz", phase: "form" });
       return;
     }
 
     // Polling finché il quiz non è pronto (o fallisce), con timeout di 60s
-    setPhase("generating");
+    setStatus({ phase: "generating" });
     const quizId = result.quizId;
     const deadline = Date.now() + 60_000;
 
     const poll = async () => {
       if (Date.now() > deadline) {
-        setIsError(true);
-        setMessage("Timeout: la generazione sta impiegando troppo tempo. Riprova più tardi.");
-        setPhase("failed");
+        setStatus({ isError: true, message: "Timeout: la generazione sta impiegando troppo tempo. Riprova più tardi.", phase: "failed" });
         return;
       }
       const data = await getQuizById(quizId);
@@ -74,12 +69,10 @@ export default function QuizCreatePage() {
         return;
       }
       if (data?.status === "failed" || data?.error) {
-        setIsError(true);
-        setMessage(data.error || "La generazione del quiz è fallita");
-        setPhase("failed");
+        setStatus({ isError: true, message: data.error || "La generazione del quiz è fallita", phase: "failed" });
         return;
       }
-      // Pronto → apri il dettaglio del quiz appena creato
+      // Pronto -> apri il dettaglio del quiz appena creato
       navigate(`/quizzes/${quizId}`);
     };
     poll();

@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getMyAttempts } from "../services/QuizAttemptService";
 
+const formatDate = (d) =>
+  new Date(d).toLocaleDateString("it-IT", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
 
 export default function QuizAttemptsPage() {
   const [attempt, setAttempt] = useState(null);
@@ -10,33 +14,33 @@ export default function QuizAttemptsPage() {
   const { quizId } = useParams();
 
   useEffect(() => {
-    const fetch = async () => {
+    let ignore = false;
+    const loadAttempt = async () => {
       setLoading(true);
       setNotFound(false);
       try {
         const data = await getMyAttempts(quizId);
+        if (ignore) return;
         if (data && data.answers) setAttempt(data);
         else setNotFound(true);
       } catch {
-        setNotFound(true);
+        if (!ignore) setNotFound(true);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
-    if (quizId) fetch();
+    if (quizId) loadAttempt();
+    return () => {
+      ignore = true;
+    };
   }, [quizId]);
-
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString("it-IT", {
-      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-    });
 
   if (loading) {
     return (
       <div className="quiz-list-container">
         <div className="loading-state">
           <div className="loading-spinner" />
-          <p className="loading-text">Caricamento tentativo...</p>
+          <p className="loading-text">Caricamento tentativo…</p>
         </div>
       </div>
     );

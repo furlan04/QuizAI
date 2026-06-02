@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFriendsList, removeFriendship } from "../services/FriendshipService";
+import { useNotice } from "../hooks/useNotice";
 
 
 const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
@@ -10,8 +11,7 @@ const AV_COLORS = ["var(--coral)", "var(--sky)", "var(--butter)", "var(--mint)",
 export default function FriendsListPage() {
   const [friends, setFriends]         = useState([]);
   const [loading, setLoading]         = useState(false);
-  const [message, setMessage]         = useState("");
-  const [messageType, setMessageType] = useState("");
+  const { notice, notify, clear }     = useNotice();
   const [confirmDialog, setConfirmDialog] = useState(null);
   const navigate = useNavigate();
 
@@ -21,8 +21,7 @@ export default function FriendsListPage() {
       const data = await getFriendsList();
       setFriends(Array.isArray(data) ? data : []);
     } catch {
-      setMessage("Errore nel caricamento della lista amici");
-      setMessageType("error");
+      notify("Errore nel caricamento della lista amici", "error");
     } finally {
       setLoading(false);
     }
@@ -35,12 +34,10 @@ export default function FriendsListPage() {
     setLoading(true);
     try {
       await removeFriendship(username);
-      setMessage("Amicizia rimossa con successo");
-      setMessageType("success");
+      notify("Amicizia rimossa con successo", "success");
       fetchFriends();
     } catch {
-      setMessage("Errore nella rimozione dell'amicizia");
-      setMessageType("error");
+      notify("Errore nella rimozione dell'amicizia", "error");
     } finally {
       setLoading(false);
     }
@@ -48,11 +45,11 @@ export default function FriendsListPage() {
 
   useEffect(() => { fetchFriends(); }, []);
   useEffect(() => {
-    if (message) {
-      const t = setTimeout(() => { setMessage(""); setMessageType(""); }, 3000);
+    if (notice.message) {
+      const t = setTimeout(() => clear(), 3000);
       return () => clearTimeout(t);
     }
-  }, [message]);
+  }, [notice.message, clear]);
 
   return (
     <div className="friends-list-container">
@@ -87,16 +84,16 @@ export default function FriendsListPage() {
         </div>
       </div>
 
-      {message && (
-        <div className={`alert ${messageType === "success" ? "alert-success" : "alert-error"}`}>
-          <div className="alert-content"><span className="alert-text">{message}</span></div>
+      {notice.message && (
+        <div className={`alert ${notice.type === "success" ? "alert-success" : "alert-error"}`}>
+          <div className="alert-content"><span className="alert-text">{notice.message}</span></div>
         </div>
       )}
 
       {loading && friends.length === 0 ? (
         <div className="loading-state">
           <div className="loading-spinner" />
-          <p className="loading-text">Caricamento amici...</p>
+          <p className="loading-text">Caricamento amici…</p>
         </div>
       ) : friends.length === 0 ? (
         <div className="empty-state">

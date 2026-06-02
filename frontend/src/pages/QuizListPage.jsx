@@ -6,7 +6,7 @@ export default function QuizListPage() {
   const { userId } = useParams();
   const me = getCurrentUser();
 
-  // Senza parametro → i miei quiz (filtro per createdBy === mio id)
+  // Senza parametro -> i miei quiz (filtro per createdBy === mio id)
   const creatorId = userId || me?.userId || null;
   const isMyQuizzes = !userId;
   const pageTitle = isMyQuizzes ? "I miei Quiz" : "Quiz dell'utente";

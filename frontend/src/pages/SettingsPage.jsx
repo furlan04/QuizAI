@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { getUserProfile, updateUserProfile } from "../services/UserService";
+import { useNotice } from "../hooks/useNotice";
 
 import "../styles/settings.css";
 
@@ -7,23 +8,19 @@ const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState(null);
-  const [bio, setBio]         = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [form, setForm] = useReducer((s, patch) => ({ ...s, ...patch }), { bio: "", avatarUrl: "" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving]   = useState(false);
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
+  const { notice, notify, clear } = useNotice();
 
   const fetchProfile = async () => {
     setLoading(true);
     try {
       const data = await getUserProfile();
       setProfile(data);
-      setBio(data.bio || "");
-      setAvatarUrl(data.avatarUrl || "");
+      setForm({ bio: data.bio || "", avatarUrl: data.avatarUrl || "" });
     } catch {
-      setMessage("Errore nel caricamento del profilo");
-      setMessageType("error");
+      notify("Errore nel caricamento del profilo", "error");
     } finally {
       setLoading(false);
     }
@@ -33,13 +30,11 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const updated = await updateUserProfile({ bio, avatarUrl });
+      const updated = await updateUserProfile({ bio: form.bio, avatarUrl: form.avatarUrl });
       setProfile(updated);
-      setMessage("Profilo aggiornato");
-      setMessageType("success");
+      notify("Profilo aggiornato", "success");
     } catch {
-      setMessage("Errore nel salvataggio");
-      setMessageType("error");
+      notify("Errore nel salvataggio", "error");
     } finally {
       setSaving(false);
     }
@@ -47,11 +42,11 @@ export default function SettingsPage() {
 
   useEffect(() => { fetchProfile(); }, []);
   useEffect(() => {
-    if (message) {
-      const t = setTimeout(() => { setMessage(""); setMessageType(""); }, 3000);
+    if (notice.message) {
+      const t = setTimeout(() => clear(), 3000);
       return () => clearTimeout(t);
     }
-  }, [message]);
+  }, [notice.message, clear]);
 
   return (
     <div className="user-settings-container">
@@ -64,16 +59,16 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {message && (
-        <div className={`alert ${messageType === "success" ? "alert-success" : "alert-error"}`}>
-          <div className="alert-content"><span className="alert-text">{message}</span></div>
+      {notice.message && (
+        <div className={`alert ${notice.type === "success" ? "alert-success" : "alert-error"}`}>
+          <div className="alert-content"><span className="alert-text">{notice.message}</span></div>
         </div>
       )}
 
       {loading && !profile ? (
         <div className="loading-state">
           <div className="loading-spinner" />
-          <p className="loading-text">Caricamento...</p>
+          <p className="loading-text">Caricamento…</p>
         </div>
       ) : profile ? (
         <div className="settings-content">
@@ -95,8 +90,8 @@ export default function SettingsPage() {
                   <textarea
                     className="form-control"
                     placeholder="Racconta qualcosa di te..."
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
+                    value={form.bio}
+                    onChange={(e) => setForm({ bio: e.target.value })}
                     rows={3}
                   />
                 </div>
@@ -107,8 +102,8 @@ export default function SettingsPage() {
                     type="url"
                     className="form-control"
                     placeholder="https://..."
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    value={form.avatarUrl}
+                    onChange={(e) => setForm({ avatarUrl: e.target.value })}
                   />
                 </div>
 

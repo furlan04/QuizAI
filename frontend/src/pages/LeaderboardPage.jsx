@@ -3,6 +3,13 @@ import { useParams, Link } from "react-router-dom";
 import { getLeaderboard } from "../services/QuizAttemptService";
 import { getCurrentUser } from "../services/CommonService";
 
+const positionIcon = (pos) => `#${pos}`;
+
+const formatDate = (d) =>
+  new Date(d).toLocaleDateString("it-IT", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+
 export default function LeaderboardPage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,20 +33,12 @@ export default function LeaderboardPage() {
     if (quizId) fetchLeaderboard();
   }, [quizId]);
 
-  const positionIcon = (pos) =>
-    pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : `#${pos}`;
-
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString("it-IT", {
-      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
-    });
-
   if (loading) {
     return (
       <div className="quiz-list-container">
         <div className="loading-state">
           <div className="loading-spinner" />
-          <p className="loading-text">Caricamento classifica...</p>
+          <p className="loading-text">Caricamento classifica…</p>
         </div>
       </div>
     );
@@ -61,7 +60,7 @@ export default function LeaderboardPage() {
     return (
       <div className="quiz-list-container">
         <div className="empty-state">
-          <div className="empty-title">🏆 Nessuna classifica disponibile</div>
+          <div className="empty-title">Nessuna classifica disponibile</div>
           <p className="empty-message">Questo quiz non ha ancora tentativi completati.</p>
           <Link to={`/quiz/${quizId}`} className="btn btn-primary btn-empty">Gioca ora</Link>
         </div>
@@ -74,7 +73,7 @@ export default function LeaderboardPage() {
       <div className="quiz-list-header">
         <div className="header-content">
           <div className="header-text">
-            <h1 className="page-title">🏆 Classifica</h1>
+            <h1 className="page-title">Classifica</h1>
             <p className="page-subtitle">{entries.length} partecipanti</p>
           </div>
           <Link to="/quizzes" className="btn btn-outline">Torna ai Quiz</Link>

@@ -9,8 +9,12 @@ using QuizService.Quizzes.Models;
 using QuizService.Sessions;
 using QuizService.Sessions.Models;
 using QuizService.Users;
+using QuizService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Mappature MongoDB a runtime: tiene il dominio puro (entità senza attributi Bson).
+MongoMappings.Register();
 
 var cfg = builder.Configuration;
 var mongoUrl      = cfg["MONGODB_URL"]       ?? "mongodb://localhost:27017";

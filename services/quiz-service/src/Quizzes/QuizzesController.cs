@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using QuizService.Messaging.Messages;
 using QuizService.Messaging.Publishers;
 using QuizService.Quizzes.Models;
@@ -68,7 +67,7 @@ public class QuizzesController : ControllerBase
             ?? User.FindFirstValue("sub")!;
         var username = User.FindFirstValue("username") ?? "";
 
-        var quizId = ObjectId.GenerateNewId().ToString();
+        var quizId = _quizzes.NewId();
 
         var quiz = new Quiz
         {
