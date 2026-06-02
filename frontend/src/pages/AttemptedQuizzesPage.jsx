@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getUserSettings } from "../services/UserService";
-import { getAuthToken } from "../services/CommonService";
+import { Button, Card, Chip, Spinner } from "../components/ui";
 
-export default function AttemptedQuizPage() {
+const formatDate = (d) =>
+  new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+export default function AttemptedQuizzesPage() {
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading]   = useState(true);
 
@@ -11,7 +14,7 @@ export default function AttemptedQuizPage() {
     const fetch = async () => {
       setLoading(true);
       try {
-        const profile = await getUserSettings(getAuthToken()); // quiz-service /users/me
+        const profile = await getUserSettings();
         setAttempts(profile?.attempts || []);
       } catch {
         setAttempts([]);
@@ -22,56 +25,55 @@ export default function AttemptedQuizPage() {
     fetch();
   }, []);
 
-  const formatDate = (d) =>
-    new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
-
-  if (loading) {
-    return (
-      <div className="quiz-list-container">
-        <div className="loading-container">
-          <div className="loading-spinner" />
-          <p className="loading-text">Caricamento quiz provati...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="quiz-list-container">
-      <div className="quiz-list-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1 className="page-title">Quiz che hai provato</h1>
-            <p className="page-subtitle">Rivedi i tuoi tentativi e rigioca</p>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      <header className="mb-8">
+        <h1 className="font-display font-extrabold text-3xl md:text-4xl tracking-tight">
+          Quiz che hai provato
+        </h1>
+        <p className="text-ink-soft mt-1">Apri un quiz per vederne il dettaglio</p>
+      </header>
 
-      {attempts.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-title">Nessun quiz provato</div>
-          <p className="empty-message">Gioca il tuo primo quiz per vederlo qui.</p>
-          <Link to="/quizzes" className="btn btn-primary btn-empty">Esplora quiz</Link>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <Spinner />
+          <p className="text-ink-soft">Caricamento quiz provati...</p>
         </div>
+      ) : attempts.length === 0 ? (
+        <Card className="text-center p-10">
+          <div className="font-display font-extrabold text-xl mb-2">Nessun quiz provato</div>
+          <p className="text-ink-soft mb-5">Gioca il tuo primo quiz per vederlo qui.</p>
+          <Button as={Link} to="/quizzes">Esplora quiz</Button>
+        </Card>
       ) : (
-        <div className="quiz-grid">
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {attempts.map((a) => (
-            <article key={a.quizId} className="quiz-card">
-              <div className="quiz-card-header quiz-cover-2">
-                <span className="quiz-ai-badge">{a.score} pt</span>
-              </div>
-              <div className="quiz-card-content">
-                <h3 className="quiz-title">Quiz</h3>
-                <p className="quiz-description">Completato il {formatDate(a.completedAt)}</p>
-              </div>
-              <div className="quiz-card-actions">
-                <Link to={`/quiz/${a.quizId}`} className="btn btn-primary btn-play">Rigioca</Link>
-                <div className="quiz-secondary-actions">
-                  <Link to={`/review/${a.quizId}`} className="btn btn-outline btn-secondary">Rivedi</Link>
-                  <Link to={`/leaderboard/${a.quizId}`} className="btn btn-outline btn-secondary">Classifica</Link>
+            <Card key={a.quizId} className="flex flex-col">
+              <Link
+                to={`/quizzes/${a.quizId}`}
+                className="block h-24 bg-lime relative no-underline"
+                style={{ backgroundImage: "repeating-linear-gradient(45deg, rgba(0,0,0,.08) 0 12px, transparent 12px 28px)" }}
+              >
+                <div className="absolute top-3 left-3">
+                  <Chip tone="ink">{a.score} pt</Chip>
                 </div>
+              </Link>
+
+              <div className="p-5 flex-1">
+                <Link to={`/quizzes/${a.quizId}`} className="no-underline text-ink">
+                  <h3 className="font-display font-extrabold text-lg leading-tight hover:underline">
+                    {a.quizTitle || "Quiz"}
+                  </h3>
+                </Link>
+                <p className="text-xs text-ink-soft mt-2">Completato il {formatDate(a.completedAt)}</p>
               </div>
-            </article>
+
+              <div className="px-5 pb-5">
+                <Button as={Link} to={`/quizzes/${a.quizId}`} fullWidth>
+                  Apri quiz
+                </Button>
+              </div>
+            </Card>
           ))}
         </div>
       )}

@@ -58,6 +58,16 @@ public class FriendshipsController : ControllerBase
         catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
     }
 
+    [HttpGet("status/{username}")]
+    public async Task<IActionResult> GetStatus(string username)
+    {
+        try
+        {
+            return Ok(await _service.GetStatusAsync(GetUserId(), username));
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+    }
+
     private string GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")!;
 }

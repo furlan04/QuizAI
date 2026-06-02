@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getQuizById } from "../services/QuizService";
 import { startSession, answerQuestion, completeSession } from "../services/QuizAttemptService";
-import { getAuthToken } from "../services/CommonService";
+
 
 const LETTER = ["A", "B", "C", "D", "E", "F"];
 
@@ -28,8 +28,7 @@ export default function QuizPlayPage() {
     let cancelled = false;
 
     const load = async () => {
-      const token = getAuthToken();
-      const data = await getQuizById(id, token);
+      const data = await getQuizById(id);
 
       if (cancelled) return;
 
@@ -45,7 +44,7 @@ export default function QuizPlayPage() {
       }
       setQuiz(data);
       // Avvia la sessione di gioco
-      const session = await startSession(id, token);
+      const session = await startSession(id);
       if (cancelled) return;
       if (session?.sessionId) {
         setSessionId(session.sessionId);
@@ -67,7 +66,7 @@ export default function QuizPlayPage() {
   const submitAnswer = async () => {
     if (selected === null || busy) return;
     setBusy(true);
-    const res = await answerQuestion(sessionId, currentIndex, selected, getAuthToken());
+    const res = await answerQuestion(sessionId, currentIndex, selected);
     setBusy(false);
     setFeedback(res); // { isCorrect, correctIndex, explanation }
   };
@@ -79,7 +78,7 @@ export default function QuizPlayPage() {
       setFeedback(null);
     } else {
       setBusy(true);
-      const res = await completeSession(sessionId, getAuthToken());
+      const res = await completeSession(sessionId);
       setBusy(false);
       setResult(res);
       setPhase("done");

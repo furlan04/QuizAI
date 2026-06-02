@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { useAuth } from "../auth/AuthContext";
 
 /* ── Inline SVG icons (no emoji) ── */
 const IcHome = () => (
@@ -86,7 +86,8 @@ function BrandMark() {
   );
 }
 
-export default function Navbar({ isLoggedIn, onLogout }) {
+export default function Navbar() {
+  const { isAuthenticated: isLoggedIn, logout: onLogout } = useAuth();
   const location = useLocation();
   const [friendsDropdownOpen, setFriendsDropdownOpen] = useState(false);
   const [quizDropdownOpen, setQuizDropdownOpen] = useState(false);

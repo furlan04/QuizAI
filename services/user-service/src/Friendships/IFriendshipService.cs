@@ -9,4 +9,5 @@ public interface IFriendshipService
     Task<FriendshipStatusResponse> SendRequestAsync(string requesterId, string targetUsername);
     Task<FriendshipStatusResponse> RespondAsync(string friendshipId, string userId, string action);
     Task RemoveFriendAsync(string userId, string targetUsername);
+    Task<FriendshipStatusDetail> GetStatusAsync(string currentUserId, string targetUsername);
 }

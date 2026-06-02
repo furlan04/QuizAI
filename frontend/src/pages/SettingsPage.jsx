@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getUserProfile, updateUserProfile } from "../services/UserService";
-import { getAuthToken } from "../services/CommonService";
+
 import "../styles/settings.css";
 
 const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const data = await getUserProfile(getAuthToken());
+      const data = await getUserProfile();
       setProfile(data);
       setBio(data.bio || "");
       setAvatarUrl(data.avatarUrl || "");
@@ -33,7 +33,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const updated = await updateUserProfile(getAuthToken(), { bio, avatarUrl });
+      const updated = await updateUserProfile({ bio, avatarUrl });
       setProfile(updated);
       setMessage("Profilo aggiornato");
       setMessageType("success");

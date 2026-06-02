@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getLeaderboard } from "../services/QuizAttemptService";
-import { getAuthToken, getCurrentUser } from "../services/CommonService";
+import { getCurrentUser } from "../services/CommonService";
 
 export default function LeaderboardPage() {
   const [entries, setEntries] = useState([]);
@@ -15,9 +15,7 @@ export default function LeaderboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const token = getAuthToken();
-        if (!token) throw new Error("Token non trovato");
-        const data = await getLeaderboard(quizId, token);
+        const data = await getLeaderboard(quizId);
         setEntries(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message);

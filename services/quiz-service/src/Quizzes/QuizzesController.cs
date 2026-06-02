@@ -12,7 +12,8 @@ public record GenerateQuizRequest(string Topic, string Difficulty, int NumQuesti
 public record GenerateQuizResponse(string QuizId, string Status);
 public record QuizSummary(
     string Id, string Title, string Topic, string Difficulty,
-    int NumQuestions, List<string> Tags, string CreatedBy, DateTime CreatedAt);
+    int NumQuestions, List<string> Tags,
+    string CreatedBy, string CreatedByUsername, DateTime CreatedAt);
 public record PagedResponse<T>(List<T> Items, long Total, int Page, int PageSize);
 
 [ApiController]
@@ -38,7 +39,8 @@ public class QuizzesController : ControllerBase
         var (items, total) = await _quizzes.GetPagedAsync(topic, difficulty, page, pageSize);
         var summaries = items.Select(q =>
             new QuizSummary(q.Id, q.Title, q.Topic, q.Difficulty,
-                q.NumQuestions, q.Tags, q.CreatedBy, q.CreatedAt)).ToList();
+                q.NumQuestions, q.Tags,
+                q.CreatedBy, q.CreatedByUsername ?? "", q.CreatedAt)).ToList();
 
         return Ok(new PagedResponse<QuizSummary>(summaries, total, page, pageSize));
     }
@@ -64,6 +66,7 @@ public class QuizzesController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             ?? User.FindFirstValue("sub")!;
+        var username = User.FindFirstValue("username") ?? "";
 
         var quizId = ObjectId.GenerateNewId().ToString();
 
@@ -75,6 +78,7 @@ public class QuizzesController : ControllerBase
             Difficulty = request.Difficulty,
             NumQuestions = request.NumQuestions,
             CreatedBy = userId,
+            CreatedByUsername = username,
             Status = "generating",
             CreatedAt = DateTime.UtcNow,
         };

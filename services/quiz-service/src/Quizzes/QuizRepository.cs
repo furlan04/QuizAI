@@ -57,4 +57,16 @@ public class QuizRepository : IQuizRepository
 
         await _col.UpdateOneAsync(q => q.Id == id, update);
     }
+
+    public async Task<Dictionary<string, string>> GetTitlesByIdsAsync(IEnumerable<string> ids)
+    {
+        var valid = ids.Where(id => ObjectId.TryParse(id, out _)).ToList();
+        if (valid.Count == 0) return new Dictionary<string, string>();
+
+        var filter = Builders<Quiz>.Filter.In(q => q.Id, valid);
+        var projection = Builders<Quiz>.Projection.Include(q => q.Title).Include(q => q.Id);
+
+        var docs = await _col.Find(filter).Project<Quiz>(projection).ToListAsync();
+        return docs.ToDictionary(q => q.Id, q => q.Title);
+    }
 }

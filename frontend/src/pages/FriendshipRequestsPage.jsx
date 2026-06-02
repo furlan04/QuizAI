@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getFriendshipRequests, sendFriendshipRequest, respondFriendshipRequest } from "../services/FriendshipService";
-import { getAuthToken } from "../services/CommonService";
+
 
 export default function FriendshipRequestsPage() {
   const [username, setUsername]   = useState("");
@@ -12,7 +12,7 @@ export default function FriendshipRequestsPage() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const data = await getFriendshipRequests(getAuthToken());
+      const data = await getFriendshipRequests();
       setRequests(Array.isArray(data) ? data : []);
     } catch {
       setMessage("Errore nel caricamento delle richieste");
@@ -26,7 +26,7 @@ export default function FriendshipRequestsPage() {
     e.preventDefault();
     if (!username.trim()) return;
     setLoading(true);
-    const res = await sendFriendshipRequest(username.trim(), getAuthToken());
+    const res = await sendFriendshipRequest(username.trim());
     setLoading(false);
     if (res.success) {
       setMessage("Richiesta di amicizia inviata!");
@@ -40,7 +40,7 @@ export default function FriendshipRequestsPage() {
 
   const respond = async (friendshipId, action) => {
     setLoading(true);
-    const res = await respondFriendshipRequest(friendshipId, action, getAuthToken());
+    const res = await respondFriendshipRequest(friendshipId, action);
     setLoading(false);
     if (res.success) {
       setMessage(action === "accept" ? "Richiesta accettata!" : "Richiesta rifiutata");

@@ -1,117 +1,41 @@
-import { handleHttpError, handleNetworkError, createAuthHeaders } from './CommonService';
-import { getConfig } from '../config/config';
+import { quizApi } from '../lib/apiClient';
 
-const QUIZ_URL = getConfig('QUIZ_SERVICE_URL');
-
-/**
- * @deprecated Usa startSession + answerQuestion + completeSession.
- * Mantenuto per compatibilità con le pagine esistenti.
- */
-export const submitQuizAttempt = async (submitData, token) => {
-  console.warn('submitQuizAttempt è deprecato. Usa startSession/answerQuestion/completeSession.');
-  return { success: false, message: 'Usa il nuovo flow: startSession → answerQuestion → completeSession' };
+/** Avvia una sessione di gioco. */
+export const startSession = async (quizId) => {
+  const res = await quizApi.post('/sessions', { quizId });
+  return res.ok ? res.data : null;
 };
 
-/**
- * @deprecated Usa getMyAttempts(quizId, token).
- */
-export const getAttemptReview = async (attemptId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/sessions/${attemptId}`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Risponde a una domanda. */
+export const answerQuestion = async (sessionId, questionIndex, selectedIndex) => {
+  const res = await quizApi.put(`/sessions/${sessionId}/answer`, { questionIndex, selectedIndex });
+  return res.ok ? res.data : null;
 };
 
-/**
- * Avvia una sessione di gioco per un quiz.
- * @returns { sessionId, quizId, questions: [{ text, options }] }
- */
-export const startSession = async (quizId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/sessions`, {
-      method: 'POST',
-      headers: createAuthHeaders(token),
-      body: JSON.stringify({ quizId }),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Completa la sessione. */
+export const completeSession = async (sessionId) => {
+  const res = await quizApi.post(`/sessions/${sessionId}/complete`);
+  return res.ok ? res.data : null;
 };
 
-/**
- * Risponde a una domanda nella sessione.
- * @returns { isCorrect, correctIndex, explanation }
- */
-export const answerQuestion = async (sessionId, questionIndex, selectedIndex, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/sessions/${sessionId}/answer`, {
-      method: 'PUT',
-      headers: createAuthHeaders(token),
-      body: JSON.stringify({ questionIndex, selectedIndex }),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+export const getSession = async (sessionId) => {
+  const res = await quizApi.get(`/sessions/${sessionId}`);
+  return res.ok ? res.data : null;
 };
 
-/**
- * Completa la sessione e calcola il punteggio finale.
- * @returns { score, totalQuestions, percentage }
- */
-export const completeSession = async (sessionId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/sessions/${sessionId}/complete`, {
-      method: 'POST',
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+export const getLeaderboard = async (quizId) => {
+  const res = await quizApi.get(`/quizzes/${quizId}/leaderboard`);
+  return res.ok ? res.data : [];
 };
 
-export const getSession = async (sessionId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/sessions/${sessionId}`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+export const getMyAttempts = async (quizId) => {
+  const res = await quizApi.get(`/users/me/attempts/${quizId}`);
+  return res.ok ? res.data : null;
 };
 
-export const getLeaderboard = async (quizId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/quizzes/${quizId}/leaderboard`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
-};
-
-export const getMyAttempts = async (quizId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/users/me/attempts/${quizId}`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Deprecati — mantenuti per compatibilità con vecchie pagine. */
+export const submitQuizAttempt = async () => ({ success: false, message: 'Usa startSession → answerQuestion → completeSession' });
+export const getAttemptReview = async (sessionId) => {
+  const res = await quizApi.get(`/sessions/${sessionId}`);
+  return res.ok ? res.data : null;
 };

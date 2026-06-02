@@ -1,90 +1,38 @@
-import { handleNetworkError, createHeaders } from './CommonService';
-import { getConfig } from '../config/config';
+// Servizi di autenticazione. Tutti tornano un oggetto risultato uniforme.
+import { authApi } from '../lib/apiClient';
 import { authMessage } from './AuthErrorCodes';
 
-const AUTH_URL = getConfig('AUTH_SERVICE_URL');
-
-// Wrappa le risposte d'errore: estrae {code, error} dal backend e produce
-// un message localizzato in base al code. Il code resta a disposizione del chiamante
-// per logica condizionale (es. mostrare "reinvia email" solo su email_not_confirmed).
-const errorResult = (data) => ({
+const errFrom = (res) => ({
   success: false,
-  code: data?.code || null,
-  message: authMessage(data?.code, data?.error),
+  code: res.errorCode,
+  message: authMessage(res.errorCode, res.error),
 });
 
 export const register = async (username, email, password) => {
-  try {
-    const response = await fetch(`${AUTH_URL}/auth/register`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ username, email, password }),
-    });
-    const data = await response.json();
-    if (response.ok) return { success: true, ...data };
-    return errorResult(data);
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+  const res = await authApi.post('/auth/register', { username, email, password });
+  if (res.ok) return { success: true, ...res.data };
+  return errFrom(res);
 };
 
 export const login = async (email, password) => {
-  try {
-    const response = await fetch(`${AUTH_URL}/auth/login`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await response.json();
-    if (response.ok && data.token) return { success: true, ...data };
-    return errorResult(data);
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+  const res = await authApi.post('/auth/login', { email, password });
+  if (res.ok && res.data?.token) return { success: true, ...res.data };
+  return errFrom(res);
 };
 
-/** Conferma l'email tramite token ricevuto via email. */
 export const confirmEmail = async (userId, token) => {
-  try {
-    const response = await fetch(`${AUTH_URL}/auth/confirm-email`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ userId, token }),
-    });
-    if (response.ok) return { success: true };
-    const data = await response.json().catch(() => ({}));
-    return errorResult(data);
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+  const res = await authApi.post('/auth/confirm-email', { userId, token });
+  if (res.ok) return { success: true };
+  return errFrom(res);
 };
 
-/** Reinvia l'email di conferma. Ritorna sempre success per non rivelare l'esistenza dell'account. */
 export const resendConfirmation = async (email) => {
-  try {
-    const response = await fetch(`${AUTH_URL}/auth/resend-confirmation`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ email }),
-    });
-    return { success: response.ok };
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+  const res = await authApi.post('/auth/resend-confirmation', { email });
+  return { success: res.ok };
 };
 
-/** Login via ID token Google (ottenuto da Google Identity Services nel browser). */
 export const googleLogin = async (idToken) => {
-  try {
-    const response = await fetch(`${AUTH_URL}/auth/google`, {
-      method: 'POST',
-      headers: createHeaders(),
-      body: JSON.stringify({ idToken }),
-    });
-    const data = await response.json();
-    if (response.ok && data.token) return { success: true, ...data };
-    return errorResult(data);
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+  const res = await authApi.post('/auth/google', { idToken });
+  if (res.ok && res.data?.token) return { success: true, ...res.data };
+  return errFrom(res);
 };

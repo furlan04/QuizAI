@@ -24,6 +24,9 @@ public class Quiz
     [BsonElement("created_by")]
     public string CreatedBy { get; set; } = default!;
 
+    [BsonElement("created_by_username")]
+    public string CreatedByUsername { get; set; } = default!;
+
     [BsonElement("status")]
     public string Status { get; set; } = default!;
 

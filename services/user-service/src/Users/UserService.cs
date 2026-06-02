@@ -50,4 +50,13 @@ public class UserService : IUserService
         return new PublicProfileResponse(
             user.Id, user.Username, user.AvatarUrl, user.Bio, user.CreatedAt);
     }
+
+    public async Task<PublicProfileResponse> GetPublicProfileByIdAsync(string userId)
+    {
+        var user = await _repo.GetByIdAsync(userId)
+            ?? throw new KeyNotFoundException($"User '{userId}' not found.");
+
+        return new PublicProfileResponse(
+            user.Id, user.Username, user.AvatarUrl, user.Bio, user.CreatedAt);
+    }
 }

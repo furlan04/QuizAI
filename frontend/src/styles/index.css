@@ -1,9 +1,15 @@
-/* Reset minimo — il design system completo è in App.css */
-*,*::before,*::after { box-sizing: border-box; }
+/* I @import devono precedere qualsiasi altra direttiva CSS */
+@import "./tokens.css";
+@import "./layout.css";
+@import "./navbar.css";
+@import "./components.css";
+@import "./home.css";
+@import "./quiz.css";
+@import "./profile.css";
+@import "./friends.css";
+@import "./settings.css";
+@import "./App.css";
 
-body {
-  margin: 0;
-  padding: 0;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

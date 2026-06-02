@@ -1,72 +1,36 @@
-import { handleHttpError, handleNetworkError, createAuthHeaders } from './CommonService';
-import { getConfig } from '../config/config';
+import { userApi, quizApi } from '../lib/apiClient';
 
-const USER_URL = getConfig('USER_SERVICE_URL');
-const QUIZ_URL = getConfig('QUIZ_SERVICE_URL');
-
-/** Profilo dell'utente autenticato (user-service). Crea il profilo al primo accesso. */
-export const getUserProfile = async (token) => {
-  try {
-    const response = await fetch(`${USER_URL}/users/me`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Profilo dell'utente autenticato. Creato al primo accesso. */
+export const getUserProfile = async () => {
+  const res = await userApi.get('/users/me');
+  return res.ok ? res.data : null;
 };
 
-/** Profilo pubblico di un utente per username (user-service). */
-export const getSpecificUserProfile = async (username, token) => {
-  try {
-    const response = await fetch(`${USER_URL}/users/${username}`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Profilo pubblico per username. */
+export const getSpecificUserProfile = async (username) => {
+  const res = await userApi.get(`/users/${encodeURIComponent(username)}`);
+  return res.ok ? res.data : null;
 };
 
-/** Aggiorna bio e avatar_url dell'utente autenticato (user-service). */
-export const updateUserProfile = async (token, { bio, avatarUrl } = {}) => {
-  try {
-    const response = await fetch(`${USER_URL}/users/me`, {
-      method: 'PUT',
-      headers: createAuthHeaders(token),
-      body: JSON.stringify({ bio, avatarUrl }),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Profilo pubblico per userId (per i quiz che hanno solo createdBy). */
+export const getProfileByUserId = async (userId) => {
+  const res = await userApi.get(`/users/by-id/${encodeURIComponent(userId)}`);
+  return res.ok ? res.data : null;
 };
 
-/** Storico tentativi quiz dell'utente autenticato (quiz-service). */
-export const getUserSettings = async (token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/users/me`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Aggiorna bio + avatarUrl. */
+export const updateUserProfile = async ({ bio, avatarUrl } = {}) => {
+  const res = await userApi.put('/users/me', { bio, avatarUrl });
+  return res.ok ? res.data : null;
 };
 
-/** Dettaglio tentativo su un quiz specifico (quiz-service). */
-export const getMyAttemptForQuiz = async (quizId, token) => {
-  try {
-    const response = await fetch(`${QUIZ_URL}/users/me/attempts/${quizId}`, {
-      headers: createAuthHeaders(token),
-    });
-    handleHttpError(response);
-    return await response.json();
-  } catch (error) {
-    return handleNetworkError(error);
-  }
+/** Tentativi quiz dell'utente (dal quiz-service). */
+export const getUserSettings = async () => {
+  const res = await quizApi.get('/users/me');
+  return res.ok ? res.data : null;
+};
+
+export const getMyAttemptForQuiz = async (quizId) => {
+  const res = await quizApi.get(`/users/me/attempts/${quizId}`);
+  return res.ok ? res.data : null;
 };

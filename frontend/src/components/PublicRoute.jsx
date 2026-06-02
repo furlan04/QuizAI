@@ -1,12 +1,9 @@
-// src/components/PublicRoute.jsx
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
-export default function PublicRoute({ children, isLoggedIn }) {
-  // Se l'utente è già loggato, reindirizza ai quiz
-  if (isLoggedIn) {
-    return <Navigate to="/quizzes" replace />;
-  }
-  
-  // Se non è loggato, mostra il componente (login/register)
+/** Rotte pubbliche (login/register): se l'utente è già loggato manda a /. */
+export default function PublicRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  if (isAuthenticated) return <Navigate to="/" replace />;
   return children;
 }

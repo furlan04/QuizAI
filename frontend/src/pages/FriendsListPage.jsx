@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFriendsList, removeFriendship } from "../services/FriendshipService";
-import { getAuthToken } from "../services/CommonService";
+
 
 const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
 
@@ -18,7 +18,7 @@ export default function FriendsListPage() {
   const fetchFriends = async () => {
     setLoading(true);
     try {
-      const data = await getFriendsList(getAuthToken());
+      const data = await getFriendsList();
       setFriends(Array.isArray(data) ? data : []);
     } catch {
       setMessage("Errore nel caricamento della lista amici");
@@ -34,7 +34,7 @@ export default function FriendsListPage() {
     setConfirmDialog(null);
     setLoading(true);
     try {
-      await removeFriendship(username, getAuthToken());
+      await removeFriendship(username);
       setMessage("Amicizia rimossa con successo");
       setMessageType("success");
       fetchFriends();

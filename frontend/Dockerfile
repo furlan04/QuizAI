@@ -12,7 +12,7 @@ ENV REACT_APP_USER_SERVICE_URL=$REACT_APP_USER_SERVICE_URL
 ENV REACT_APP_GOOGLE_CLIENT_ID=$REACT_APP_GOOGLE_CLIENT_ID
 
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+RUN npm ci
 COPY . .
 RUN npm run build
 
