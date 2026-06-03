@@ -20,5 +20,14 @@ class Settings(BaseSettings):
     # Internal
     internal_api_key: str = "changeme"
 
+    # Document upload + RAG (all ephemeral / in-memory)
+    max_upload_bytes: int = 15 * 1024 * 1024  # 15 MB hard limit on uploads
+    max_source_chars: int = 60000             # cap on forwarded document text
+    doc_overview_chars: int = 4000            # slice fed to the planner
+    rag_chunk_size: int = 900                 # words per retrieval chunk
+    rag_chunk_overlap: int = 150              # word overlap between chunks
+    rag_k: int = 3                            # chunks retrieved per subtopic
+    rag_context_chars: int = 6000             # cap on grounding context
+
 
 settings = Settings()

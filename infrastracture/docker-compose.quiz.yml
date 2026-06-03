@@ -105,6 +105,8 @@ services:
       MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       AUTH_SERVICE_URL: "http://auth-service:5001"
+      AI_AGENT_URL: "http://ai-agent:8000"
+      INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -112,6 +114,8 @@ services:
         condition: service_healthy
       auth-service:
         condition: service_healthy
+      ai-agent:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080' 2>/dev/null"]
       interval: 10s
@@ -166,6 +170,7 @@ services:
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
+      INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
     depends_on:
       rabbitmq:
         condition: service_healthy

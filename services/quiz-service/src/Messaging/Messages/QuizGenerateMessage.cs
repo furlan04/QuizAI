@@ -5,5 +5,6 @@ public record QuizGenerateMessage(
     string Topic,
     string Difficulty,
     int NumQuestions,
-    string UserId
+    string UserId,
+    string? SourceText = null
 );

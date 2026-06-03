@@ -2,7 +2,12 @@ import logging
 import instructor
 from groq import Groq
 from ..state import AgentState
-from ..prompts.planner_prompt import PLANNER_SYSTEM_PROMPT, PLANNER_USER_PROMPT
+from ..prompts.planner_prompt import (
+    PLANNER_SYSTEM_PROMPT,
+    PLANNER_USER_PROMPT,
+    DOC_PLANNER_SYSTEM_PROMPT,
+    DOC_PLANNER_USER_PROMPT,
+)
 from ...contracts.models import QuizPlan
 from ...config import settings
 
@@ -13,12 +18,21 @@ def planner_node(state: AgentState) -> dict:
     try:
         client = instructor.from_groq(Groq(api_key=settings.groq_api_key))
 
-        system_msg = PLANNER_SYSTEM_PROMPT.format(num_questions=state.num_questions)
-        user_msg = PLANNER_USER_PROMPT.format(
-            topic=state.topic,
-            difficulty=state.difficulty,
-            num_questions=state.num_questions,
-        )
+        if state.source_text:
+            # Document-grounded: derive subtopics from the uploaded content.
+            system_msg = DOC_PLANNER_SYSTEM_PROMPT.format(num_questions=state.num_questions)
+            user_msg = DOC_PLANNER_USER_PROMPT.format(
+                difficulty=state.difficulty,
+                num_questions=state.num_questions,
+                document=state.source_text[: settings.doc_overview_chars],
+            )
+        else:
+            system_msg = PLANNER_SYSTEM_PROMPT.format(num_questions=state.num_questions)
+            user_msg = PLANNER_USER_PROMPT.format(
+                topic=state.topic,
+                difficulty=state.difficulty,
+                num_questions=state.num_questions,
+            )
 
         plan: QuizPlan = client.chat.completions.create(
             model=settings.groq_model,

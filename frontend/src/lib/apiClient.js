@@ -57,8 +57,13 @@ export const request = async (url, options = {}) => {
     signal,
   } = options;
 
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const finalHeaders = { ...headers };
-  if (body !== undefined) finalHeaders['Content-Type'] = finalHeaders['Content-Type'] || 'application/json';
+  // Per FormData lasciamo che il browser imposti il Content-Type (con il boundary).
+  if (body !== undefined && !isFormData) {
+    finalHeaders['Content-Type'] = finalHeaders['Content-Type'] || 'application/json';
+  }
   if (auth) {
     const token = getToken();
     if (token) finalHeaders.Authorization = `Bearer ${token}`;
@@ -69,7 +74,7 @@ export const request = async (url, options = {}) => {
     response = await fetch(url, {
       method,
       headers: finalHeaders,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
       signal,
     });
   } catch (err) {
