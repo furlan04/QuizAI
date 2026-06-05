@@ -190,6 +190,7 @@ export default function QuizPlayPage() {
             return (
               <button
                 key={i}
+                type="button"
                 className={cls}
                 onClick={() => !feedback && setSelected(i)}
                 disabled={busy || !!feedback}
@@ -220,11 +221,11 @@ export default function QuizPlayPage() {
 
         <div className="quiz-actions">
           {!feedback ? (
-            <button className="btn btn-primary btn-next" onClick={submitAnswer} disabled={selected === null || busy}>
+            <button type="button" className="btn btn-primary btn-next" onClick={submitAnswer} disabled={selected === null || busy}>
               {busy ? "Invio..." : "Conferma risposta"}
             </button>
           ) : (
-            <button className="btn btn-primary btn-next" onClick={next} disabled={busy}>
+            <button type="button" className="btn btn-primary btn-next" onClick={next} disabled={busy}>
               {currentIndex + 1 < total ? "Prossima domanda" : "Vedi risultato"}
             </button>
           )}

@@ -29,6 +29,7 @@ export default function NotificationsPage() {
             </p>
           </div>
           <button
+            type="button"
             onClick={markAllRead}
             className="btn btn-outline btn-refresh"
             disabled={loading || unreadCount === 0}

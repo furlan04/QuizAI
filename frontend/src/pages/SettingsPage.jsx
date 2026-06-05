@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect, useReducer, useCallback } from "react";
 import { getUserProfile, updateUserProfile } from "../services/UserService";
 import { useNotice } from "../hooks/useNotice";
 
@@ -13,7 +13,7 @@ export default function SettingsPage() {
   const [saving, setSaving]   = useState(false);
   const { notice, notify, clear } = useNotice();
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getUserProfile();
@@ -24,7 +24,7 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify]);
 
   const save = async (e) => {
     e.preventDefault();
@@ -40,7 +40,7 @@ export default function SettingsPage() {
     }
   };
 
-  useEffect(() => { fetchProfile(); }, []);
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
   useEffect(() => {
     if (notice.message) {
       const t = setTimeout(() => clear(), 3000);
@@ -86,8 +86,9 @@ export default function SettingsPage() {
             <div className="profile-content">
               <form onSubmit={save}>
                 <div className="setting-item">
-                  <label className="setting-label">Bio</label>
+                  <label className="setting-label" htmlFor="settings-bio">Bio</label>
                   <textarea
+                    id="settings-bio"
                     className="form-control"
                     placeholder="Racconta qualcosa di te..."
                     value={form.bio}
@@ -97,8 +98,9 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="setting-item">
-                  <label className="setting-label">URL Avatar</label>
+                  <label className="setting-label" htmlFor="settings-avatar">URL Avatar</label>
                   <input
+                    id="settings-avatar"
                     type="url"
                     className="form-control"
                     placeholder="https://..."
@@ -117,7 +119,7 @@ export default function SettingsPage() {
       ) : (
         <div className="empty-state">
           <h2 className="empty-title">Impossibile caricare le impostazioni</h2>
-          <button onClick={fetchProfile} className="btn btn-primary btn-empty">Riprova</button>
+          <button type="button" onClick={fetchProfile} className="btn btn-primary btn-empty">Riprova</button>
         </div>
       )}
     </div>

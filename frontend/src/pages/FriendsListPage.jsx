@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFriendsList, removeFriendship } from "../services/FriendshipService";
 import { useNotice } from "../hooks/useNotice";
@@ -15,7 +15,7 @@ export default function FriendsListPage() {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const navigate = useNavigate();
 
-  const fetchFriends = async () => {
+  const fetchFriends = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getFriendsList();
@@ -25,7 +25,7 @@ export default function FriendsListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify]);
 
   const confirmRemoveFriend = async () => {
     if (!confirmDialog) return;
@@ -43,7 +43,7 @@ export default function FriendsListPage() {
     }
   };
 
-  useEffect(() => { fetchFriends(); }, []);
+  useEffect(() => { fetchFriends(); }, [fetchFriends]);
   useEffect(() => {
     if (notice.message) {
       const t = setTimeout(() => clear(), 3000);
@@ -66,8 +66,8 @@ export default function FriendsListPage() {
             Rimuovere l&apos;amicizia con {confirmDialog.username}?
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }} onClick={() => setConfirmDialog(null)}>Annulla</button>
-            <button className="btn btn-primary" style={{ padding: "8px 14px", fontSize: 13, background: "var(--coral)", color: "var(--ink)" }} onClick={confirmRemoveFriend} disabled={loading}>
+            <button type="button" className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }} onClick={() => setConfirmDialog(null)}>Annulla</button>
+            <button type="button" className="btn btn-primary" style={{ padding: "8px 14px", fontSize: 13, background: "var(--coral)", color: "var(--ink)" }} onClick={confirmRemoveFriend} disabled={loading}>
               {loading ? "Rimozione..." : "Rimuovi"}
             </button>
           </div>
@@ -80,7 +80,7 @@ export default function FriendsListPage() {
             <h1 className="page-title">I miei amici</h1>
             <p className="page-subtitle">Gestisci le tue connessioni</p>
           </div>
-          <button onClick={fetchFriends} className="btn btn-outline" disabled={loading}>Aggiorna</button>
+          <button type="button" onClick={fetchFriends} className="btn btn-outline" disabled={loading}>Aggiorna</button>
         </div>
       </div>
 
@@ -135,10 +135,10 @@ export default function FriendsListPage() {
                     </div>
                   </div>
                   <div className="friend-actions">
-                    <button className="btn btn-primary btn-view-quizzes" onClick={() => navigate(`/profile/${friend.username}`)} disabled={loading}>
+                    <button type="button" className="btn btn-primary btn-view-quizzes" onClick={() => navigate(`/profile/${friend.username}`)} disabled={loading}>
                       Vedi profilo
                     </button>
-                    <button className="btn btn-outline btn-remove" onClick={() => setConfirmDialog({ username: friend.username })} disabled={loading}>
+                    <button type="button" className="btn btn-outline btn-remove" onClick={() => setConfirmDialog({ username: friend.username })} disabled={loading}>
                       Rimuovi
                     </button>
                   </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getFriendshipRequests, sendFriendshipRequest, respondFriendshipRequest } from "../services/FriendshipService";
 import { useNotice } from "../hooks/useNotice";
 
@@ -9,7 +9,7 @@ export default function FriendshipRequestsPage() {
   const [loading, setLoading]     = useState(false);
   const { notice, notify, clear } = useNotice();
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getFriendshipRequests();
@@ -19,7 +19,7 @@ export default function FriendshipRequestsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify]);
 
   const sendRequest = async (e) => {
     e.preventDefault();
@@ -47,7 +47,7 @@ export default function FriendshipRequestsPage() {
     }
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
   useEffect(() => {
     if (notice.message) {
       const t = setTimeout(() => clear(), 3000);
@@ -72,8 +72,9 @@ export default function FriendshipRequestsPage() {
           <div className="card-content">
             <form onSubmit={sendRequest} className="request-form">
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Username dell&apos;utente</label>
+                <label className="form-label" htmlFor="friend-username">Username dell&apos;utente</label>
                 <input
+                  id="friend-username"
                   type="text"
                   className="form-control"
                   placeholder="es. mario_rossi"
@@ -100,7 +101,7 @@ export default function FriendshipRequestsPage() {
                 {requests.length} {requests.length === 1 ? "richiesta" : "richieste"} in attesa
               </p>
             </div>
-            <button onClick={fetchRequests} className="btn btn-outline btn-refresh" disabled={loading}>Aggiorna</button>
+            <button type="button" onClick={fetchRequests} className="btn btn-outline btn-refresh" disabled={loading}>Aggiorna</button>
           </div>
 
           <div className="card-content">
@@ -130,10 +131,10 @@ export default function FriendshipRequestsPage() {
                       )}
                     </div>
                     <div className="request-actions" style={{ display: "flex", gap: 6 }}>
-                      <button className="btn btn-accept" onClick={() => respond(req.friendshipId, "accept")} disabled={loading}>
+                      <button type="button" className="btn btn-accept" onClick={() => respond(req.friendshipId, "accept")} disabled={loading}>
                         Accetta
                       </button>
-                      <button className="btn btn-outline" onClick={() => respond(req.friendshipId, "reject")} disabled={loading}>
+                      <button type="button" className="btn btn-outline" onClick={() => respond(req.friendshipId, "reject")} disabled={loading}>
                         Rifiuta
                       </button>
                     </div>

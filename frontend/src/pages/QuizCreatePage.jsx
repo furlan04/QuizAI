@@ -212,8 +212,9 @@ export default function QuizCreatePage() {
           <form onSubmit={handleCreate} className="create-form">
             {mode === "topic" ? (
               <div className="form-group">
-                <label className="form-label">Di cosa parla il tuo quiz?</label>
+                <label className="form-label" htmlFor="create-topic">Di cosa parla il tuo quiz?</label>
                 <textarea
+                  id="create-topic"
                   className="form-control"
                   placeholder="Es. Storia Romana, JavaScript avanzato, Cultura Pop anni '90..."
                   value={topic}
@@ -232,8 +233,9 @@ export default function QuizCreatePage() {
               </div>
             ) : (
               <div className="form-group">
-                <label className="form-label">Carica un documento</label>
+                <label className="form-label" htmlFor="create-file">Carica un documento</label>
                 <input
+                  id="create-file"
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,.docx,.pptx"
@@ -284,8 +286,9 @@ export default function QuizCreatePage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Numero di domande: {numQuestions}</label>
+              <label className="form-label" htmlFor="create-numq">Numero di domande: {numQuestions}</label>
               <input
+                id="create-numq"
                 type="range"
                 min={1}
                 max={20}

@@ -97,10 +97,11 @@ export default function RegisterPage() {
           <div className="auth-form-container">
             <form onSubmit={handleRegister} className="auth-form">
               <div className="form-group">
-                <label className="form-label">Username</label>
+                <label className="form-label" htmlFor="register-username">Username</label>
                 <div className="input-container">
                   <div className="input-icon"><User size={18} /></div>
                   <input
+                    id="register-username"
                     type="text"
                     className="form-control"
                     placeholder="es. mario_rossi"
@@ -115,10 +116,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email</label>
+                <label className="form-label" htmlFor="register-email">Email</label>
                 <div className="input-container">
                   <div className="input-icon"><Mail size={18} /></div>
                   <input
+                    id="register-email"
                     type="email"
                     className="form-control"
                     placeholder="es. nome@dominio.com"
@@ -133,10 +135,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label" htmlFor="register-password">Password</label>
                 <div className="input-container">
                   <div className="input-icon"><Lock size={18} /></div>
                   <input
+                    id="register-password"
                     type="password"
                     className="form-control"
                     placeholder="Crea una password sicura"
@@ -170,10 +173,11 @@ export default function RegisterPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Conferma Password</label>
+                <label className="form-label" htmlFor="register-confirm">Conferma Password</label>
                 <div className="input-container">
                   <div className="input-icon"><ShieldCheck size={18} /></div>
                   <input
+                    id="register-confirm"
                     type="password"
                     className="form-control"
                     placeholder="Ripeti la password"

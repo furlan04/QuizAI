@@ -36,7 +36,7 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
     topic: initialTopic, debouncedTopic: initialTopic, difficulty: "",
   });
   const { topic, debouncedTopic, difficulty } = filters;
-  const [quizzes, setQuizzes] = useState([]);
+  const [allQuizzes, setAllQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,22 +49,31 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
     difficulty: difficulty     || undefined,
   }), [debouncedTopic, difficulty]);
 
+  // Scarica dal server solo quando cambiano i filtri inviati al server.
+  // creatorId NON è qui: filtra lato client, quindi non deve causare un re-fetch.
   useEffect(() => {
+    let cancelled = false;
     const fetchQuizzes = async () => {
       setLoading(true);
       try {
         const data = await getQuizzes(filter);
-        let items = data?.items || [];
-        if (creatorId) items = items.filter((q) => q.createdBy === creatorId);
-        setQuizzes(items);
+        if (!cancelled) setAllQuizzes(data?.items || []);
       } catch {
-        setQuizzes([]);
+        if (!cancelled) setAllQuizzes([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchQuizzes();
-  }, [creatorId, filter]);
+    return () => { cancelled = true; };
+  }, [filter]);
+
+  // Il filtro per creatore è una pura derivazione dei dati già scaricati:
+  // si calcola durante il render, non si duplica nello stato.
+  const quizzes = useMemo(
+    () => (creatorId ? allQuizzes.filter((q) => q.createdBy === creatorId) : allQuizzes),
+    [allQuizzes, creatorId],
+  );
 
   return (
     <div>
@@ -72,6 +81,7 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
         <Card className="flex flex-wrap gap-2.5 p-3.5 mb-5">
           <input
             type="search"
+            aria-label="Cerca quiz per argomento"
             value={topic}
             onChange={(e) => setFilters({ topic: e.target.value })}
             placeholder="Cerca per argomento..."
@@ -81,6 +91,7 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
                        focus:outline-none focus:border-violet focus:bg-white"
           />
           <select
+            aria-label="Filtra per difficoltà"
             value={difficulty}
             onChange={(e) => setFilters({ difficulty: e.target.value })}
             className="font-display font-bold text-sm

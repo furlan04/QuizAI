@@ -221,7 +221,7 @@ export default function Navbar() {
 
           {/* Quiz dropdown */}
           <div className={`nav-dropdown${quizDropdownOpen ? " open" : ""}`}>
-            <button className={`nav-item nav-dd-toggle${quizActive ? " active" : ""}`} onClick={toggleQuiz}>
+            <button type="button" className={`nav-item nav-dd-toggle${quizActive ? " active" : ""}`} onClick={toggleQuiz}>
               <span className="nav-icon"><IcQuiz /></span>
               <span className="nav-text">Quiz</span>
               <span className="nav-dd-arrow"><IcArrow /></span>
@@ -237,7 +237,7 @@ export default function Navbar() {
 
           {/* Friends dropdown */}
           <div className={`nav-dropdown${friendsDropdownOpen ? " open" : ""}`}>
-            <button className={`nav-item nav-dd-toggle${friendsActive ? " active" : ""}`} onClick={toggleFriends}>
+            <button type="button" className={`nav-item nav-dd-toggle${friendsActive ? " active" : ""}`} onClick={toggleFriends}>
               <span className="nav-icon"><IcFriends /></span>
               <span className="nav-text">Amicizie</span>
               <span className="nav-dd-arrow"><IcArrow /></span>
@@ -252,7 +252,7 @@ export default function Navbar() {
 
           {/* Notifications dropdown */}
           <div className={`nav-dropdown${notifDropdownOpen ? " open" : ""}`}>
-            <button className={`nav-item nav-dd-toggle${isActive("/notifications") ? " active" : ""}`} onClick={toggleNotif}>
+            <button type="button" className={`nav-item nav-dd-toggle${isActive("/notifications") ? " active" : ""}`} onClick={toggleNotif}>
               <span className="nav-icon notif-bell">
                 <IcBell />
                 {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>}
@@ -287,7 +287,7 @@ export default function Navbar() {
           </Link>
 
           {/* Logout */}
-          <button onClick={onLogout} className="nav-item logout-btn">
+          <button type="button" onClick={onLogout} className="nav-item logout-btn">
             <span className="nav-icon"><IcLogout /></span>
             <span className="nav-text">Logout</span>
           </button>
@@ -303,7 +303,7 @@ export default function Navbar() {
 
         {/* Mobile quiz dropdown */}
         <div className="mobile-nav-dropdown">
-          <button className={`mobile-nav-item${quizDropdownOpen ? " active" : ""}`} onClick={toggleQuiz}>
+          <button type="button" className={`mobile-nav-item${quizDropdownOpen ? " active" : ""}`} onClick={toggleQuiz}>
             <span className="mobile-nav-icon"><IcQuiz /></span>
             <span className="mobile-nav-text">Quiz</span>
           </button>
@@ -318,7 +318,7 @@ export default function Navbar() {
 
         {/* Mobile friends dropdown */}
         <div className="mobile-nav-dropdown">
-          <button className={`mobile-nav-item${friendsDropdownOpen ? " active" : ""}`} onClick={toggleFriends}>
+          <button type="button" className={`mobile-nav-item${friendsDropdownOpen ? " active" : ""}`} onClick={toggleFriends}>
             <span className="mobile-nav-icon"><IcFriends /></span>
             <span className="mobile-nav-text">Amici</span>
           </button>
@@ -332,7 +332,7 @@ export default function Navbar() {
 
         {/* Mobile notifications dropdown */}
         <div className="mobile-nav-dropdown">
-          <button className={`mobile-nav-item${notifDropdownOpen ? " active" : ""}`} onClick={toggleNotif}>
+          <button type="button" className={`mobile-nav-item${notifDropdownOpen ? " active" : ""}`} onClick={toggleNotif}>
             <span className="mobile-nav-icon notif-bell">
               <IcBell />
               {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>}
@@ -352,7 +352,7 @@ export default function Navbar() {
           <span className="mobile-nav-text">Profilo</span>
         </Link>
 
-        <button onClick={onLogout} className="mobile-nav-item logout-btn">
+        <button type="button" onClick={onLogout} className="mobile-nav-item logout-btn">
           <span className="mobile-nav-icon"><IcLogout /></span>
           <span className="mobile-nav-text">Esci</span>
         </button>
