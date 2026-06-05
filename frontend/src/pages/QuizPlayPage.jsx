@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useReducer } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getQuizById } from "../services/QuizService";
 import { startSession, answerQuestion, completeSession } from "../services/QuizAttemptService";
+import { Check, X } from "../components/ui/Icon";
 
 
 const LETTER = ["A", "B", "C", "D", "E", "F"];
@@ -9,22 +10,21 @@ const LETTER = ["A", "B", "C", "D", "E", "F"];
 export default function QuizPlayPage() {
   const { id } = useParams();
 
+  // Stato della sessione/caricamento raggruppato.
   // phase: 'loading' | 'generating' | 'failed' | 'playing' | 'done'
-  const [phase, setPhase]               = useState("loading");
-  const [quiz, setQuiz]                 = useState(null);
-  const [sessionId, setSessionId]       = useState(null);
-  const [questions, setQuestions]       = useState([]);
+  const [game, setGame] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    phase: "loading", quiz: null, sessionId: null, questions: [], error: null, result: null,
+  });
+  const { phase, quiz, sessionId, questions, error, result } = game;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected]         = useState(null);
   const [feedback, setFeedback]         = useState(null); // { isCorrect, correctIndex, explanation }
-  const [result, setResult]             = useState(null); // { score, totalQuestions, percentage }
-  const [error, setError]               = useState(null);
   const [busy, setBusy]                 = useState(false);
   const pollRef = useRef(null);
 
   // Carica il quiz, gestendo lo stato di generazione con polling
   useEffect(() => {
-    if (!id || id === "undefined") { setError("ID quiz non valido"); setPhase("failed"); return; }
+    if (!id || id === "undefined") { setGame({ error: "ID quiz non valido", phase: "failed" }); return; }
     let cancelled = false;
 
     const load = async () => {
@@ -33,26 +33,22 @@ export default function QuizPlayPage() {
       if (cancelled) return;
 
       if (data?.generating || data?.status === "generating") {
-        setPhase("generating");
+        setGame({ phase: "generating" });
         pollRef.current = setTimeout(load, 2500); // riprova finché pronto
         return;
       }
       if (data?.status === "failed" || data?.error) {
-        setError(data.error || "Generazione del quiz fallita");
-        setPhase("failed");
+        setGame({ error: data.error || "Generazione del quiz fallita", phase: "failed" });
         return;
       }
-      setQuiz(data);
+      setGame({ quiz: data });
       // Avvia la sessione di gioco
       const session = await startSession(id);
       if (cancelled) return;
       if (session?.sessionId) {
-        setSessionId(session.sessionId);
-        setQuestions(session.questions || []);
-        setPhase("playing");
+        setGame({ sessionId: session.sessionId, questions: session.questions || [], phase: "playing" });
       } else {
-        setError("Impossibile avviare la sessione");
-        setPhase("failed");
+        setGame({ error: "Impossibile avviare la sessione", phase: "failed" });
       }
     };
 
@@ -80,8 +76,7 @@ export default function QuizPlayPage() {
       setBusy(true);
       const res = await completeSession(sessionId);
       setBusy(false);
-      setResult(res);
-      setPhase("done");
+      setGame({ result: res, phase: "done" });
     }
   };
 
@@ -202,10 +197,10 @@ export default function QuizPlayPage() {
                 <span className="option-letter">{LETTER[i] || i + 1}</span>
                 <span className="option-text">{opt}</span>
                 {feedback && i === feedback.correctIndex && (
-                  <span className="option-check" style={{ marginLeft: "auto", color: "var(--mint,green)" }}>✓</span>
+                  <Check className="option-check" size={20} style={{ marginLeft: "auto", color: "var(--mint,green)" }} />
                 )}
                 {feedback && i === selected && i !== feedback.correctIndex && (
-                  <span className="option-check" style={{ marginLeft: "auto", color: "var(--coral,red)" }}>✗</span>
+                  <X className="option-check" size={20} style={{ marginLeft: "auto", color: "var(--coral,red)" }} />
                 )}
               </button>
             );

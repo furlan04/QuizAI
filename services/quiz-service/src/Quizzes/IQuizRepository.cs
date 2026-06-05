@@ -4,6 +4,8 @@ namespace QuizService.Quizzes;
 
 public interface IQuizRepository
 {
+    /// <summary>Genera un nuovo identificativo persistente (dettaglio dello storage).</summary>
+    string NewId();
     Task<string> CreateAsync(Quiz quiz);
     Task<Quiz?> GetByIdAsync(string id);
     Task<(List<Quiz> Items, long Total)> GetPagedAsync(

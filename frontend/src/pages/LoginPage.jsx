@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useReducer } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { login, googleLogin, resendConfirmation } from "../services/AuthService";
 import { AuthErrorCodes } from "../services/AuthErrorCodes";
 import { getConfig } from "../config/config";
 import { useAuth } from "../auth/AuthContext";
-import { Alert, Button, Card, Input } from "../components/ui";
+import Alert from "../components/ui/Alert";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
 
 export default function LoginPage() {
   const { login: setAuth } = useAuth();
@@ -14,11 +17,11 @@ export default function LoginPage() {
 
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [errorCode, setErrorCode] = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [resendMsg, setResendMsg] = useState("");
-  const [resendBusy, setResendBusy] = useState(false);
+  // Stato di richiesta/errore (login + reinvio conferma) raggruppato in un reducer.
+  const [status, setStatus] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    error: "", errorCode: null, loading: false, resendMsg: "", resendBusy: false,
+  });
+  const { error, errorCode, loading, resendMsg, resendBusy } = status;
 
   const needsEmailConfirmation = errorCode === AuthErrorCodes.EmailNotConfirmed;
 
@@ -26,61 +29,68 @@ export default function LoginPage() {
   useEffect(() => {
     if (!googleClientId || !googleBtnRef.current) return;
 
+    let retryTimer;
+    let cancelled = false;
+
     const onCredential = async (response) => {
-      setError(""); setErrorCode(null);
-      setLoading(true);
+      setStatus({ error: "", errorCode: null, loading: true });
       try {
         const res = await googleLogin(response.credential);
         if (res.success && res.token) {
           setAuth(res.token);
           navigate("/");
         } else {
-          setError(res.message || "Login Google fallito");
-          setErrorCode(res.code || null);
+          setStatus({ error: res.message || "Login Google fallito", errorCode: res.code || null });
         }
       } catch {
-        setError("Errore di connessione al server");
+        setStatus({ error: "Errore di connessione al server" });
       } finally {
-        setLoading(false);
+        setStatus({ loading: false });
       }
     };
 
     const tryInit = () => {
-      if (!window.google?.accounts?.id) { setTimeout(tryInit, 250); return; }
+      if (cancelled) return;
+      if (!window.google?.accounts?.id) { retryTimer = setTimeout(tryInit, 250); return; }
       window.google.accounts.id.initialize({ client_id: googleClientId, callback: onCredential });
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: 320,
       });
     };
     tryInit();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleClientId]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); setErrorCode(null); setResendMsg("");
-    setLoading(true);
+    setStatus({ error: "", errorCode: null, resendMsg: "", loading: true });
     try {
       const result = await login(email, password);
       if (result.success && result.token) {
         setAuth(result.token);
         navigate("/");
       } else {
-        setError(result.message || "Errore login");
-        setErrorCode(result.code || null);
+        setStatus({ error: result.message || "Errore login", errorCode: result.code || null });
       }
     } catch {
-      setError("Errore di connessione al server");
+      setStatus({ error: "Errore di connessione al server" });
     } finally {
-      setLoading(false);
+      setStatus({ loading: false });
     }
   };
 
   const handleResend = async () => {
-    setResendBusy(true); setResendMsg("");
+    setStatus({ resendBusy: true, resendMsg: "" });
     const res = await resendConfirmation(email);
-    setResendBusy(false);
-    setResendMsg(res.success ? "Email di conferma inviata." : "Errore nell'invio. Riprova più tardi.");
+    setStatus({
+      resendBusy: false,
+      resendMsg: res.success ? "Email di conferma inviata." : "Errore nell'invio. Riprova più tardi.",
+    });
   };
 
   return (

@@ -1,7 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useReducer } from "react";
 import { Link } from "react-router-dom";
 import { getQuizzes } from "../services/QuizService";
-import { Button, Card, Chip, Spinner } from "./ui";
+import Button from "./ui/Button";
+import Card from "./ui/Card";
+import Chip from "./ui/Chip";
+import Spinner from "./ui/Spinner";
 
 const COVERS = [
   "bg-violet",
@@ -28,14 +31,16 @@ const DIFFICULTIES = [
  *   - initialTopic: valore iniziale del topic
  */
 export default function QuizList({ creatorId = null, searchable = true, initialTopic = "" }) {
-  const [topic, setTopic] = useState(initialTopic);
-  const [debouncedTopic, setDebouncedTopic] = useState(initialTopic);
-  const [difficulty, setDifficulty] = useState("");
+  // Filtri di ricerca correlati raggruppati in un reducer.
+  const [filters, setFilters] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    topic: initialTopic, debouncedTopic: initialTopic, difficulty: "",
+  });
+  const { topic, debouncedTopic, difficulty } = filters;
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedTopic(topic.trim()), 300);
+    const t = setTimeout(() => setFilters({ debouncedTopic: topic.trim() }), 300);
     return () => clearTimeout(t);
   }, [topic]);
 
@@ -68,7 +73,7 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
           <input
             type="search"
             value={topic}
-            onChange={(e) => setTopic(e.target.value)}
+            onChange={(e) => setFilters({ topic: e.target.value })}
             placeholder="Cerca per argomento..."
             className="flex-1 min-w-[200px] font-display font-bold text-base
                        border-2 border-ink rounded-sm bg-cream
@@ -77,7 +82,7 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
           />
           <select
             value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
+            onChange={(e) => setFilters({ difficulty: e.target.value })}
             className="font-display font-bold text-sm
                        border-2 border-ink rounded-sm bg-white
                        px-3.5 py-2.5 cursor-pointer
@@ -93,7 +98,7 @@ export default function QuizList({ creatorId = null, searchable = true, initialT
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Spinner />
-          <p className="text-ink-soft">Caricamento quiz...</p>
+          <p className="text-ink-soft">Caricamento quiz…</p>
         </div>
       ) : quizzes.length === 0 ? (
         <Card className="text-center p-10">

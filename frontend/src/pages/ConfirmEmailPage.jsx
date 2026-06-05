@@ -36,7 +36,7 @@ export default function ConfirmEmailPage() {
             {status === "loading" && (
               <>
                 <div className="loading-spinner" />
-                <p className="auth-subtitle">Sto confermando il tuo account...</p>
+                <p className="auth-subtitle">Sto confermando il tuo account…</p>
               </>
             )}
 

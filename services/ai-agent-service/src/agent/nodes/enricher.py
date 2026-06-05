@@ -48,6 +48,8 @@ def _derive_tags(topic: str, plan: dict | None) -> list[str]:
 def enricher_node(state: AgentState) -> dict:
     try:
         tags = _derive_tags(state.topic, state.plan)
+        if state.source_text:
+            tags = sorted(set(tags) | {"source:document"})
 
         generated_at = datetime.now(tz=timezone.utc).isoformat()
         language = (state.plan or {}).get("language", "en")

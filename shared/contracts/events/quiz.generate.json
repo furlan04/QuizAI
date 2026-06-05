@@ -30,6 +30,11 @@
     "user_id": {
       "type": "string",
       "description": "ID dell'utente che ha richiesto il quiz."
+    },
+    "source_text": {
+      "type": ["string", "null"],
+      "maxLength": 60000,
+      "description": "Testo estratto da un documento caricato (PDF/DOCX/PPTX) su cui ancorare il quiz (RAG). Null/assente per i quiz generati dal solo topic. Transitorio: non viene mai persistito."
     }
   }
 }

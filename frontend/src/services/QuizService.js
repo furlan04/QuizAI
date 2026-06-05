@@ -6,6 +6,22 @@ export const generateQuiz = async (topic, difficulty, numQuestions) => {
   return { success: false, message: res.error || 'Errore durante la generazione del quiz' };
 };
 
+/**
+ * Genera un quiz a partire da un documento (PDF/DOCX/PPTX).
+ * Il file viene caricato sul quiz-service che lo inoltra all'AI per l'estrazione
+ * del testo; il file non viene salvato da nessuna parte.
+ */
+export const generateQuizFromFile = async (file, difficulty, numQuestions) => {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('difficulty', difficulty);
+  form.append('numQuestions', String(numQuestions));
+
+  const res = await quizApi.post('/quizzes/generate-from-file', form);
+  if (res.ok) return { success: true, ...res.data };
+  return { success: false, message: res.error || 'Errore durante la generazione del quiz dal documento' };
+};
+
 /** Compat con vecchio createQuiz */
 export const createQuiz = (topic) => generateQuiz(topic, 'medium', 5);
 

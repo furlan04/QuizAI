@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getMyAttempts } from "../services/QuizAttemptService";
 import { getQuizById } from "../services/QuizService";
+import { Check, X } from "../components/ui/Icon";
 
 
 const LETTER = ["A", "B", "C", "D", "E", "F"];
@@ -40,7 +41,7 @@ export default function QuizReviewPage() {
       <div className="quiz-list-container">
         <div className="loading-state">
           <div className="loading-spinner" />
-          <p className="loading-text">Caricamento revisione...</p>
+          <p className="loading-text">Caricamento revisione…</p>
         </div>
       </div>
     );
@@ -109,8 +110,8 @@ export default function QuizReviewPage() {
                     }}>
                       <span style={{ fontWeight: 700 }}>{LETTER[oi] || oi + 1}</span>
                       <span style={{ flex: 1 }}>{opt}</span>
-                      {isCorrectOpt && <span>✓</span>}
-                      {isSelectedWrong && <span>✗</span>}
+                      {isCorrectOpt && <Check size={18} style={{ color: "rgb(0,160,80)" }} />}
+                      {isSelectedWrong && <X size={18} style={{ color: "rgb(214,55,55)" }} />}
                     </div>
                   );
                 })}

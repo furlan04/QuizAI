@@ -61,9 +61,13 @@ public class FriendshipService : IFriendshipService
         var existing = await _repo.GetBetweenUsersAsync(requesterId, target.Id);
         if (existing is not null)
         {
-            throw existing.Status == "accepted"
-                ? new ConflictException("Siete già amici.")
-                : new ConflictException("Richiesta già inviata.");
+            if (existing.Status == "accepted")
+                throw new ConflictException("Siete già amici.");
+            if (existing.Status == "pending")
+                throw new ConflictException("Richiesta già inviata.");
+            // Una precedente richiesta era stata rifiutata: rimuovi la vecchia riga
+            // e consenti un nuovo invio (con la direzione corretta requester→addressee).
+            await _repo.DeleteBetweenUsersAsync(requesterId, target.Id);
         }
 
         var friendship = new Friendship

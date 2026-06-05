@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getQuizById } from "../services/QuizService";
 import { getLeaderboard, getMyAttempts } from "../services/QuizAttemptService";
 import { getProfileByUserId } from "../services/UserService";
 import { useAuth } from "../auth/AuthContext";
-import { Button, Card, Chip, Spinner } from "../components/ui";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Chip from "../components/ui/Chip";
+import Spinner from "../components/ui/Spinner";
+import { Trophy, Medal, ArrowRight } from "../components/ui/Icon";
 
 const DIFFICULTY_LABEL = { easy: "Facile", medium: "Medio", hard: "Difficile" };
-const POS_ICON = ["🥇", "🥈", "🥉"];
+// Colori medaglia oro / argento / bronzo per le prime tre posizioni.
+const MEDAL_COLOR = ["#D4AF37", "#9CA3AF", "#CD7F32"];
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -18,10 +23,11 @@ export default function QuizDetailPage() {
   const navigate = useNavigate();
   const { user: me } = useAuth();
 
-  const [quiz, setQuiz] = useState(null);
-  const [creatorUsername, setCreatorUsername] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [myAttempt, setMyAttempt] = useState(null);
+  // Dati della pagina caricati insieme nello stesso effetto: raggruppati in un reducer.
+  const [data, setData] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    quiz: null, creatorUsername: null, leaderboard: [], myAttempt: null,
+  });
+  const { quiz, creatorUsername, leaderboard, myAttempt } = data;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -38,21 +44,21 @@ export default function QuizDetailPage() {
           setError(quizData.error || "Quiz non disponibile.");
           return;
         }
-        setQuiz(quizData);
+        setData({ quiz: quizData });
 
         let username = quizData.createdByUsername || null;
         if (!username && quizData.createdBy) {
           const profile = await getProfileByUserId(quizData.createdBy).catch(() => null);
           if (profile?.username) username = profile.username;
         }
-        setCreatorUsername(username);
+        setData({ creatorUsername: username });
 
         const [lb, attempt] = await Promise.allSettled([
           getLeaderboard(id),
           getMyAttempts(id),
         ]);
-        if (lb.status === "fulfilled" && Array.isArray(lb.value)) setLeaderboard(lb.value);
-        if (attempt.status === "fulfilled" && attempt.value?.answers) setMyAttempt(attempt.value);
+        if (lb.status === "fulfilled" && Array.isArray(lb.value)) setData({ leaderboard: lb.value });
+        if (attempt.status === "fulfilled" && attempt.value?.answers) setData({ myAttempt: attempt.value });
       } catch (err) {
         setError(err?.message || "Errore nel caricamento del quiz");
       } finally {
@@ -67,7 +73,7 @@ export default function QuizDetailPage() {
       <div className="max-w-4xl mx-auto px-6 py-20">
         <div className="flex flex-col items-center gap-3">
           <Spinner />
-          <p className="text-ink-soft">Caricamento quiz...</p>
+          <p className="text-ink-soft">Caricamento quiz…</p>
         </div>
       </div>
     );
@@ -128,7 +134,7 @@ export default function QuizDetailPage() {
               <div className="text-xs text-ink-soft">Creato da</div>
               <div className="font-extrabold text-base">{creatorUsername}</div>
             </div>
-            <span className="font-mono text-xs font-bold">Vai al profilo →</span>
+            <span className="font-mono text-xs font-bold inline-flex items-center gap-1">Vai al profilo <ArrowRight size={14} /></span>
           </Card>
         </Link>
       )}
@@ -150,10 +156,12 @@ export default function QuizDetailPage() {
       {/* Leaderboard */}
       <Card>
         <div className="flex justify-between items-center px-5 py-3.5 border-b-2 border-ink">
-          <h3 className="font-display font-extrabold text-lg m-0">🏆 Classifica</h3>
+          <h3 className="font-display font-extrabold text-lg m-0 inline-flex items-center gap-2">
+            <Trophy size={20} className="text-violet" /> Classifica
+          </h3>
           {leaderboard.length > 5 && (
-            <Link to={`/leaderboard/${id}`} className="font-mono text-xs font-bold underline">
-              Vedi tutta →
+            <Link to={`/leaderboard/${id}`} className="font-mono text-xs font-bold underline inline-flex items-center gap-1">
+              Vedi tutta <ArrowRight size={14} />
             </Link>
           )}
         </div>
@@ -176,7 +184,9 @@ export default function QuizDetailPage() {
                   ].join(" ")}
                 >
                   <span className="font-display font-extrabold text-base">
-                    {POS_ICON[idx] || `#${idx + 1}`}
+                    {idx < 3
+                      ? <Medal size={20} style={{ color: MEDAL_COLOR[idx] }} />
+                      : `#${idx + 1}`}
                   </span>
                   <span className="font-bold">
                     {entry.username}

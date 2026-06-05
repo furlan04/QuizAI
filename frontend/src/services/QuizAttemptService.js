@@ -34,7 +34,7 @@ export const getMyAttempts = async (quizId) => {
 };
 
 /** Deprecati — mantenuti per compatibilità con vecchie pagine. */
-export const submitQuizAttempt = async () => ({ success: false, message: 'Usa startSession → answerQuestion → completeSession' });
+export const submitQuizAttempt = async () => ({ success: false, message: 'Usa startSession -> answerQuestion -> completeSession' });
 export const getAttemptReview = async (sessionId) => {
   const res = await quizApi.get(`/sessions/${sessionId}`);
   return res.ok ? res.data : null;

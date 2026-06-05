@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { getFriendshipRequests, sendFriendshipRequest, respondFriendshipRequest } from "../services/FriendshipService";
+import { useNotice } from "../hooks/useNotice";
 
 
 export default function FriendshipRequestsPage() {
   const [username, setUsername]   = useState("");
   const [requests, setRequests]   = useState([]);
   const [loading, setLoading]     = useState(false);
-  const [message, setMessage]     = useState("");
-  const [messageType, setMessageType] = useState("");
+  const { notice, notify, clear } = useNotice();
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -15,8 +15,7 @@ export default function FriendshipRequestsPage() {
       const data = await getFriendshipRequests();
       setRequests(Array.isArray(data) ? data : []);
     } catch {
-      setMessage("Errore nel caricamento delle richieste");
-      setMessageType("error");
+      notify("Errore nel caricamento delle richieste", "error");
     } finally {
       setLoading(false);
     }
@@ -29,12 +28,10 @@ export default function FriendshipRequestsPage() {
     const res = await sendFriendshipRequest(username.trim());
     setLoading(false);
     if (res.success) {
-      setMessage("Richiesta di amicizia inviata!");
-      setMessageType("success");
+      notify("Richiesta di amicizia inviata!", "success");
       setUsername("");
     } else {
-      setMessage(res.message || "Errore nell'invio della richiesta");
-      setMessageType("error");
+      notify(res.message || "Errore nell'invio della richiesta", "error");
     }
   };
 
@@ -43,22 +40,20 @@ export default function FriendshipRequestsPage() {
     const res = await respondFriendshipRequest(friendshipId, action);
     setLoading(false);
     if (res.success) {
-      setMessage(action === "accept" ? "Richiesta accettata!" : "Richiesta rifiutata");
-      setMessageType("success");
+      notify(action === "accept" ? "Richiesta accettata!" : "Richiesta rifiutata", "success");
       fetchRequests();
     } else {
-      setMessage(res.message || "Errore nella risposta");
-      setMessageType("error");
+      notify(res.message || "Errore nella risposta", "error");
     }
   };
 
   useEffect(() => { fetchRequests(); }, []);
   useEffect(() => {
-    if (message) {
-      const t = setTimeout(() => { setMessage(""); setMessageType(""); }, 3000);
+    if (notice.message) {
+      const t = setTimeout(() => clear(), 3000);
       return () => clearTimeout(t);
     }
-  }, [message]);
+  }, [notice.message, clear]);
 
   return (
     <div className="friendship-requests-container">
@@ -112,7 +107,7 @@ export default function FriendshipRequestsPage() {
             {loading && requests.length === 0 ? (
               <div className="loading-state" style={{ minHeight: 120 }}>
                 <div className="loading-spinner" />
-                <p className="loading-text">Caricamento...</p>
+                <p className="loading-text">Caricamento…</p>
               </div>
             ) : requests.length === 0 ? (
               <div className="empty-state" style={{ minHeight: 120, background: "var(--cream)", border: "none", boxShadow: "none" }}>
@@ -150,9 +145,9 @@ export default function FriendshipRequestsPage() {
         </div>
       </div>
 
-      {message && (
-        <div className={`alert ${messageType === "success" ? "alert-success" : "alert-error"}`}>
-          <div className="alert-content"><span className="alert-text">{message}</span></div>
+      {notice.message && (
+        <div className={`alert ${notice.type === "success" ? "alert-success" : "alert-error"}`}>
+          <div className="alert-content"><span className="alert-text">{notice.message}</span></div>
         </div>
       )}
     </div>

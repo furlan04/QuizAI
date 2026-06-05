@@ -11,6 +11,8 @@ class AgentState:
     difficulty: str = ""
     num_questions: int = 0
     user_id: str = ""
+    # When present, the quiz is grounded on this uploaded-document text (RAG).
+    source_text: str = ""
 
     # Pipeline fields
     plan: Optional[dict] = None

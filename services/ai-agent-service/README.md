@@ -4,6 +4,8 @@ Microservizio Python responsabile della generazione automatica di quiz tramite L
 
 Riceve una richiesta di generazione da RabbitMQ, esegue una pipeline LangGraph a 4 nodi che pianifica, genera, valida e arricchisce le domande, poi pubblica il risultato sulla coda di risposta.
 
+Supporta inoltre la **generazione da documento (RAG)**: se la richiesta include `source_text` (testo estratto da un PDF/DOCX/PPTX caricato dall'utente), planner e generator vengono ancorati al contenuto del documento tramite un indice BM25 in-memory effimero. Il documento non viene mai salvato né messo in cache: il testo vive solo nel messaggio transitorio e nello stato della pipeline, e viene scartato a fine generazione (non viene persistito su MongoDB).
+
 ---
 
 ## Architettura
@@ -30,7 +32,9 @@ Il validator fa fino a **3 retry** sul generator prima di pubblicare `status: fa
 ## Stack
 
 - **Python 3.11**
-- **FastAPI** — solo per `GET /health`
+- **FastAPI** — `GET /health` e `POST /documents/extract` (estrazione testo interna)
+- **pypdf / python-docx / python-pptx** — estrazione testo in memoria da PDF/DOCX/PPTX
+- **rank-bm25** — retrieval lessicale effimero per ancorare le domande al documento
 - **LangGraph** — orchestrazione della pipeline
 - **LangChain + GROQ** — LLM (`llama-3.3-70b-versatile`)
 - **instructor** — output strutturato forzato dall'LLM
@@ -131,8 +135,19 @@ curl http://localhost:8000/health
   "topic": "Python decorators",
   "difficulty": "medium",
   "num_questions": 5,
-  "user_id": "u-42"
+  "user_id": "u-42",
+  "source_text": null
 }
+```
+
+`source_text` è opzionale: se valorizzato (testo del documento caricato, max 60k caratteri) la generazione è ancorata a quel contenuto (RAG). È transitorio e non viene mai persistito.
+
+**Estrazione testo** — `POST /documents/extract` (interno, header `X-Internal-Api-Key`):
+
+Riceve un upload multipart (`file`: PDF/DOCX/PPTX), estrae il testo **in memoria** e lo restituisce. Nessun byte viene scritto su disco dal servizio. Chiamato server-to-server dal Quiz Service.
+
+```json
+{ "filename": "appunti.pdf", "char_count": 1234, "suggested_topic": "appunti", "text": "..." }
 ```
 
 **Uscita** — `quiz.generated`:

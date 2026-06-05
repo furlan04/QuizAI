@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getUserSettings } from "../services/UserService";
-import { Button, Card, Chip, Spinner } from "../components/ui";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Chip from "../components/ui/Chip";
+import Spinner from "../components/ui/Spinner";
 
 const formatDate = (d) =>
   new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -11,18 +14,22 @@ export default function AttemptedQuizzesPage() {
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
+    let ignore = false;
+    const loadAttempts = async () => {
       setLoading(true);
       try {
         const profile = await getUserSettings();
-        setAttempts(profile?.attempts || []);
+        if (!ignore) setAttempts(profile?.attempts || []);
       } catch {
-        setAttempts([]);
+        if (!ignore) setAttempts([]);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
-    fetch();
+    loadAttempts();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   return (
@@ -37,7 +44,7 @@ export default function AttemptedQuizzesPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Spinner />
-          <p className="text-ink-soft">Caricamento quiz provati...</p>
+          <p className="text-ink-soft">Caricamento quiz provati…</p>
         </div>
       ) : attempts.length === 0 ? (
         <Card className="text-center p-10">

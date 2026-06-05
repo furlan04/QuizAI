@@ -77,13 +77,14 @@ def _make_invalid_raw(n: int = 2) -> RawQuestions:
     )
 
 
-def _make_initial_state(num_questions: int = 2) -> AgentState:
+def _make_initial_state(num_questions: int = 2, source_text: str = "") -> AgentState:
     return AgentState(
         quiz_id="qz-test-001",
         topic="Python",
         difficulty="easy",
         num_questions=num_questions,
         user_id="u-test",
+        source_text=source_text,
     )
 
 
@@ -201,3 +202,48 @@ def test_always_fails_sets_error(mock_planner_groq, mock_planner_instructor,
     assert final.retry_count == 3  # MAX_RETRIES
     # Generator called MAX_RETRIES times (3 retries = 3 generation attempts after initial)
     assert gen_client.chat.completions.create.call_count == 3
+
+
+# ---------------------------------------------------------------------------
+# Scenario 4: Document-grounded (RAG) path
+# ---------------------------------------------------------------------------
+
+@patch("src.agent.nodes.generator.instructor")
+@patch("src.agent.nodes.generator.Groq")
+@patch("src.agent.nodes.planner.instructor")
+@patch("src.agent.nodes.planner.Groq")
+def test_document_path_uses_grounded_prompts(mock_planner_groq, mock_planner_instructor,
+                                             mock_gen_groq, mock_gen_instructor):
+    """
+    With source_text set, the planner and generator must use the document-grounded
+    prompts and the generator's user message must contain excerpts from the document.
+    """
+    planner_client = MagicMock()
+    mock_planner_instructor.from_groq.return_value = planner_client
+    planner_client.chat.completions.create.return_value = _make_plan()
+
+    gen_client = MagicMock()
+    mock_gen_instructor.from_groq.return_value = gen_client
+    gen_client.chat.completions.create.return_value = _make_valid_raw(2)
+
+    source_text = (
+        "Variables in Python store references to objects. "
+        "Functions are first-class objects and can be passed around. "
+    ) * 20
+
+    graph = build_graph()
+    final: AgentState = graph.invoke(
+        _make_initial_state(num_questions=2, source_text=source_text)
+    )
+
+    assert final.validated_questions is not None
+    assert "source:document" in final.tags
+
+    # Inspect the messages the generator sent to the LLM.
+    _, gen_kwargs = gen_client.chat.completions.create.call_args
+    messages = gen_kwargs["messages"]
+    system_content = messages[0]["content"]
+    user_content = messages[1]["content"]
+    assert "strictly from a provided document" in system_content
+    assert "Document excerpts" in user_content
+    assert "first-class objects" in user_content  # grounded on the actual text

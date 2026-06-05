@@ -10,8 +10,13 @@ using UserService.Messaging.Consumers;
 using UserService.Messaging.Publishers;
 using UserService.Users;
 using UserService.Users.Models;
+using UserService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Mappature MongoDB a runtime: tiene il dominio puro (entità senza attributi Bson).
+MongoMappings.Register();
+
 var cfg = builder.Configuration;
 
 var mongoUrl       = cfg["MONGODB_URL"]        ?? "mongodb://localhost:27017";

@@ -11,6 +11,8 @@ class QuizGenerateEvent(BaseModel):
     difficulty: Literal["easy", "medium", "hard"]
     num_questions: int = Field(ge=1, le=20)
     user_id: str
+    # Optional: extracted text of an uploaded document to ground the quiz on.
+    source_text: Optional[str] = Field(default=None, max_length=60000)
 
 
 class QuizGeneratedEvent(BaseModel):

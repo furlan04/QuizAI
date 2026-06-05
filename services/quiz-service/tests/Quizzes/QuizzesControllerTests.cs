@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using QuizService.Documents;
 using QuizService.Messaging.Messages;
 using QuizService.Messaging.Publishers;
 using QuizService.Quizzes;
@@ -14,11 +15,12 @@ public class QuizzesControllerTests
 {
     private readonly Mock<IQuizRepository> _repo = new();
     private readonly Mock<IQuizGenerationPublisher> _publisher = new();
+    private readonly Mock<IDocumentExtractionClient> _extractor = new();
     private readonly QuizzesController _sut;
 
     public QuizzesControllerTests()
     {
-        _sut = new QuizzesController(_repo.Object, _publisher.Object);
+        _sut = new QuizzesController(_repo.Object, _publisher.Object, _extractor.Object);
         SetUser("alice");
     }
 

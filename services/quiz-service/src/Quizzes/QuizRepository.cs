@@ -11,6 +11,8 @@ public class QuizRepository : IQuizRepository
     public QuizRepository(IMongoDatabase db)
         => _col = db.GetCollection<Quiz>("quizzes");
 
+    public string NewId() => ObjectId.GenerateNewId().ToString();
+
     public async Task<string> CreateAsync(Quiz quiz)
     {
         await _col.InsertOneAsync(quiz);

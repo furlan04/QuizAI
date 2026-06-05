@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
-import { generateQuiz, getQuizById } from "../services/QuizService";
+import { generateQuiz, generateQuizFromFile, getQuizById } from "../services/QuizService";
 
 
 const DIFFICULTIES = [
@@ -8,6 +8,9 @@ const DIFFICULTIES = [
   { value: "medium", label: "Medio" },
   { value: "hard",   label: "Difficile" },
 ];
+
+const ACCEPTED_EXTENSIONS = [".pdf", ".docx", ".pptx"];
+const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15 MB
 
 const LOADING_PHRASES = [
   "Penso alle domande...",
@@ -21,16 +24,20 @@ const LOADING_PHRASES = [
 ];
 
 export default function QuizCreatePage() {
+  const [mode, setMode]                 = useState("topic"); // 'topic' | 'document'
   const [topic, setTopic]               = useState("");
+  const [file, setFile]                 = useState(null);
   const [difficulty, setDifficulty]     = useState("medium");
   const [numQuestions, setNumQuestions] = useState(5);
-  const [message, setMessage]           = useState("");
-  const [isError, setIsError]           = useState(false);
-  // phase: 'form' | 'submitting' | 'generating' | 'failed'
-  const [phase, setPhase]               = useState("form");
+  // Stato di invio/esito raggruppato. phase: 'form' | 'submitting' | 'generating' | 'failed'
+  const [status, setStatus] = useReducer((s, patch) => ({ ...s, ...patch }), {
+    phase: "form", message: "", isError: false,
+  });
+  const { phase, message, isError } = status;
   const [phraseIndex, setPhraseIndex]   = useState(0);
   const navigate = useNavigate();
   const pollRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Rotazione delle frasi durante il caricamento
   useEffect(() => {
@@ -41,31 +48,14 @@ export default function QuizCreatePage() {
     return () => clearInterval(t);
   }, [phase]);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setMessage("");
-    setIsError(false);
-    setPhase("submitting");
-
-    const result = await generateQuiz(topic, difficulty, Number(numQuestions));
-
-    if (!result.success || !result.quizId) {
-      setIsError(true);
-      setMessage(result.message || "Errore durante la generazione del quiz");
-      setPhase("form");
-      return;
-    }
-
-    // Polling finché il quiz non è pronto (o fallisce), con timeout di 60s
-    setPhase("generating");
-    const quizId = result.quizId;
+  // Polling condiviso: attende che il quiz sia pronto (o fallisca), timeout 60s.
+  const beginPolling = (quizId) => {
+    setStatus({ phase: "generating" });
     const deadline = Date.now() + 60_000;
 
     const poll = async () => {
       if (Date.now() > deadline) {
-        setIsError(true);
-        setMessage("Timeout: la generazione sta impiegando troppo tempo. Riprova più tardi.");
-        setPhase("failed");
+        setStatus({ isError: true, message: "Timeout: la generazione sta impiegando troppo tempo. Riprova più tardi.", phase: "failed" });
         return;
       }
       const data = await getQuizById(quizId);
@@ -74,15 +64,57 @@ export default function QuizCreatePage() {
         return;
       }
       if (data?.status === "failed" || data?.error) {
-        setIsError(true);
-        setMessage(data.error || "La generazione del quiz è fallita");
-        setPhase("failed");
+        setStatus({ isError: true, message: data.error || "La generazione del quiz è fallita", phase: "failed" });
         return;
       }
-      // Pronto → apri il dettaglio del quiz appena creato
+      // Pronto -> apri il dettaglio del quiz appena creato
       navigate(`/quizzes/${quizId}`);
     };
     poll();
+  };
+
+  const handleSelectFile = (e) => {
+    const picked = e.target.files?.[0] || null;
+    if (!picked) { setFile(null); return; }
+
+    const lower = picked.name.toLowerCase();
+    const okType = ACCEPTED_EXTENSIONS.some((ext) => lower.endsWith(ext));
+    if (!okType) {
+      setStatus({ isError: true, message: "Formato non supportato. Usa PDF, DOCX o PPTX.", phase: "form" });
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    if (picked.size > MAX_FILE_BYTES) {
+      setStatus({ isError: true, message: "File troppo grande (max 15 MB).", phase: "form" });
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setStatus({ message: "", isError: false });
+    setFile(picked);
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+
+    if (mode === "document" && !file) {
+      setStatus({ isError: true, message: "Seleziona un documento (PDF, DOCX o PPTX).", phase: "form" });
+      return;
+    }
+
+    setStatus({ message: "", isError: false, phase: "submitting" });
+
+    const result = mode === "document"
+      ? await generateQuizFromFile(file, difficulty, Number(numQuestions))
+      : await generateQuiz(topic, difficulty, Number(numQuestions));
+
+    if (!result.success || !result.quizId) {
+      setStatus({ isError: true, message: result.message || "Errore durante la generazione del quiz", phase: "form" });
+      return;
+    }
+
+    beginPolling(result.quizId);
   };
 
   useEffect(() => () => { if (pollRef.current) clearTimeout(pollRef.current); }, []);
@@ -153,30 +185,86 @@ export default function QuizCreatePage() {
       <div className="quiz-create-card">
         <div className="create-header">
           <h1 className="create-title">Crea un nuovo Quiz</h1>
-          <p className="create-subtitle">Descrivi l&apos;argomento, al resto pensa l&apos;AI</p>
+          <p className="create-subtitle">Parti da un argomento o da un tuo documento, al resto pensa l&apos;AI</p>
         </div>
 
         <div className="create-content">
+          {/* Selettore modalità: argomento libero oppure documento caricato */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+            <button
+              type="button"
+              className={`btn ${mode === "topic" ? "btn-primary" : "btn-outline"}`}
+              onClick={() => { setMode("topic"); setStatus({ message: "", isError: false }); }}
+              style={{ flex: "1 1 0", minWidth: 120 }}
+            >
+              Argomento
+            </button>
+            <button
+              type="button"
+              className={`btn ${mode === "document" ? "btn-primary" : "btn-outline"}`}
+              onClick={() => { setMode("document"); setStatus({ message: "", isError: false }); }}
+              style={{ flex: "1 1 0", minWidth: 120 }}
+            >
+              Da documento
+            </button>
+          </div>
+
           <form onSubmit={handleCreate} className="create-form">
-            <div className="form-group">
-              <label className="form-label">Di cosa parla il tuo quiz?</label>
-              <textarea
-                className="form-control"
-                placeholder="Es. Storia Romana, JavaScript avanzato, Cultura Pop anni '90..."
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                required
-                maxLength={200}
-                rows={4}
-                style={{
-                  fontFamily: "'Bricolage Grotesque', sans-serif",
-                  fontWeight: 700, fontSize: 22, lineHeight: 1.2,
-                  letterSpacing: "-.02em", resize: "vertical",
-                  minHeight: 100, padding: "14px 16px",
-                }}
-              />
-              <p className="form-hint">Sii specifico per risultati migliori (max 200 caratteri)</p>
-            </div>
+            {mode === "topic" ? (
+              <div className="form-group">
+                <label className="form-label">Di cosa parla il tuo quiz?</label>
+                <textarea
+                  className="form-control"
+                  placeholder="Es. Storia Romana, JavaScript avanzato, Cultura Pop anni '90..."
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  required
+                  maxLength={200}
+                  rows={4}
+                  style={{
+                    fontFamily: "'Bricolage Grotesque', sans-serif",
+                    fontWeight: 700, fontSize: 22, lineHeight: 1.2,
+                    letterSpacing: "-.02em", resize: "vertical",
+                    minHeight: 100, padding: "14px 16px",
+                  }}
+                />
+                <p className="form-hint">Sii specifico per risultati migliori (max 200 caratteri)</p>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label className="form-label">Carica un documento</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.pptx"
+                  onChange={handleSelectFile}
+                  style={{ display: "none" }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    width: "100%", minHeight: 100, padding: "16px",
+                    display: "flex", flexDirection: "column", gap: 6,
+                    alignItems: "center", justifyContent: "center",
+                    borderStyle: "dashed",
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 17 }}>
+                    {file ? file.name : "Scegli un file PDF, DOCX o PPTX"}
+                  </span>
+                  <span className="form-hint" style={{ margin: 0 }}>
+                    {file
+                      ? `${(file.size / 1024 / 1024).toFixed(1)} MB — clicca per cambiare`
+                      : "Clicca per selezionare (max 15 MB)"}
+                  </span>
+                </button>
+                <p className="form-hint">
+                  L&apos;AI genera le domande dal contenuto del file. Il documento non viene salvato: viene eliminato subito dopo la generazione.
+                </p>
+              </div>
+            )}
 
             <div className="form-group">
               <label className="form-label">Difficoltà</label>

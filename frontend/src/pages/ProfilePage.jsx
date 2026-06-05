@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useReducer } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUserProfile, getSpecificUserProfile } from "../services/UserService";
 import {
@@ -8,10 +8,23 @@ import {
   getFriendshipStatus,
 } from "../services/FriendshipService";
 import { useAuth } from "../auth/AuthContext";
-import { Button, Card, Spinner } from "../components/ui";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Spinner from "../components/ui/Spinner";
 
 const getInitials = (name) => (name ? name.slice(0, 2).toUpperCase() : "?");
 const BANNER_COLORS = ["bg-coral", "bg-violet", "bg-sky", "bg-butter", "bg-mint"];
+
+// Stato dell'azione di amicizia (in corso + messaggio) raggruppato in un reducer.
+const initialAction = { busy: false, msg: "" };
+function actionReducer(state, action) {
+  switch (action.type) {
+    case "start":   return { busy: true, msg: "" };
+    case "message": return { ...state, msg: action.msg || "" };
+    case "idle":    return { ...state, busy: false };
+    default:        return state;
+  }
+}
 
 export default function ProfilePage() {
   const { userId: usernameParam } = useParams();
@@ -22,8 +35,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [friendship, setFriendship] = useState(null);
-  const [actionBusy, setActionBusy] = useState(false);
-  const [actionMsg, setActionMsg]   = useState("");
+  const [action, dispatchAction]    = useReducer(actionReducer, initialAction);
 
   const isSelf = !usernameParam || (me && usernameParam === me.username);
 
@@ -52,19 +64,18 @@ export default function ProfilePage() {
   }, [usernameParam]);
 
   const runAction = async (fn, successMsg) => {
-    setActionBusy(true);
-    setActionMsg("");
+    dispatchAction({ type: "start" });
     try {
       const res = await fn();
-      if (res?.success === false) setActionMsg(res.message || "Operazione fallita");
+      if (res?.success === false) dispatchAction({ type: "message", msg: res.message || "Operazione fallita" });
       else {
-        setActionMsg(successMsg);
+        dispatchAction({ type: "message", msg: successMsg });
         try { await refreshFriendship(profile.username); } catch { /* */ }
       }
     } catch (err) {
-      setActionMsg(err?.message || "Errore di connessione");
+      dispatchAction({ type: "message", msg: err?.message || "Errore di connessione" });
     } finally {
-      setActionBusy(false);
+      dispatchAction({ type: "idle" });
     }
   };
 
@@ -77,7 +88,7 @@ export default function ProfilePage() {
     return (
       <div className="max-w-3xl mx-auto px-6 py-20 flex flex-col items-center gap-3">
         <Spinner />
-        <p className="text-ink-soft">Caricamento profilo...</p>
+        <p className="text-ink-soft">Caricamento profilo…</p>
       </div>
     );
   }
@@ -99,18 +110,18 @@ export default function ProfilePage() {
     if (isSelf || !friendship) return null;
     switch (friendship.status) {
       case "accepted":
-        return <Button variant="outline" onClick={removeFriend} disabled={actionBusy}>Rimuovi amicizia</Button>;
+        return <Button variant="outline" onClick={removeFriend} disabled={action.busy}>Rimuovi amicizia</Button>;
       case "pending_sent":
         return <Button variant="secondary" disabled>Richiesta inviata</Button>;
       case "pending_received":
         return (
           <>
-            <Button onClick={acceptRequest} disabled={actionBusy}>Accetta</Button>
-            <Button variant="outline" onClick={rejectRequest} disabled={actionBusy}>Rifiuta</Button>
+            <Button onClick={acceptRequest} disabled={action.busy}>Accetta</Button>
+            <Button variant="outline" onClick={rejectRequest} disabled={action.busy}>Rifiuta</Button>
           </>
         );
       default:
-        return <Button onClick={sendRequest} disabled={actionBusy}>Aggiungi amico</Button>;
+        return <Button onClick={sendRequest} disabled={action.busy}>Aggiungi amico</Button>;
     }
   };
 
@@ -155,7 +166,7 @@ export default function ProfilePage() {
               <Button variant="secondary" onClick={() => navigate("/settings")}>Impostazioni account</Button>
             ) : renderFriendshipActions()}
           </div>
-          {actionMsg && <p className="mt-3 text-sm text-ink-soft">{actionMsg}</p>}
+          {action.msg && <p className="mt-3 text-sm text-ink-soft">{action.msg}</p>}
         </div>
       </Card>
     </div>
