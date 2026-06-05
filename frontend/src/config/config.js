@@ -2,7 +2,7 @@
 // via import.meta.env, in modo da non rompere i compose esistenti.
 const env = import.meta.env;
 
-export const APP_CONFIG = {
+const APP_CONFIG = {
   AUTH_SERVICE_URL: env.REACT_APP_AUTH_SERVICE_URL || 'http://localhost:5001',
   QUIZ_SERVICE_URL: env.REACT_APP_QUIZ_SERVICE_URL || 'http://localhost:8080',
   USER_SERVICE_URL: env.REACT_APP_USER_SERVICE_URL || 'http://localhost:5002',
@@ -24,16 +24,4 @@ export const getConfig = (key) => {
     else return undefined;
   }
   return value;
-};
-
-/** Verifica che le env essenziali siano valorizzate. Chiamata in fase di bootstrap. */
-export const validateConfig = () => {
-  const required = ['AUTH_SERVICE_URL', 'QUIZ_SERVICE_URL', 'USER_SERVICE_URL'];
-  const missing = required.filter((k) => !APP_CONFIG[k]);
-  if (missing.length > 0) {
-    // eslint-disable-next-line no-console
-    console.error('[config] env mancanti:', missing);
-    return false;
-  }
-  return true;
 };

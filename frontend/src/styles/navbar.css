@@ -307,3 +307,20 @@
   font-weight: 800;
   text-align: center;
 }
+
+/* ── Brand mark ── */
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--lime);
+  display: grid;
+  place-items: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 3px 3px 0 0 var(--coral);
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+}

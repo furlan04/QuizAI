@@ -29,8 +29,3 @@ export const getUserSettings = async () => {
   const res = await quizApi.get('/users/me');
   return res.ok ? res.data : null;
 };
-
-export const getMyAttemptForQuiz = async (quizId) => {
-  const res = await quizApi.get(`/users/me/attempts/${quizId}`);
-  return res.ok ? res.data : null;
-};

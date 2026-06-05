@@ -13,16 +13,17 @@ export default function SettingsPage() {
   const [saving, setSaving]   = useState(false);
   const { notice, notify, clear } = useNotice();
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (isActive = () => true) => {
     setLoading(true);
     try {
       const data = await getUserProfile();
+      if (!isActive()) return;
       setProfile(data);
       setForm({ bio: data.bio || "", avatarUrl: data.avatarUrl || "" });
     } catch {
-      notify("Errore nel caricamento del profilo", "error");
+      if (isActive()) notify("Errore nel caricamento del profilo", "error");
     } finally {
-      setLoading(false);
+      if (isActive()) setLoading(false);
     }
   }, [notify]);
 
@@ -40,7 +41,11 @@ export default function SettingsPage() {
     }
   };
 
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+  useEffect(() => {
+    let active = true;
+    fetchProfile(() => active);
+    return () => { active = false; };
+  }, [fetchProfile]);
   useEffect(() => {
     if (notice.message) {
       const t = setTimeout(() => clear(), 3000);
@@ -119,7 +124,7 @@ export default function SettingsPage() {
       ) : (
         <div className="empty-state">
           <h2 className="empty-title">Impossibile caricare le impostazioni</h2>
-          <button type="button" onClick={fetchProfile} className="btn btn-primary btn-empty">Riprova</button>
+          <button type="button" onClick={() => fetchProfile()} className="btn btn-primary btn-empty">Riprova</button>
         </div>
       )}
     </div>

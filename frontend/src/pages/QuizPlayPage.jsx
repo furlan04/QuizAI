@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useReducer } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getQuizById } from "../services/QuizService";
 import { startSession, answerQuestion, completeSession } from "../services/QuizAttemptService";
@@ -20,12 +20,12 @@ export default function QuizPlayPage() {
   const [selected, setSelected]         = useState(null);
   const [feedback, setFeedback]         = useState(null); // { isCorrect, correctIndex, explanation }
   const [busy, setBusy]                 = useState(false);
-  const pollRef = useRef(null);
 
   // Carica il quiz, gestendo lo stato di generazione con polling
   useEffect(() => {
     if (!id || id === "undefined") { setGame({ error: "ID quiz non valido", phase: "failed" }); return; }
     let cancelled = false;
+    let pollTimer = null;
 
     const load = async () => {
       const data = await getQuizById(id);
@@ -34,7 +34,7 @@ export default function QuizPlayPage() {
 
       if (data?.generating || data?.status === "generating") {
         setGame({ phase: "generating" });
-        pollRef.current = setTimeout(load, 2500); // riprova finché pronto
+        pollTimer = setTimeout(load, 2500); // riprova finché pronto
         return;
       }
       if (data?.status === "failed" || data?.error) {
@@ -53,7 +53,7 @@ export default function QuizPlayPage() {
     };
 
     load();
-    return () => { cancelled = true; if (pollRef.current) clearTimeout(pollRef.current); };
+    return () => { cancelled = true; if (pollTimer) clearTimeout(pollTimer); };
   }, [id]);
 
   const total = questions.length;
@@ -69,7 +69,7 @@ export default function QuizPlayPage() {
 
   const next = async () => {
     if (currentIndex + 1 < total) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex((prev) => prev + 1);
       setSelected(null);
       setFeedback(null);
     } else {
@@ -189,7 +189,7 @@ export default function QuizPlayPage() {
             } else if (selected === i) cls += " selected";
             return (
               <button
-                key={i}
+                key={opt}
                 type="button"
                 className={cls}
                 onClick={() => !feedback && setSelected(i)}

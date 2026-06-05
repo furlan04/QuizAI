@@ -54,11 +54,7 @@ export default function FriendsListPage() {
   return (
     <div className="friends-list-container">
       {confirmDialog && (
-        <div style={{
-          position: "fixed", top: 20, right: 20, background: "#fff",
-          border: "2.5px solid var(--ink)", borderRadius: "var(--radius)",
-          padding: "22px 24px", boxShadow: "var(--shadow-hard-lg)", zIndex: 10000, minWidth: 320, maxWidth: 380,
-        }}>
+        <div className="friend-confirm-dialog">
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, marginBottom: 12 }}>
             Conferma rimozione
           </div>
@@ -118,11 +114,7 @@ export default function FriendsListPage() {
                     borderBottom: "2.5px solid var(--ink)",
                   }} />
                   <div style={{ padding: "0 20px 12px", marginTop: -26, display: "flex", alignItems: "flex-end", gap: 12 }}>
-                    <div style={{
-                      width: 52, height: 52, borderRadius: "50%", background: avColor, border: "3px solid #fff",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: "3px 3px 0 0 var(--ink)", flexShrink: 0,
-                    }}>
+                    <div className="friend-avatar" style={{ background: avColor }}>
                       <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18 }}>
                         {getInitials(friend.username)}
                       </span>

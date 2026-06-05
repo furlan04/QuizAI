@@ -105,7 +105,7 @@ export const request = async (url, options = {}) => {
 };
 
 /** Wrapper per servizi specifici: costruisce request a partire da un base URL. */
-export const createClient = (baseUrl) => ({
+const createClient = (baseUrl) => ({
   get:    (path, opts)        => request(`${baseUrl}${path}`, { ...opts, method: 'GET' }),
   post:   (path, body, opts)  => request(`${baseUrl}${path}`, { ...opts, method: 'POST', body }),
   put:    (path, body, opts)  => request(`${baseUrl}${path}`, { ...opts, method: 'PUT', body }),

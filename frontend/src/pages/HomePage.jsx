@@ -22,18 +22,8 @@ export default function Home() {
         }} />
 
         <div style={{ padding: "48px 48px 40px" }}>
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: "var(--lime)",
-            border: "2px solid var(--ink)",
-            borderRadius: 100,
-            padding: "5px 14px",
-            marginBottom: 24,
-            boxShadow: "3px 3px 0 0 var(--ink)",
-          }}>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 11, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink)" }}>
+          <div className="home-badge">
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink)" }}>
               Powered by AI
             </span>
           </div>
@@ -57,51 +47,10 @@ export default function Home() {
           </p>
 
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link
-              to="/register"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "var(--violet)",
-                color: "#fff",
-                border: "2.5px solid var(--ink)",
-                borderRadius: "var(--radius-sm)",
-                padding: "13px 26px",
-                fontFamily: "'Bricolage Grotesque', sans-serif",
-                fontWeight: 800,
-                fontSize: 16,
-                letterSpacing: "-.01em",
-                textDecoration: "none",
-                boxShadow: "var(--shadow-hard)",
-                transition: "transform .1s, box-shadow .1s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-2px,-2px)"; e.currentTarget.style.boxShadow = "6px 6px 0 0 var(--ink)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--shadow-hard)"; }}
-            >
+            <Link to="/register" className="home-hero-btn home-hero-btn--primary">
               Inizia Gratis
             </Link>
-            <Link
-              to="/login"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "transparent",
-                color: "var(--ink)",
-                border: "2.5px solid var(--ink)",
-                borderRadius: "var(--radius-sm)",
-                padding: "13px 26px",
-                fontFamily: "'Bricolage Grotesque', sans-serif",
-                fontWeight: 700,
-                fontSize: 16,
-                textDecoration: "none",
-                boxShadow: "var(--shadow-hard)",
-                transition: "transform .1s, box-shadow .1s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translate(-2px,-2px)"; e.currentTarget.style.boxShadow = "6px 6px 0 0 var(--ink)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "var(--shadow-hard)"; }}
-            >
+            <Link to="/login" className="home-hero-btn home-hero-btn--secondary">
               Accedi
             </Link>
           </div>
@@ -147,7 +96,7 @@ export default function Home() {
             <div style={{ padding: "22px 22px 20px" }}>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: ".12em",
                 textTransform: "uppercase",
@@ -187,7 +136,7 @@ export default function Home() {
       }}>
         <div style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: 700,
           letterSpacing: ".12em",
           textTransform: "uppercase",
@@ -214,22 +163,7 @@ export default function Home() {
             { n: "03", title: "Condividi e Sfida", desc: "Invita gli amici e scala la classifica.", color: "var(--lime)" },
           ].map((s) => (
             <div key={s.n}>
-              <div style={{
-                width: 44,
-                height: 44,
-                background: s.color,
-                border: "2.5px solid var(--ink)",
-                borderRadius: "var(--radius-sm)",
-                boxShadow: "3px 3px 0 0 var(--ink)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "'JetBrains Mono', monospace",
-                fontWeight: 700,
-                fontSize: 14,
-                color: "var(--ink)",
-                marginBottom: 16,
-              }}>
+              <div className="home-step-number" style={{ background: s.color }}>
                 {s.n}
               </div>
               <h3 style={{
@@ -273,37 +207,10 @@ export default function Home() {
           Unisciti alla community e inizia a creare quiz potenziati dall&apos;AI.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link
-            to="/register"
-            style={{
-              background: "var(--lime)",
-              color: "var(--ink)",
-              border: "2.5px solid rgba(255,255,255,.3)",
-              borderRadius: "var(--radius-sm)",
-              padding: "13px 26px",
-              fontFamily: "'Bricolage Grotesque', sans-serif",
-              fontWeight: 800,
-              fontSize: 15,
-              textDecoration: "none",
-              boxShadow: "4px 4px 0 0 rgba(255,255,255,.18)",
-            }}
-          >
+          <Link to="/register" className="home-cta-btn home-cta-btn--primary">
             Crea Account Gratuito
           </Link>
-          <Link
-            to="/quizzes"
-            style={{
-              background: "transparent",
-              color: "#fff",
-              border: "2px solid rgba(255,255,255,.35)",
-              borderRadius: "var(--radius-sm)",
-              padding: "13px 26px",
-              fontFamily: "'Bricolage Grotesque', sans-serif",
-              fontWeight: 700,
-              fontSize: 15,
-              textDecoration: "none",
-            }}
-          >
+          <Link to="/quizzes" className="home-cta-btn home-cta-btn--secondary">
             Esplora Quiz
           </Link>
         </div>

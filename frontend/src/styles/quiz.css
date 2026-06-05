@@ -476,3 +476,41 @@
   .result-stats        { grid-template-columns: 1fr; }
   .quiz-play-container { padding: 20px 12px 80px; }
 }
+
+/* ── Classifica (leaderboard) ── */
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm, 10px);
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+.leaderboard-row.is-me { background: var(--lime, #e8ff8a); }
+
+/* ── Crea quiz: campo argomento e area upload ── */
+.create-topic-input {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -.02em;
+  resize: vertical;
+  min-height: 100px;
+  padding: 14px 16px;
+}
+
+.create-file-drop {
+  width: 100%;
+  min-height: 100px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+}

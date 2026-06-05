@@ -80,19 +80,33 @@ const IcBell = () => (
 /* ── Brand mark ── */
 function BrandMark() {
   return (
-    <div style={{
-      width: 38, height: 38, borderRadius: 12,
-      background: "var(--ink)", color: "var(--lime)",
-      display: "grid", placeItems: "center",
-      fontFamily: "'Bricolage Grotesque', sans-serif",
-      fontWeight: 800, fontSize: 20,
-      boxShadow: "3px 3px 0 0 var(--coral)",
-      transform: "rotate(-4deg)",
-      flexShrink: 0,
-    }}>
+    <div className="brand-mark">
       Q
     </div>
   );
+}
+
+/* ── Lista notifiche del dropdown ── */
+function NotifList({ notifications, onOpen }) {
+  if (notifications.length === 0) {
+    return <div className="notif-empty">Nessuna notifica</div>;
+  }
+  return notifications.map((n) => {
+    const { text, detail } = describeNotification(n);
+    return (
+      <button
+        key={n.id}
+        type="button"
+        className={`notif-dd-item${n.read ? "" : " unread"}`}
+        onClick={() => onOpen(n)}
+      >
+        {!n.read && <span className="notification-dot" aria-hidden="true" />}
+        <span className="notif-dd-text">
+          {text}{detail ? ` — ${detail}` : ""}
+        </span>
+      </button>
+    );
+  });
 }
 
 export default function Navbar() {
@@ -132,29 +146,6 @@ export default function Navbar() {
     closeAll();
     navigate(to);
   };
-
-  const renderNotifList = () => (
-    notifications.length === 0 ? (
-      <div className="notif-empty">Nessuna notifica</div>
-    ) : (
-      notifications.map((n) => {
-        const { text, detail } = describeNotification(n);
-        return (
-          <button
-            key={n.id}
-            type="button"
-            className={`notif-dd-item${n.read ? "" : " unread"}`}
-            onClick={() => openNotification(n)}
-          >
-            {!n.read && <span className="notification-dot" aria-hidden="true" />}
-            <span className="notif-dd-text">
-              {text}{detail ? ` — ${detail}` : ""}
-            </span>
-          </button>
-        );
-      })
-    )
-  );
 
   /* ── Public sidebar (not logged in) ── */
   if (!isLoggedIn) {
@@ -262,7 +253,7 @@ export default function Navbar() {
             </button>
             {notifDropdownOpen && (
               <div className="nav-dd-panel notif-dd-panel">
-                {renderNotifList()}
+                <NotifList notifications={notifications} onOpen={openNotification} />
                 <Link to="/notifications" className="nav-item notif-dd-all" onClick={closeAll}>Vedi tutte</Link>
               </div>
             )}
@@ -341,7 +332,7 @@ export default function Navbar() {
           </button>
           {notifDropdownOpen && (
             <div className="mobile-dropdown-menu notif-dd-panel">
-              {renderNotifList()}
+              <NotifList notifications={notifications} onOpen={openNotification} />
               <Link to="/notifications" className="mobile-dropdown-item notif-dd-all" onClick={closeAll}>Vedi tutte</Link>
             </div>
           )}
