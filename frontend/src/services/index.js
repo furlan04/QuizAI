@@ -7,5 +7,6 @@ export * from './FriendshipService';
 export * from './ChallengeService';
 export * from './UserService';
 export * from './CommonService';
+export * from './NotificationsService';
 
 export { default as NotificationService, notify, NOTIFICATION_TYPES } from './NotificationService';

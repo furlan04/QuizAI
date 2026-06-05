@@ -327,3 +327,29 @@
 /* ── Leaderboard Bootstrap compat ── */
 .container      { max-width: 1140px; margin: 0 auto; padding: 0 1.5rem; }
 .container.my-5 { margin-top: 3rem !important; margin-bottom: 3rem !important; }
+
+/* ── Lista notifiche (pagina) ── */
+.notifications-list { display: flex; flex-direction: column; gap: 10px; }
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  border: var(--b) solid var(--ink);
+  border-radius: var(--radius-sm, 12px);
+  background: var(--cream);
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+}
+
+.notification-item:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 0 var(--coral); }
+.notification-item.unread { background: rgba(255,107,139,.07); }
+
+.notification-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.notification-text { font-weight: 700; color: var(--ink); }
+.notification-detail { font-size: .9rem; color: var(--ink); opacity: .85; }
+.notification-date { font-size: .8rem; color: var(--ink-soft, #6b6678); }
+.notification-item .notification-dot { margin-top: 7px; }

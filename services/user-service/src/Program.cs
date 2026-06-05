@@ -8,6 +8,8 @@ using UserService.Friendships;
 using UserService.Friendships.Models;
 using UserService.Messaging.Consumers;
 using UserService.Messaging.Publishers;
+using UserService.Notifications;
+using UserService.Notifications.Models;
 using UserService.Users;
 using UserService.Users.Models;
 using UserService.Persistence;
@@ -35,10 +37,13 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IFriendshipRepository, FriendshipRepository>();
 builder.Services.AddSingleton<IChallengeRepository, ChallengeRepository>();
+builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IUserService, UserService.Users.UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IChallengeCreatedPublisher, ChallengeCreatedPublisher>();
+builder.Services.AddScoped<IFriendRequestPublisher, FriendRequestPublisher>();
 
 // ── JWT via JWKS (auth-service) ──────────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -60,6 +65,8 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<QuizCompletedConsumer>();
     x.AddConsumer<UserRegisteredConsumer>();
+    x.AddConsumer<QuizCreatedConsumer>();
+    x.AddConsumer<FriendRequestNotificationConsumer>();
 
     x.UsingRabbitMq((ctx, mqCfg) =>
     {
@@ -81,6 +88,14 @@ builder.Services.AddMassTransit(x =>
         mqCfg.ReceiveEndpoint("user.registered", e =>
         {
             e.ConfigureConsumer<UserRegisteredConsumer>(ctx);
+        });
+        mqCfg.ReceiveEndpoint("quiz.created", e =>
+        {
+            e.ConfigureConsumer<QuizCreatedConsumer>(ctx);
+        });
+        mqCfg.ReceiveEndpoint("friend.request.sent", e =>
+        {
+            e.ConfigureConsumer<FriendRequestNotificationConsumer>(ctx);
         });
     });
 });
@@ -171,5 +186,26 @@ static async Task CreateIndexesAsync(IServiceProvider sp)
             Builders<Challenge>.IndexKeys
                 .Ascending(c => c.QuizId)
                 .Ascending(c => c.Status)),
+    ]);
+
+    var notifications = db.GetCollection<Notification>("notifications");
+    await notifications.Indexes.CreateManyAsync(
+    [
+        // Lista per utente, ordinata dalla più recente.
+        new CreateIndexModel<Notification>(
+            Builders<Notification>.IndexKeys
+                .Ascending(n => n.UserId)
+                .Descending(n => n.CreatedAt)),
+        // Conteggio non lette.
+        new CreateIndexModel<Notification>(
+            Builders<Notification>.IndexKeys
+                .Ascending(n => n.UserId)
+                .Ascending(n => n.Read)),
+        // Deduplica idempotente (utente, tipo, riferimento).
+        new CreateIndexModel<Notification>(
+            Builders<Notification>.IndexKeys
+                .Ascending(n => n.UserId)
+                .Ascending(n => n.Type)
+                .Ascending(n => n.ReferenceId)),
     ]);
 }
