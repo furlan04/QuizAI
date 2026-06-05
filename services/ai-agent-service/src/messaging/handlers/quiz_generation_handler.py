@@ -38,6 +38,7 @@ async def handle_quiz_generate(
         difficulty=incoming.difficulty,
         num_questions=incoming.num_questions,
         user_id=incoming.user_id,
+        source_text=incoming.source_text or "",
     )
 
     # Run the synchronous LangGraph pipeline in the event loop

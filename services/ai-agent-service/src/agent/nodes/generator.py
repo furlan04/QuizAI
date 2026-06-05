@@ -2,7 +2,12 @@ import logging
 import instructor
 from groq import Groq
 from ..state import AgentState
-from ..prompts.generator_prompt import GENERATOR_SYSTEM_PROMPT, GENERATOR_USER_PROMPT
+from ..prompts.generator_prompt import (
+    GENERATOR_SYSTEM_PROMPT,
+    GENERATOR_USER_PROMPT,
+    DOC_GENERATOR_SYSTEM_PROMPT,
+    DOC_GENERATOR_USER_PROMPT,
+)
 from ...contracts.models import RawQuestions
 from ...config import settings
 
@@ -23,20 +28,50 @@ def generator_node(state: AgentState) -> dict:
 
         client = instructor.from_groq(Groq(api_key=settings.groq_api_key))
 
-        user_msg = GENERATOR_USER_PROMPT.format(
-            total_questions=state.num_questions,
-            topic=plan.get("topic", state.topic),
-            difficulty=plan.get("difficulty", state.difficulty),
-            language=plan.get("language", "en"),
-            subtopics=subtopics_text,
-            notes=plan.get("notes") or "None",
-        )
+        if state.source_text:
+            # Document-grounded: retrieve the most relevant chunks per subtopic
+            # via an ephemeral in-memory BM25 index, then ground generation on them.
+            from ..rag import DocumentIndex  # lazy: only the document path needs rank-bm25
+
+            index = DocumentIndex(
+                state.source_text,
+                settings.rag_chunk_size,
+                settings.rag_chunk_overlap,
+            )
+            queries = [plan.get("topic", state.topic)] + [
+                s["subtopic"] for s in plan.get("subtopics", [])
+            ]
+            context = index.build_context(
+                queries,
+                k_per_query=settings.rag_k,
+                max_chars=settings.rag_context_chars,
+            )
+            system_msg = DOC_GENERATOR_SYSTEM_PROMPT
+            user_msg = DOC_GENERATOR_USER_PROMPT.format(
+                total_questions=state.num_questions,
+                topic=plan.get("topic", state.topic),
+                difficulty=plan.get("difficulty", state.difficulty),
+                language=plan.get("language", "en"),
+                subtopics=subtopics_text,
+                notes=plan.get("notes") or "None",
+                context=context or state.source_text[: settings.rag_context_chars],
+            )
+        else:
+            system_msg = GENERATOR_SYSTEM_PROMPT
+            user_msg = GENERATOR_USER_PROMPT.format(
+                total_questions=state.num_questions,
+                topic=plan.get("topic", state.topic),
+                difficulty=plan.get("difficulty", state.difficulty),
+                language=plan.get("language", "en"),
+                subtopics=subtopics_text,
+                notes=plan.get("notes") or "None",
+            )
 
         result: RawQuestions = client.chat.completions.create(
             model=settings.groq_model,
             response_model=RawQuestions,
             messages=[
-                {"role": "system", "content": GENERATOR_SYSTEM_PROMPT},
+                {"role": "system", "content": system_msg},
                 {"role": "user", "content": user_msg},
             ],
             max_retries=2,
