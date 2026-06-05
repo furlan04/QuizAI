@@ -18,6 +18,7 @@ import QuizListPage from "./pages/QuizListPage";
 import QuizDetailPage from "./pages/QuizDetailPage";
 import LikedQuizzesPage from "./pages/LikedQuizzesPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -169,13 +170,22 @@ function AppShell() {
           } 
         />
 
-        <Route 
-          path="/settings" 
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
           element={
             <ProtectedRoute>
               <SettingsPage />
             </ProtectedRoute>
-          } 
+          }
         />
 
         <Route 

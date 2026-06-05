@@ -60,8 +60,7 @@ export default function ProfilePage() {
       }
     };
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usernameParam]);
+  }, [usernameParam, isSelf, refreshFriendship]);
 
   const runAction = async (fn, successMsg) => {
     dispatchAction({ type: "start" });

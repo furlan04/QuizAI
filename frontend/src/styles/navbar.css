@@ -236,3 +236,91 @@
 }
 
 .mobile-dropdown-item:hover { background: rgba(26,23,38,.05); color: var(--ink); }
+
+/* ── Notifiche: campanello, badge e dropdown ── */
+.notif-bell { position: relative; }
+
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--coral);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--cream);
+}
+
+.notif-dd-panel { min-width: 260px; }
+
+.notif-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-bottom: var(--bb) solid rgba(26,23,38,.1);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notif-dd-item:hover { background: rgba(26,23,38,.05); }
+.notif-dd-item.unread { background: rgba(255,107,139,.07); }
+
+.notif-dd-text {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notification-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--coral);
+  flex-shrink: 0;
+}
+
+.notif-empty {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--ink-soft, #6b6678);
+  text-align: center;
+}
+
+.notif-dd-all {
+  justify-content: center;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ── Brand mark ── */
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--lime);
+  display: grid;
+  place-items: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 3px 3px 0 0 var(--coral);
+  transform: rotate(-4deg);
+  flex-shrink: 0;
+}

@@ -50,4 +50,17 @@ export const handlers = [
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
     })
   ),
+
+  // NOTIFICATIONS
+  http.get(`${USER}/users/me/notifications`, () =>
+    HttpResponse.json([
+      { id: 'n1', type: 'quiz_created', read: false, createdAt: new Date().toISOString(),
+        actorId: 'u2', actorUsername: 'bob', quizId: 'q9', quizTitle: 'Geografia', friendshipId: null },
+    ])
+  ),
+  http.get(`${USER}/users/me/notifications/unread-count`, () =>
+    HttpResponse.json({ count: 1 })
+  ),
+  http.put(`${USER}/users/me/notifications/:id/read`, () => new HttpResponse(null, { status: 204 })),
+  http.put(`${USER}/users/me/notifications/read-all`, () => new HttpResponse(null, { status: 204 })),
 ];

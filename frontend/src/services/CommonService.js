@@ -1,10 +1,5 @@
-// Shim di compatibilità: re-esporta funzioni di base da apiClient.
 // I componenti React dovrebbero preferire `useAuth()` per leggere lo stato.
-import { getToken, clearToken } from '../lib/apiClient';
-
-export const getAuthToken   = getToken;
-export const isAuthenticated = () => !!getToken();
-export const logout = () => clearToken();
+import { getToken } from '../lib/apiClient';
 
 /** Decodifica il payload del JWT corrente. Ritorna null se non c'è. */
 export const getCurrentUser = () => {

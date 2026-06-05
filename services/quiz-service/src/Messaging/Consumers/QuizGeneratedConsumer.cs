@@ -1,5 +1,6 @@
 using MassTransit;
 using QuizService.Messaging.Messages;
+using QuizService.Messaging.Publishers;
 using QuizService.Quizzes;
 using QuizService.Quizzes.Models;
 
@@ -8,11 +9,16 @@ namespace QuizService.Messaging.Consumers;
 public class QuizGeneratedConsumer : IConsumer<QuizGeneratedMessage>
 {
     private readonly IQuizRepository _quizzes;
+    private readonly IQuizCreatedPublisher _quizCreated;
     private readonly ILogger<QuizGeneratedConsumer> _logger;
 
-    public QuizGeneratedConsumer(IQuizRepository quizzes, ILogger<QuizGeneratedConsumer> logger)
+    public QuizGeneratedConsumer(
+        IQuizRepository quizzes,
+        IQuizCreatedPublisher quizCreated,
+        ILogger<QuizGeneratedConsumer> logger)
     {
         _quizzes = quizzes;
+        _quizCreated = quizCreated;
         _logger = logger;
     }
 
@@ -41,5 +47,23 @@ public class QuizGeneratedConsumer : IConsumer<QuizGeneratedMessage>
             questions,
             msg.Tags,
             msg.Error);
+
+        // Solo quando il quiz è effettivamente pronto annunciamo la creazione:
+        // user-service ne notificherà gli amici del creatore.
+        if (msg.Status == "ready")
+        {
+            var quiz = await _quizzes.GetByIdAsync(msg.QuizId);
+            if (quiz is not null)
+            {
+                await _quizCreated.PublishAsync(new QuizCreatedMessage(
+                    quiz.Id, quiz.CreatedBy, quiz.CreatedByUsername, quiz.Title));
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "quiz.generated ready ma quiz {QuizId} non trovato: notifica saltata",
+                    msg.QuizId);
+            }
+        }
     }
 }

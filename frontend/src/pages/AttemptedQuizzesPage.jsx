@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { getUserSettings } from "../services/UserService";
 import Button from "../components/ui/Button";
@@ -13,24 +13,22 @@ export default function AttemptedQuizzesPage() {
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading]   = useState(true);
 
-  useEffect(() => {
-    let ignore = false;
-    const loadAttempts = async () => {
-      setLoading(true);
-      try {
-        const profile = await getUserSettings();
-        if (!ignore) setAttempts(profile?.attempts || []);
-      } catch {
-        if (!ignore) setAttempts([]);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    };
-    loadAttempts();
-    return () => {
-      ignore = true;
-    };
+  const loadAttempts = useCallback(async (isActive = () => true) => {
+    try {
+      const profile = await getUserSettings();
+      if (isActive()) setAttempts(profile?.attempts || []);
+    } catch {
+      if (isActive()) setAttempts([]);
+    } finally {
+      if (isActive()) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadAttempts(() => active);
+    return () => { active = false; };
+  }, [loadAttempts]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">

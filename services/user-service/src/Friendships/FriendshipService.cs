@@ -1,5 +1,7 @@
 using UserService.Friendships.Models;
 using UserService.Friendships.Models.Dtos;
+using UserService.Messaging.Messages;
+using UserService.Messaging.Publishers;
 using UserService.Users;
 
 namespace UserService.Friendships;
@@ -13,11 +15,16 @@ public class FriendshipService : IFriendshipService
 {
     private readonly IFriendshipRepository _repo;
     private readonly IUserRepository _users;
+    private readonly IFriendRequestPublisher _friendRequests;
 
-    public FriendshipService(IFriendshipRepository repo, IUserRepository users)
+    public FriendshipService(
+        IFriendshipRepository repo,
+        IUserRepository users,
+        IFriendRequestPublisher friendRequests)
     {
-        _repo  = repo;
-        _users = users;
+        _repo           = repo;
+        _users          = users;
+        _friendRequests = friendRequests;
     }
 
     public async Task<List<FriendResponse>> GetFriendsAsync(string userId)
@@ -80,6 +87,11 @@ public class FriendshipService : IFriendshipService
         };
 
         var id = await _repo.CreateAsync(friendship);
+
+        // Evento consumato internamente per generare la notifica in-app al destinatario.
+        await _friendRequests.PublishAsync(
+            new FriendRequestSentMessage(id, requesterId, target.Id));
+
         return new FriendshipStatusResponse(id, "pending");
     }
 

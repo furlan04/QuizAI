@@ -176,7 +176,7 @@ export default function QuizDetailPage() {
               const isMe = me && entry.username === me.username;
               return (
                 <div
-                  key={idx}
+                  key={entry.username}
                   className={[
                     "grid grid-cols-[40px_1fr_auto] items-center gap-3 px-5 py-2.5",
                     isMe ? "bg-lime" : "",

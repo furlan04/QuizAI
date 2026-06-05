@@ -63,8 +63,7 @@ export default function LoginPage() {
       cancelled = true;
       clearTimeout(retryTimer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [googleClientId]);
+  }, [googleClientId, setAuth, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

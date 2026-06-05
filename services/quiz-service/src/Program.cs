@@ -37,6 +37,7 @@ builder.Services.AddSingleton<IQuizRepository, QuizRepository>();
 builder.Services.AddSingleton<ISessionRepository, SessionRepository>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IQuizGenerationPublisher, QuizGenerationPublisher>();
+builder.Services.AddScoped<IQuizCreatedPublisher, QuizCreatedPublisher>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 
 // ── Document extraction (ai-agent-service) ───────────────────────────────────

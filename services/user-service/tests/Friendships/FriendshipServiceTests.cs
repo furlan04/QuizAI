@@ -1,5 +1,7 @@
 using UserService.Friendships;
 using UserService.Friendships.Models;
+using UserService.Messaging.Messages;
+using UserService.Messaging.Publishers;
 using UserService.Users;
 using UserService.Users.Models;
 
@@ -9,10 +11,11 @@ public class FriendshipServiceTests
 {
     private readonly Mock<IFriendshipRepository> _repo = new();
     private readonly Mock<IUserRepository> _users = new();
+    private readonly Mock<IFriendRequestPublisher> _friendRequests = new();
     private readonly IFriendshipService _sut;
 
     public FriendshipServiceTests()
-        => _sut = new FriendshipService(_repo.Object, _users.Object);
+        => _sut = new FriendshipService(_repo.Object, _users.Object, _friendRequests.Object);
 
     private static User MakeUser(string id, string username) =>
         new() { Id = id, Username = username, Email = $"{username}@x.com",
@@ -32,6 +35,9 @@ public class FriendshipServiceTests
 
         result.Status.Should().Be("pending");
         result.FriendshipId.Should().Be("f1");
+        _friendRequests.Verify(p => p.PublishAsync(It.Is<FriendRequestSentMessage>(m =>
+            m.FriendshipId == "f1" && m.RequesterId == "alice-id" && m.AddresseeId == "bob-id")),
+            Times.Once);
     }
 
     [Fact]
