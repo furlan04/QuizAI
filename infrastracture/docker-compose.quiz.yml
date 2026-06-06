@@ -67,6 +67,9 @@ services:
       MYSQL_URL: "Server=mysql;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      # Lo stack docker è servito in http su localhost: il cookie non può essere Secure
+      # (altrimenti il browser non lo invierebbe). In produzione https impostare a true.
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
       # Google login (lascia vuoto per disabilitare)
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       # SMTP per email di conferma (vuoto → log in console, dev mode)
@@ -107,6 +110,8 @@ services:
       AUTH_SERVICE_URL: "http://auth-service:5001"
       AI_AGENT_URL: "http://ai-agent:8000"
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
+      # Origine del frontend ammessa da CORS (necessaria per i cookie cross-origin)
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -140,6 +145,8 @@ services:
       MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       AUTH_SERVICE_URL: "http://auth-service:5001"
+      # Origine del frontend ammessa da CORS (necessaria per i cookie cross-origin)
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
     depends_on:
       rabbitmq:
         condition: service_healthy

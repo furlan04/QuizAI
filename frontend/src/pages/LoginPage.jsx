@@ -36,8 +36,8 @@ export default function LoginPage() {
       setStatus({ error: "", errorCode: null, loading: true });
       try {
         const res = await googleLogin(response.credential);
-        if (res.success && res.token) {
-          setAuth(res.token);
+        if (res.success) {
+          setAuth(res.user);
           navigate("/");
         } else {
           setStatus({ error: res.message || "Login Google fallito", errorCode: res.code || null });
@@ -70,8 +70,8 @@ export default function LoginPage() {
     setStatus({ error: "", errorCode: null, resendMsg: "", loading: true });
     try {
       const result = await login(email, password);
-      if (result.success && result.token) {
-        setAuth(result.token);
+      if (result.success) {
+        setAuth(result.user);
         navigate("/");
       } else {
         setStatus({ error: result.message || "Errore login", errorCode: result.code || null });

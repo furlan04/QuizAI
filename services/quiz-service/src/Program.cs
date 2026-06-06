@@ -26,6 +26,7 @@ var aiAgentUrl    = cfg["AI_AGENT_URL"]      ?? "http://localhost:8000";
 var internalApiKey = cfg["INTERNAL_API_KEY"] ?? "changeme";
 var jwtIssuer     = cfg["JWT_ISSUER"]        ?? "quizai";
 var jwtAudience   = cfg["JWT_AUDIENCE"]      ?? "quizai";
+var frontendUrl   = cfg["FRONTEND_URL"]?.TrimEnd('/') ?? "http://localhost:3000";
 
 // ── MongoDB ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
@@ -61,6 +62,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidIssuer   = jwtIssuer,
             ValidAudience = jwtAudience,
+        };
+        o.Events = new JwtBearerEvents
+        {
+            // Il frontend non manda più l'header Authorization: il token sta nel
+            // cookie httpOnly `access_token`. L'header resta supportato come fallback.
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Token))
+                    context.Token = context.Request.Cookies["access_token"];
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddAuthorization();
@@ -118,8 +130,13 @@ builder.Services.AddSwaggerGen(o =>
     });
 });
 
+// AllowCredentials è necessario perché il cookie httpOnly viaggi cross-origin;
+// impone di elencare l'origine esplicita (non combinabile con AllowAnyOrigin).
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+    p.WithOrigins(frontendUrl)
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+     .AllowCredentials()));
 
 var app = builder.Build();
 

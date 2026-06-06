@@ -4,7 +4,9 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../auth/AuthContext';
 import { request } from '../lib/apiClient';
 import { server } from './msw/server';
-import { FAKE_JWT } from './msw/handlers';
+import { FAKE_USER } from './msw/handlers';
+
+const AUTH = 'http://localhost:5001';
 
 function AuthSpy() {
   const auth = useAuth();
@@ -25,48 +27,59 @@ const renderWithProvider = () =>
   );
 
 describe('AuthContext', () => {
-  it('parte come non autenticato se sessionStorage è vuoto', () => {
+  it('parte come non autenticato se /auth/me risponde 401', async () => {
     renderWithProvider();
-    expect(screen.getByTestId('status')).toHaveTextContent('out');
+    // Il controllo iniziale della sessione (GET /auth/me) è asincrono.
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('out'));
     expect(screen.getByTestId('username')).toHaveTextContent('-');
   });
 
-  it('login(token) decodifica il JWT e popola lo stato user', async () => {
+  it('se /auth/me risponde con un utente, parte autenticato', async () => {
+    server.use(http.get(`${AUTH}/auth/me`, () => HttpResponse.json(FAKE_USER)));
     renderWithProvider();
-    await act(async () => globalThis.__authActions.login(FAKE_JWT));
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('in'));
+    expect(screen.getByTestId('username')).toHaveTextContent('alice');
+  });
+
+  it('login(user) popola lo stato user', async () => {
+    renderWithProvider();
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('out'));
+
+    await act(async () => globalThis.__authActions.login(FAKE_USER));
     expect(screen.getByTestId('status')).toHaveTextContent('in');
     expect(screen.getByTestId('username')).toHaveTextContent('alice');
   });
 
-  it('logout() ripulisce lo stato e il sessionStorage', async () => {
+  it('logout() chiama il backend e ripulisce lo stato', async () => {
     renderWithProvider();
-    await act(async () => globalThis.__authActions.login(FAKE_JWT));
-    expect(sessionStorage.getItem('jwt')).toBe(FAKE_JWT);
+    // Attendi che il controllo iniziale della sessione si concluda prima di login.
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('out'));
+    await act(async () => globalThis.__authActions.login(FAKE_USER));
+    expect(screen.getByTestId('status')).toHaveTextContent('in');
 
     await act(async () => globalThis.__authActions.logout());
     expect(screen.getByTestId('status')).toHaveTextContent('out');
-    expect(sessionStorage.getItem('jwt')).toBeNull();
   });
 
   it('una risposta 401 da apiClient esegue logout automatico', async () => {
     // Override handler con una risposta 401 a un endpoint qualsiasi
     server.use(
-      http.get('http://localhost:5001/health', () =>
+      http.get(`${AUTH}/health`, () =>
         HttpResponse.json({ error: 'unauth' }, { status: 401 })
       )
     );
 
     renderWithProvider();
-    await act(async () => globalThis.__authActions.login(FAKE_JWT));
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('out'));
+    await act(async () => globalThis.__authActions.login(FAKE_USER));
     expect(screen.getByTestId('status')).toHaveTextContent('in');
 
     await act(async () => {
-      await request('http://localhost:5001/health', { auth: true });
+      await request(`${AUTH}/health`, { auth: true });
     });
 
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('out');
     });
-    expect(sessionStorage.getItem('jwt')).toBeNull();
   });
 });
