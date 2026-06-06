@@ -36,7 +36,20 @@ export default function App() {
 }
 
 function AppShell() {
-  const { isAuthenticated: isLoggedIn, logout } = useAuth();
+  const { isAuthenticated: isLoggedIn, loading } = useAuth();
+
+  // Finché non sappiamo se il cookie di sessione è valido (GET /auth/me),
+  // evitiamo di mostrare l'app: impedisce un "lampo" di redirect a /login
+  // su refresh di una pagina protetta.
+  if (loading) {
+    return (
+      <div className="app-container public">
+        <main className="main-content" style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}>
+          <div className="loading-spinner" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={`app-container ${isLoggedIn ? 'authenticated' : 'public'}`}>

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -20,8 +20,6 @@ const renderLogin = (initialEntry = '/login') =>
   );
 
 describe('LoginPage', () => {
-  beforeEach(() => sessionStorage.clear());
-
   it('mostra il form con i campi email e password', () => {
     renderLogin();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
@@ -29,7 +27,7 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: /accedi/i })).toBeInTheDocument();
   });
 
-  it('login con credenziali valide salva il token e naviga a /', async () => {
+  it('login con credenziali valide naviga a / (cookie impostato dal server)', async () => {
     const user = userEvent.setup();
     renderLogin();
 
@@ -40,7 +38,6 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('page-home')).toBeInTheDocument();
     });
-    expect(sessionStorage.getItem('jwt')).toBeTruthy();
   });
 
   it('login con credenziali sbagliate mostra il messaggio d\'errore', async () => {
@@ -54,6 +51,5 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/email o password non corretti/i);
     });
-    expect(sessionStorage.getItem('jwt')).toBeNull();
   });
 });

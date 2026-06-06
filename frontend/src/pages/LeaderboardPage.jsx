@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getLeaderboard } from "../services/QuizAttemptService";
-import { getCurrentUser } from "../services/CommonService";
+import { useAuth } from "../auth/AuthContext";
 
 const positionIcon = (pos) => `#${pos}`;
 
@@ -15,7 +15,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { quizId } = useParams();
-  const me = getCurrentUser();
+  const { user: me } = useAuth();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {

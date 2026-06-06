@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import {
   getNotifications,
@@ -8,14 +8,11 @@ import {
   describeNotification,
   NOTIFICATION_KIND,
 } from '../services/NotificationsService';
-import { setToken, clearToken } from '../lib/apiClient';
 import { server } from './msw/server';
 
 const USER = 'http://localhost:5002';
 
 describe('NotificationsService', () => {
-  beforeEach(() => { clearToken(); setToken('tok'); });
-
   it('getNotifications ritorna la lista del backend', async () => {
     const items = await getNotifications();
     expect(Array.isArray(items)).toBe(true);

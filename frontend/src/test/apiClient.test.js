@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { http, HttpResponse } from 'msw';
-import { request, getToken, setToken, clearToken, onUnauthorized } from '../lib/apiClient';
+import { request, onUnauthorized } from '../lib/apiClient';
 import { server } from './msw/server';
 
 describe('apiClient', () => {
-  beforeEach(() => clearToken());
-
   it('GET 2xx ritorna { ok:true, data, status, error:null }', async () => {
     server.use(
       http.get('http://localhost:8080/quizzes/1', () =>
@@ -36,9 +34,8 @@ describe('apiClient', () => {
     expect(res.errorCode).toBe('invalid_credentials');
   });
 
-  it('aggiunge automaticamente Authorization quando auth=true (default)', async () => {
-    setToken('mytoken');
-    let receivedAuth = null;
+  it('non aggiunge più l\'header Authorization: il cookie httpOnly viaggia da solo', async () => {
+    let receivedAuth = 'sentinel';
     server.use(
       http.get('http://localhost:5001/me', ({ request: req }) => {
         receivedAuth = req.headers.get('authorization');
@@ -46,11 +43,10 @@ describe('apiClient', () => {
       })
     );
     await request('http://localhost:5001/me');
-    expect(receivedAuth).toBe('Bearer mytoken');
+    expect(receivedAuth).toBeNull();
   });
 
-  it('su 401 emette notify ai listener onUnauthorized', async () => {
-    setToken('mytoken');
+  it('su 401 (auth=true) emette notify ai listener onUnauthorized', async () => {
     let fired = 0;
     const off = onUnauthorized(() => { fired++; });
 
@@ -61,7 +57,6 @@ describe('apiClient', () => {
     );
     await request('http://localhost:5001/protected');
     expect(fired).toBe(1);
-    expect(getToken()).toBeNull(); // notifyUnauthorized invoca anche clearToken
     off();
   });
 

@@ -4,19 +4,12 @@ const AUTH = 'http://localhost:5001';
 const QUIZ = 'http://localhost:8080';
 const USER = 'http://localhost:5002';
 
-// JWT fake con un payload base — usato dai test per simulare un utente loggato.
-// Header e signature sono stub; AuthContext li accetta perché decodifica solo il payload.
-const fakePayload = {
-  sub: 'user-1',
-  email: 'alice@test.com',
-  username: 'alice',
-  exp: Math.floor(Date.now() / 1000) + 3600,
-};
-export const FAKE_JWT = 'h.' + btoa(JSON.stringify(fakePayload)) + '.s';
+// Utente di prova restituito da login/me quando la sessione è valida.
+export const FAKE_USER = { userId: 'user-1', username: 'alice', email: 'alice@test.com' };
 
 // Handlers di default — risposte "happy path". I test li sovrascrivono con server.use(...) quando serve.
 export const handlers = [
-  // AUTH
+  // AUTH — il JWT viaggia come cookie httpOnly: il body contiene solo le info utente.
   http.post(`${AUTH}/auth/login`, async ({ request }) => {
     const body = await request.json();
     if (body.email === 'wrong@test.com') {
@@ -25,11 +18,16 @@ export const handlers = [
         { status: 401 }
       );
     }
-    return HttpResponse.json({
-      userId: 'user-1', username: 'alice', email: body.email,
-      token: FAKE_JWT, expiresAt: new Date(Date.now() + 3600_000).toISOString(),
-    });
+    return HttpResponse.json({ ...FAKE_USER, email: body.email });
   }),
+
+  // Sessione non valida di default: nessun cookie → 401. I test che simulano un
+  // utente loggato sovrascrivono questo handler con server.use(...).
+  http.get(`${AUTH}/auth/me`, () =>
+    HttpResponse.json({ error: 'unauthorized' }, { status: 401 })
+  ),
+
+  http.post(`${AUTH}/auth/logout`, () => new HttpResponse(null, { status: 204 })),
 
   // QUIZ
   http.get(`${QUIZ}/quizzes`, () =>

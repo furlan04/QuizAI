@@ -2,7 +2,9 @@
 // apiClient — unico punto di accesso HTTP del frontend.
 //
 // Punti chiave:
-//   • legge il token da sessionStorage in automatico
+//   • il JWT vive in un cookie httpOnly `access_token` (non leggibile da JS):
+//     ogni richiesta usa `credentials: 'include'` così il browser lo invia da solo
+//   • niente più Authorization header né sessionStorage
 //   • normalizza la risposta a { ok, status, data, error, errorCode }
 //   • gestisce 401 globalmente (logout + redirect a /login)
 //   • supporta AbortSignal per cancellation
@@ -12,17 +14,6 @@
 
 import { getConfig } from '../config/config';
 
-const TOKEN_KEY = getConfig('AUTH_CONFIG.TOKEN_KEY');
-
-/** Ritorna il token JWT corrente oppure null. */
-export const getToken = () => sessionStorage.getItem(TOKEN_KEY);
-
-/** Salva il token JWT corrente. */
-export const setToken = (token) => sessionStorage.setItem(TOKEN_KEY, token);
-
-/** Cancella la sessione (token). */
-export const clearToken = () => sessionStorage.removeItem(TOKEN_KEY);
-
 // Callbacks su 401 — la AuthProvider si registra qui per fare logout reattivo.
 const unauthorizedListeners = new Set();
 export const onUnauthorized = (cb) => {
@@ -31,7 +22,6 @@ export const onUnauthorized = (cb) => {
 };
 
 const notifyUnauthorized = () => {
-  clearToken();
   unauthorizedListeners.forEach((cb) => {
     try { cb(); } catch { /* ignora */ }
   });
@@ -47,6 +37,9 @@ const notifyUnauthorized = () => {
  * - data:      body parsato come JSON (se possibile) oppure null
  * - error:     messaggio d'errore lato server o di rete, oppure null
  * - errorCode: campo `code` opzionale del backend (es. AuthErrorCodes)
+ *
+ * `auth` (default true) non aggiunge più header: il cookie viaggia sempre.
+ * Serve solo a decidere se un 401 deve scatenare il logout globale.
  */
 export const request = async (url, options = {}) => {
   const {
@@ -64,10 +57,6 @@ export const request = async (url, options = {}) => {
   if (body !== undefined && !isFormData) {
     finalHeaders['Content-Type'] = finalHeaders['Content-Type'] || 'application/json';
   }
-  if (auth) {
-    const token = getToken();
-    if (token) finalHeaders.Authorization = `Bearer ${token}`;
-  }
 
   let response;
   try {
@@ -75,6 +64,7 @@ export const request = async (url, options = {}) => {
       method,
       headers: finalHeaders,
       body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
+      credentials: 'include', // invia/riceve il cookie httpOnly access_token
       signal,
     });
   } catch (err) {
