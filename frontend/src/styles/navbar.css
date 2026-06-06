@@ -133,9 +133,9 @@
 
 .nav-dd-panel {
   position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  top: 0;
+  left: calc(100% + 8px); /* flyout a destra della sidebar, sopra il contenuto */
+  min-width: 220px;
   background: var(--cream);
   border: var(--b) solid var(--ink);
   border-radius: var(--radius-sm);
