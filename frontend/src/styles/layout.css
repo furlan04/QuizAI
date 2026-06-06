@@ -29,8 +29,16 @@
 
 /* ── Desktop: sidebar + scrollable content ── */
 @media (min-width: 1024px) {
-  .app-container.authenticated { height: 100vh; overflow: hidden; }
-  .sidebar-desktop { display: flex; overflow-y: auto; }
+  .app-container.authenticated,
+  .app-container.public {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* overflow visibile così i dropdown della sidebar possono uscire a destra */
+  .sidebar-desktop { display: flex; overflow: visible; }
   .sidebar-mobile  { display: none; }
   .main-content    { height: 100vh; overflow-y: auto; padding-bottom: 0; }
 }
