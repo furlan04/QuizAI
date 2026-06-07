@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace QuizService.Quizzes;
 
-public record GenerateQuizRequest(string Topic, string Difficulty, int NumQuestions);
+public record GenerateQuizRequest(string Topic, string Difficulty, int NumQuestions, bool DeepSearch = false);
 public record GenerateQuizResponse(string QuizId, string Status);
 public record QuizSummary(
     string Id, string Title, string Topic, string Difficulty,
@@ -96,7 +96,7 @@ public class QuizzesController : ControllerBase
 
         await _publisher.PublishAsync(new QuizGenerateMessage(
             quizId, request.Topic, request.Difficulty,
-            request.NumQuestions, userId));
+            request.NumQuestions, userId, DeepSearch: request.DeepSearch));
 
         return Accepted(new GenerateQuizResponse(quizId, "generating"));
     }

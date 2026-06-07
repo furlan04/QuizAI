@@ -13,6 +13,9 @@ class QuizGenerateEvent(BaseModel):
     user_id: str
     # Optional: extracted text of an uploaded document to ground the quiz on.
     source_text: Optional[str] = Field(default=None, max_length=60000)
+    # Optional: when True, consult the web (deep search) before generating to
+    # enrich the quiz with additional information on the topic.
+    deep_search: bool = Field(default=False)
 
 
 class QuizGeneratedEvent(BaseModel):

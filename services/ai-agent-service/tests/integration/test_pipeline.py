@@ -77,7 +77,9 @@ def _make_invalid_raw(n: int = 2) -> RawQuestions:
     )
 
 
-def _make_initial_state(num_questions: int = 2, source_text: str = "") -> AgentState:
+def _make_initial_state(
+    num_questions: int = 2, source_text: str = "", deep_search: bool = False
+) -> AgentState:
     return AgentState(
         quiz_id="qz-test-001",
         topic="Python",
@@ -85,6 +87,7 @@ def _make_initial_state(num_questions: int = 2, source_text: str = "") -> AgentS
         num_questions=num_questions,
         user_id="u-test",
         source_text=source_text,
+        deep_search=deep_search,
     )
 
 
@@ -247,3 +250,43 @@ def test_document_path_uses_grounded_prompts(mock_planner_groq, mock_planner_ins
     assert "strictly from a provided document" in system_content
     assert "Document excerpts" in user_content
     assert "first-class objects" in user_content  # grounded on the actual text
+
+
+# ---------------------------------------------------------------------------
+# Scenario 5: Deep search (web-grounded) path
+# ---------------------------------------------------------------------------
+
+@patch("src.agent.nodes.researcher.research_topic")
+@patch("src.agent.nodes.generator.instructor")
+@patch("src.agent.nodes.generator.Groq")
+@patch("src.agent.nodes.planner.instructor")
+@patch("src.agent.nodes.planner.Groq")
+def test_deep_search_injects_web_context(mock_planner_groq, mock_planner_instructor,
+                                         mock_gen_groq, mock_gen_instructor,
+                                         mock_research):
+    """
+    With deep_search=True, the researcher runs first and its web context is
+    threaded into both the planner and generator prompts.
+    """
+    mock_research.return_value = "Python 3.13 introduced an experimental JIT compiler."
+
+    planner_client = MagicMock()
+    mock_planner_instructor.from_groq.return_value = planner_client
+    planner_client.chat.completions.create.return_value = _make_plan()
+
+    gen_client = MagicMock()
+    mock_gen_instructor.from_groq.return_value = gen_client
+    gen_client.chat.completions.create.return_value = _make_valid_raw(2)
+
+    graph = build_graph()
+    final: AgentState = graph.invoke(_make_initial_state(num_questions=2, deep_search=True))
+
+    assert final.validated_questions is not None
+    mock_research.assert_called_once_with("Python", "easy")
+
+    # Web context reaches the planner prompt...
+    _, planner_kwargs = planner_client.chat.completions.create.call_args
+    assert "experimental JIT compiler" in planner_kwargs["messages"][1]["content"]
+    # ...and the generator prompt.
+    _, gen_kwargs = gen_client.chat.completions.create.call_args
+    assert "experimental JIT compiler" in gen_kwargs["messages"][1]["content"]

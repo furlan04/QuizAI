@@ -28,8 +28,9 @@ export default function QuizCreatePage() {
   const [form, setForm] = useReducer((s, patch) => ({ ...s, ...patch }), {
     mode: "topic", // 'topic' | 'document'
     topic: "", file: null, difficulty: "medium", numQuestions: 5,
+    deepSearch: false, // ricerca web prima della generazione (solo modalità argomento)
   });
-  const { mode, topic, file, difficulty, numQuestions } = form;
+  const { mode, topic, file, difficulty, numQuestions, deepSearch } = form;
   // Stato di invio/esito raggruppato. phase: 'form' | 'submitting' | 'generating' | 'failed'
   const [status, setStatus] = useReducer((s, patch) => ({ ...s, ...patch }), {
     phase: "form", message: "", isError: false,
@@ -108,7 +109,7 @@ export default function QuizCreatePage() {
 
     const result = mode === "document"
       ? await generateQuizFromFile(file, difficulty, Number(numQuestions))
-      : await generateQuiz(topic, difficulty, Number(numQuestions));
+      : await generateQuiz(topic, difficulty, Number(numQuestions), deepSearch);
 
     if (!result.success || !result.quizId) {
       setStatus({ isError: true, message: result.message || "Errore durante la generazione del quiz", phase: "form" });
@@ -212,20 +213,45 @@ export default function QuizCreatePage() {
 
           <form onSubmit={handleCreate} className="create-form">
             {mode === "topic" ? (
-              <div className="form-group">
-                <label className="form-label" htmlFor="create-topic">Di cosa parla il tuo quiz?</label>
-                <textarea
-                  id="create-topic"
-                  className="form-control create-topic-input"
-                  placeholder="Es. Storia Romana, JavaScript avanzato, Cultura Pop anni '90..."
-                  value={topic}
-                  onChange={(e) => setForm({ topic: e.target.value })}
-                  required
-                  maxLength={200}
-                  rows={4}
-                />
-                <p className="form-hint">Sii specifico per risultati migliori (max 200 caratteri)</p>
-              </div>
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="create-topic">Di cosa parla il tuo quiz?</label>
+                  <textarea
+                    id="create-topic"
+                    className="form-control create-topic-input"
+                    placeholder="Es. Storia Romana, JavaScript avanzato, Cultura Pop anni '90..."
+                    value={topic}
+                    onChange={(e) => setForm({ topic: e.target.value })}
+                    required
+                    maxLength={200}
+                    rows={4}
+                  />
+                  <p className="form-hint">Sii specifico per risultati migliori (max 200 caratteri)</p>
+                </div>
+
+                {/* Deep search: consulta il web prima di generare (solo argomento) */}
+                <div className="form-group">
+                  <label className="deep-search-toggle" htmlFor="create-deepsearch">
+                    <span className="deep-search-text">
+                      <span className="deep-search-label">Ricerca web (deep search)</span>
+                      <span className="form-hint" style={{ margin: 0 }}>
+                        L&apos;AI consulta il web per informazioni aggiornate sull&apos;argomento. La generazione può richiedere più tempo.
+                      </span>
+                    </span>
+                    <input
+                      id="create-deepsearch"
+                      type="checkbox"
+                      role="switch"
+                      className="deep-search-input"
+                      checked={deepSearch}
+                      onChange={(e) => setForm({ deepSearch: e.target.checked })}
+                    />
+                    <span className="deep-search-track" aria-hidden="true">
+                      <span className="deep-search-thumb" />
+                    </span>
+                  </label>
+                </div>
+              </>
             ) : (
               <div className="form-group">
                 <label className="form-label" htmlFor="create-file">Carica un documento</label>

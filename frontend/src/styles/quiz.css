@@ -192,6 +192,58 @@
 }
 .btn-create-quiz:hover:not(:disabled) { box-shadow: 6px 6px 0 0 var(--ink); }
 
+/* ── Toggle deep search (ricerca web) ── */
+.deep-search-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--cream, #efe9da);
+  cursor: pointer;
+}
+.deep-search-text { display: flex; flex-direction: column; gap: 4px; flex: 1 1 auto; }
+.deep-search-label { font-weight: 700; color: var(--ink); }
+/* Checkbox visivamente nascosta ma accessibile e cliccabile */
+.deep-search-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+.deep-search-track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 30px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  transition: background 0.15s ease;
+}
+.deep-search-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.deep-search-input:checked + .deep-search-track { background: var(--lime); }
+.deep-search-input:checked + .deep-search-track .deep-search-thumb {
+  transform: translateX(22px);
+  background: var(--violet);
+}
+.deep-search-input:focus-visible + .deep-search-track {
+  outline: 3px solid var(--violet);
+  outline-offset: 2px;
+}
+
 /* ── Gioca quiz ── */
 .quiz-play-container {
   min-height: 100vh;

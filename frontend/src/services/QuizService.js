@@ -1,7 +1,7 @@
 import { quizApi } from '../lib/apiClient';
 
-export const generateQuiz = async (topic, difficulty, numQuestions) => {
-  const res = await quizApi.post('/quizzes/generate', { topic, difficulty, numQuestions });
+export const generateQuiz = async (topic, difficulty, numQuestions, deepSearch = false) => {
+  const res = await quizApi.post('/quizzes/generate', { topic, difficulty, numQuestions, deepSearch });
   if (res.ok) return { success: true, ...res.data };
   return { success: false, message: res.error || 'Errore durante la generazione del quiz' };
 };

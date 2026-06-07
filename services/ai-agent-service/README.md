@@ -6,20 +6,25 @@ Riceve una richiesta di generazione da RabbitMQ, esegue una pipeline LangGraph a
 
 Supporta inoltre la **generazione da documento (RAG)**: se la richiesta include `source_text` (testo estratto da un PDF/DOCX/PPTX caricato dall'utente), planner e generator vengono ancorati al contenuto del documento tramite un indice BM25 in-memory effimero. Il documento non viene mai salvato né messo in cache: il testo vive solo nel messaggio transitorio e nello stato della pipeline, e viene scartato a fine generazione (non viene persistito su MongoDB).
 
+Supporta infine la **deep search (ricerca web)**: se la richiesta imposta `deep_search: true`, prima della pianificazione un nodo `researcher` consulta il web tramite **Browser Use** per raccogliere informazioni aggiornate sul topic, che vengono poi iniettate nei prompt di planner e generator. È opt-in e best-effort: se la chiamata fallisce, va in timeout o `BROWSER_USE_API_KEY` non è configurata, la pipeline procede esattamente come senza deep search. La deep search è ignorata per i quiz ancorati a un documento (`source_text`), che restano vincolati al solo contenuto caricato.
+
 ---
 
 ## Architettura
 
 ```
-RabbitMQ                   LangGraph Pipeline                  RabbitMQ
-quiz.generate  →  planner → generator → validator → enricher  →  quiz.generated
-                                            ↑___retry (max 3)___↓
+RabbitMQ                          LangGraph Pipeline                       RabbitMQ
+quiz.generate  →  (researcher) → planner → generator → validator → enricher  →  quiz.generated
+                                                          ↑___retry (max 3)___↓
 ```
+
+Il nodo `researcher` viene eseguito solo se `deep_search: true` (e non c'è `source_text`); altrimenti l'ingresso va direttamente al planner.
 
 ### Nodi della pipeline
 
 | Nodo | Responsabilità |
 |------|---------------|
+| **researcher** | (Opzionale, `deep_search`) Consulta il web via Browser Use e raccoglie fatti sul topic |
 | **planner** | Analizza topic e difficoltà, decide subtopic e distribuzione domande |
 | **generator** | Chiama GROQ con output strutturato via `instructor`, produce domande raw |
 | **validator** | Verifica 4 opzioni, `correct_index` valido, no duplicati, conteggio corretto |
@@ -65,6 +70,7 @@ src/
 │   └── handlers/quiz_generation_handler.py
 └── infrastructure/
     ├── groq_client.py               # Retry esponenziale via tenacity
+    ├── browser_use_client.py        # Client deep search (Browser Use Cloud API)
     └── mongo_client.py              # Salvataggio non-fatal
 ```
 
@@ -88,6 +94,10 @@ cp .env.example .env
 | `MONGODB_URL` | `mongodb://localhost:27017` | |
 | `MONGODB_DB` | `quizai` | |
 | `INTERNAL_API_KEY` | — | Autenticazione interna |
+| `BROWSER_USE_API_KEY` | — | API key Browser Use; se vuota la deep search è disabilitata |
+| `BROWSER_USE_BASE_URL` | `https://api.browser-use.com` | Base URL API Browser Use |
+| `BROWSER_USE_TIMEOUT` | `180` | Budget complessivo (s) per una ricerca web |
+| `BROWSER_USE_POLL_INTERVAL` | `3` | Intervallo (s) tra i poll dello stato del task |
 
 ---
 
@@ -136,11 +146,14 @@ curl http://localhost:8000/health
   "difficulty": "medium",
   "num_questions": 5,
   "user_id": "u-42",
-  "source_text": null
+  "source_text": null,
+  "deep_search": false
 }
 ```
 
 `source_text` è opzionale: se valorizzato (testo del documento caricato, max 60k caratteri) la generazione è ancorata a quel contenuto (RAG). È transitorio e non viene mai persistito.
+
+`deep_search` è opzionale (default `false`): se `true` il servizio consulta il web (Browser Use) prima di generare per arricchire il quiz con informazioni aggiornate sul topic. Ignorato quando è presente `source_text`.
 
 **Estrazione testo** — `POST /documents/extract` (interno, header `X-Internal-Api-Key`):
 
@@ -185,7 +198,8 @@ pytest tests/            # include integration (GROQ mockato)
 | `tests/unit/test_planner.py` | Nodo planner, gestione errori LLM |
 | `tests/unit/test_validator.py` | Validazione domande, logica di retry |
 | `tests/unit/test_enricher.py` | Tag derivati, metadati aggiunti |
-| `tests/integration/test_pipeline.py` | Pipeline completa: happy path, retry, fail |
+| `tests/unit/test_researcher.py` | Nodo deep search + client Browser Use (mockato) |
+| `tests/integration/test_pipeline.py` | Pipeline completa: happy path, retry, fail, RAG, deep search |
 
 ---
 

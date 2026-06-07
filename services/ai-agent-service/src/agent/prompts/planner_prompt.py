@@ -18,6 +18,15 @@ Number of questions: {num_questions}
 Return a structured plan with subtopics and question distribution.
 """
 
+PLANNER_RESEARCH_SECTION = """
+
+The following are factual notes gathered from the web about this topic. Use them
+to choose accurate, relevant subtopics and to reflect current information:
+\"\"\"
+{research}
+\"\"\"
+"""
+
 DOC_PLANNER_SYSTEM_PROMPT = """You are a quiz architect working strictly from an uploaded document.
 Given excerpts from the document, a difficulty level, and the desired number of questions,
 you produce a structured quiz plan whose subtopics are actually covered by the document.
