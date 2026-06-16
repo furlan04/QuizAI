@@ -109,6 +109,7 @@ services:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       AUTH_SERVICE_URL: "http://auth-service:5001"
       AI_AGENT_URL: "http://ai-agent:8000"
+      FILE_SERVICE_URL: "http://file-service:8001"
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
       # Origine del frontend ammessa da CORS (necessaria per i cookie cross-origin)
       FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
@@ -191,6 +192,20 @@ services:
         - action: sync
           path: ../shared
           target: /app/shared
+
+  file-service:
+    build:
+      context: ../services/file-service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
+    develop:
+      watch:
+        - action: sync+restart
+          path: ../services/file-service/src
+          target: /app/src
 
   # ── Frontend ────────────────────────────────────────────────────────────────
 

@@ -13,14 +13,11 @@ logger = logging.getLogger(__name__)
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".pptx"}
 
-
 class UnsupportedDocumentError(ValueError):
     """Raised when a file extension is not one of the supported document types."""
 
-
 class DocumentExtractionError(RuntimeError):
     """Raised when a supported file cannot be parsed."""
-
 
 def _extract_pdf(data: bytes) -> str:
     from pypdf import PdfReader

@@ -4,12 +4,6 @@ import io
 import pytest
 
 from src.agent.rag import DocumentIndex, chunk_text
-from src.agent.document.extractor import (
-    DocumentExtractionError,
-    UnsupportedDocumentError,
-    extract_text,
-    suggest_topic,
-)
 
 
 # ── Chunking ─────────────────────────────────────────────────────────────────
@@ -57,35 +51,4 @@ def test_empty_document_index_is_falsy_and_safe():
     assert idx.build_context(["q"]) == ""
 
 
-# ── Extraction ───────────────────────────────────────────────────────────────
 
-def test_extract_rejects_unsupported_extension():
-    with pytest.raises(UnsupportedDocumentError):
-        extract_text("notes.txt", b"hello")
-
-
-def test_extract_wraps_parse_failure():
-    # Not a valid PDF -> pypdf raises -> wrapped as DocumentExtractionError
-    with pytest.raises(DocumentExtractionError):
-        extract_text("broken.pdf", b"%PDF-not-really")
-
-
-def test_extract_docx_roundtrip_and_cap():
-    docx = pytest.importorskip("docx")
-    document = docx.Document()
-    document.add_paragraph("Quantum entanglement links particle states.")
-    document.add_paragraph("Measurement collapses the shared wavefunction.")
-    buf = io.BytesIO()
-    document.save(buf)
-
-    text = extract_text("physics.docx", buf.getvalue())
-    assert "Quantum entanglement" in text
-    assert "wavefunction" in text
-
-    capped = extract_text("physics.docx", buf.getvalue(), max_chars=10)
-    assert len(capped) == 10
-
-
-def test_suggest_topic_prefers_filename_stem():
-    assert suggest_topic("body", "my_cool-notes.pdf") == "my cool notes"
-    assert suggest_topic("First line here\nsecond", "") == "First line here"

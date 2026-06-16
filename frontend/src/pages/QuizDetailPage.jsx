@@ -1,6 +1,6 @@
 import { useEffect, useState, useReducer } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getQuizById } from "../services/QuizService";
+import { getQuizById, downloadAnkiDeck } from "../services/QuizService";
 import { getLeaderboard, getMyAttempts } from "../services/QuizAttemptService";
 import { getProfileByUserId } from "../services/UserService";
 import { useAuth } from "../auth/AuthContext";
@@ -30,6 +30,16 @@ export default function QuizDetailPage() {
   const { quiz, creatorUsername, leaderboard, myAttempt } = data;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [downloadingAnki, setDownloadingAnki] = useState(false);
+
+  const handleAnkiDownload = async () => {
+    setDownloadingAnki(true);
+    const res = await downloadAnkiDeck(id, quiz.title);
+    if (!res.success) {
+      alert(res.message);
+    }
+    setDownloadingAnki(false);
+  };
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -117,9 +127,14 @@ export default function QuizDetailPage() {
             </div>
           )}
 
-          <Button size="lg" onClick={() => navigate(`/quiz/${id}`)}>
-            Gioca ora
-          </Button>
+          <div className="flex gap-3 mt-2">
+            <Button size="lg" onClick={() => navigate(`/quiz/${id}`)}>
+              Gioca ora
+            </Button>
+            <Button size="lg" variant="outline" onClick={handleAnkiDownload} disabled={downloadingAnki}>
+              {downloadingAnki ? "Esportazione..." : "Esporta in Anki"}
+            </Button>
+          </div>
         </div>
       </Card>
 
