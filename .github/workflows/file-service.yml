@@ -34,4 +34,6 @@ jobs:
           pip install pytest pytest-mock httpx
 
       - name: Run tests
+        env:
+          PYTHONPATH: .
         run: pytest -q
