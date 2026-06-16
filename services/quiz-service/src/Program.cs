@@ -23,6 +23,7 @@ var mongoDb       = cfg["MONGODB_DB"]        ?? "quizai";
 var mqUrl         = cfg["RABBITMQ_URL"]      ?? "amqp://guest:guest@localhost:5672/";
 var authServiceUrl = cfg["AUTH_SERVICE_URL"] ?? "http://localhost:5001";
 var aiAgentUrl    = cfg["AI_AGENT_URL"]      ?? "http://localhost:8000";
+var fileServiceUrl = cfg["FILE_SERVICE_URL"] ?? "http://localhost:8001";
 var internalApiKey = cfg["INTERNAL_API_KEY"] ?? "changeme";
 var jwtIssuer     = cfg["JWT_ISSUER"]        ?? "quizai";
 var jwtAudience   = cfg["JWT_AUDIENCE"]      ?? "quizai";
@@ -44,7 +45,7 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 // ── Document extraction (ai-agent-service) ───────────────────────────────────
 builder.Services.AddHttpClient<IDocumentExtractionClient, DocumentExtractionClient>(c =>
 {
-    c.BaseAddress = new Uri(aiAgentUrl);
+    c.BaseAddress = new Uri(fileServiceUrl);
     c.DefaultRequestHeaders.Add("X-Internal-Api-Key", internalApiKey);
     c.Timeout = TimeSpan.FromSeconds(60);
 });

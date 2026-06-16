@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using QuizService.Documents;
 using QuizService.Messaging.Messages;
 using QuizService.Messaging.Publishers;
@@ -66,6 +67,38 @@ public class QuizzesController : ControllerBase
             "failed"     => StatusCode(500, new { error = quiz.Error }),
             _            => Ok(quiz),
         };
+    }
+
+    [HttpGet("{id}/anki")]
+    public async Task<IActionResult> GetAnkiById(string id)
+    {
+        var quiz = await _quizzes.GetByIdAsync(id);
+        if (quiz is null) return NotFound();
+        if (quiz.Status != "ready" || quiz.Questions is null || quiz.Questions.Count == 0)
+            return BadRequest(new { error = "Quiz non pronto o senza domande." });
+
+        var ankiQuestions = quiz.Questions.Select(q => new
+        {
+            question = q.Text,
+            answer = q.Options != null && q.CorrectIndex >= 0 && q.CorrectIndex < q.Options.Count 
+                ? q.Options[q.CorrectIndex] 
+                : "N/A"
+        }).ToList();
+
+        var questionsJson = JsonSerializer.Serialize(ankiQuestions);
+
+        try
+        {
+            var stream = await _extractor.GenerateAnkiAsync(quiz.Title, questionsJson);
+            return File(stream, "application/apkg", $"{quiz.Title}.apkg");
+        }
+        catch (DocumentExtractionException ex)
+        {
+            var status = ex.StatusCode is >= 400 and < 500
+                ? StatusCodes.Status422UnprocessableEntity
+                : StatusCodes.Status502BadGateway;
+            return StatusCode(status, new { error = ex.Message });
+        }
     }
 
     [HttpPost("generate")]

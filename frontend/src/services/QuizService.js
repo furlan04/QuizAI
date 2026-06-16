@@ -1,4 +1,5 @@
 import { quizApi } from '../lib/apiClient';
+import { getConfig } from '../config/config';
 
 export const generateQuiz = async (topic, difficulty, numQuestions, deepSearch = false) => {
   const res = await quizApi.post('/quizzes/generate', { topic, difficulty, numQuestions, deepSearch });
@@ -37,4 +38,30 @@ export const getQuizById = async (quizId) => {
   const res = await quizApi.get(`/quizzes/${quizId}`);
   if (res.status === 202) return { generating: true };
   return res.ok ? res.data : null;
+};
+
+export const downloadAnkiDeck = async (quizId, quizTitle) => {
+  const baseUrl = getConfig('QUIZ_SERVICE_URL');
+  try {
+    const response = await fetch(`${baseUrl}/quizzes/${quizId}/anki`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, message: errorData.error || 'Errore durante il download' };
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${quizTitle}.apkg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: 'Errore di rete durante il download' };
+  }
 };
