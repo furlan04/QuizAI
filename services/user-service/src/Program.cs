@@ -8,6 +8,8 @@ using UserService.Friendships;
 using UserService.Friendships.Models;
 using UserService.Messaging.Consumers;
 using UserService.Messaging.Publishers;
+using UserService.Notifications;
+using UserService.Notifications.Models;
 using UserService.Users;
 using UserService.Users.Models;
 using UserService.Persistence;
@@ -25,6 +27,7 @@ var mqUrl          = cfg["RABBITMQ_URL"]       ?? "amqp://guest:guest@localhost:
 var authServiceUrl = cfg["AUTH_SERVICE_URL"]   ?? "http://localhost:5001";
 var jwtIssuer      = cfg["JWT_ISSUER"]         ?? "quizai";
 var jwtAudience    = cfg["JWT_AUDIENCE"]       ?? "quizai";
+var frontendUrl    = cfg["FRONTEND_URL"]?.TrimEnd('/') ?? "http://localhost:3000";
 
 // ── MongoDB ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
@@ -35,10 +38,13 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IFriendshipRepository, FriendshipRepository>();
 builder.Services.AddSingleton<IChallengeRepository, ChallengeRepository>();
+builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IUserService, UserService.Users.UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IChallengeCreatedPublisher, ChallengeCreatedPublisher>();
+builder.Services.AddScoped<IFriendRequestPublisher, FriendRequestPublisher>();
 
 // ── JWT via JWKS (auth-service) ──────────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -52,6 +58,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer   = jwtIssuer,
             ValidAudience = jwtAudience,
         };
+        o.Events = new JwtBearerEvents
+        {
+            // Il frontend non manda più l'header Authorization: il token sta nel
+            // cookie httpOnly `access_token`. L'header resta supportato come fallback.
+            OnMessageReceived = context =>
+            {
+                if (string.IsNullOrEmpty(context.Token))
+                    context.Token = context.Request.Cookies["access_token"];
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -60,6 +77,8 @@ builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<QuizCompletedConsumer>();
     x.AddConsumer<UserRegisteredConsumer>();
+    x.AddConsumer<QuizCreatedConsumer>();
+    x.AddConsumer<FriendRequestNotificationConsumer>();
 
     x.UsingRabbitMq((ctx, mqCfg) =>
     {
@@ -81,6 +100,14 @@ builder.Services.AddMassTransit(x =>
         mqCfg.ReceiveEndpoint("user.registered", e =>
         {
             e.ConfigureConsumer<UserRegisteredConsumer>(ctx);
+        });
+        mqCfg.ReceiveEndpoint("quiz.created", e =>
+        {
+            e.ConfigureConsumer<QuizCreatedConsumer>(ctx);
+        });
+        mqCfg.ReceiveEndpoint("friend.request.sent", e =>
+        {
+            e.ConfigureConsumer<FriendRequestNotificationConsumer>(ctx);
         });
     });
 });
@@ -109,8 +136,13 @@ builder.Services.AddSwaggerGen(o =>
     });
 });
 
+// AllowCredentials è necessario perché il cookie httpOnly viaggi cross-origin;
+// impone di elencare l'origine esplicita (non combinabile con AllowAnyOrigin).
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+    p.WithOrigins(frontendUrl)
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+     .AllowCredentials()));
 
 var app = builder.Build();
 
@@ -171,5 +203,26 @@ static async Task CreateIndexesAsync(IServiceProvider sp)
             Builders<Challenge>.IndexKeys
                 .Ascending(c => c.QuizId)
                 .Ascending(c => c.Status)),
+    ]);
+
+    var notifications = db.GetCollection<Notification>("notifications");
+    await notifications.Indexes.CreateManyAsync(
+    [
+        // Lista per utente, ordinata dalla più recente.
+        new CreateIndexModel<Notification>(
+            Builders<Notification>.IndexKeys
+                .Ascending(n => n.UserId)
+                .Descending(n => n.CreatedAt)),
+        // Conteggio non lette.
+        new CreateIndexModel<Notification>(
+            Builders<Notification>.IndexKeys
+                .Ascending(n => n.UserId)
+                .Ascending(n => n.Read)),
+        // Deduplica idempotente (utente, tipo, riferimento).
+        new CreateIndexModel<Notification>(
+            Builders<Notification>.IndexKeys
+                .Ascending(n => n.UserId)
+                .Ascending(n => n.Type)
+                .Ascending(n => n.ReferenceId)),
     ]);
 }

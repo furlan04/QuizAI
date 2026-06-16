@@ -13,8 +13,13 @@ class AgentState:
     user_id: str = ""
     # When present, the quiz is grounded on this uploaded-document text (RAG).
     source_text: str = ""
+    # When True, the web is consulted (Browser Use) before planning to gather
+    # additional, up-to-date information on the topic.
+    deep_search: bool = False
 
     # Pipeline fields
+    # Factual notes gathered from the web by the researcher node (deep search).
+    web_context: str = ""
     plan: Optional[dict] = None
     raw_questions: Optional[list] = None
     validated_questions: Optional[list] = None

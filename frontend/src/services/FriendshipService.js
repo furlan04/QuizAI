@@ -22,10 +22,6 @@ export const respondFriendshipRequest = async (friendshipId, action) => {
   return { success: false, message: res.error || 'Errore nella risposta' };
 };
 
-/** Alias compatibilità */
-export const acceptFriendshipRequest = (friendshipId) =>
-  respondFriendshipRequest(friendshipId, 'accept');
-
 export const removeFriendship = async (username) => {
   const res = await userApi.del(`/users/me/friends/${encodeURIComponent(username)}`);
   if (res.ok) return { success: true };

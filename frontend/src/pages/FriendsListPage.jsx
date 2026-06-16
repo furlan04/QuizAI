@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFriendsList, removeFriendship } from "../services/FriendshipService";
 import { useNotice } from "../hooks/useNotice";
@@ -15,7 +15,7 @@ export default function FriendsListPage() {
   const [confirmDialog, setConfirmDialog] = useState(null);
   const navigate = useNavigate();
 
-  const fetchFriends = async () => {
+  const fetchFriends = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getFriendsList();
@@ -25,7 +25,7 @@ export default function FriendsListPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [notify]);
 
   const confirmRemoveFriend = async () => {
     if (!confirmDialog) return;
@@ -43,7 +43,7 @@ export default function FriendsListPage() {
     }
   };
 
-  useEffect(() => { fetchFriends(); }, []);
+  useEffect(() => { fetchFriends(); }, [fetchFriends]);
   useEffect(() => {
     if (notice.message) {
       const t = setTimeout(() => clear(), 3000);
@@ -54,11 +54,7 @@ export default function FriendsListPage() {
   return (
     <div className="friends-list-container">
       {confirmDialog && (
-        <div style={{
-          position: "fixed", top: 20, right: 20, background: "#fff",
-          border: "2.5px solid var(--ink)", borderRadius: "var(--radius)",
-          padding: "22px 24px", boxShadow: "var(--shadow-hard-lg)", zIndex: 10000, minWidth: 320, maxWidth: 380,
-        }}>
+        <div className="friend-confirm-dialog">
           <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 16, marginBottom: 12 }}>
             Conferma rimozione
           </div>
@@ -66,8 +62,8 @@ export default function FriendsListPage() {
             Rimuovere l&apos;amicizia con {confirmDialog.username}?
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }} onClick={() => setConfirmDialog(null)}>Annulla</button>
-            <button className="btn btn-primary" style={{ padding: "8px 14px", fontSize: 13, background: "var(--coral)", color: "var(--ink)" }} onClick={confirmRemoveFriend} disabled={loading}>
+            <button type="button" className="btn btn-outline" style={{ padding: "8px 14px", fontSize: 13 }} onClick={() => setConfirmDialog(null)}>Annulla</button>
+            <button type="button" className="btn btn-primary" style={{ padding: "8px 14px", fontSize: 13, background: "var(--coral)", color: "var(--ink)" }} onClick={confirmRemoveFriend} disabled={loading}>
               {loading ? "Rimozione..." : "Rimuovi"}
             </button>
           </div>
@@ -80,7 +76,7 @@ export default function FriendsListPage() {
             <h1 className="page-title">I miei amici</h1>
             <p className="page-subtitle">Gestisci le tue connessioni</p>
           </div>
-          <button onClick={fetchFriends} className="btn btn-outline" disabled={loading}>Aggiorna</button>
+          <button type="button" onClick={fetchFriends} className="btn btn-outline" disabled={loading}>Aggiorna</button>
         </div>
       </div>
 
@@ -118,11 +114,7 @@ export default function FriendsListPage() {
                     borderBottom: "2.5px solid var(--ink)",
                   }} />
                   <div style={{ padding: "0 20px 12px", marginTop: -26, display: "flex", alignItems: "flex-end", gap: 12 }}>
-                    <div style={{
-                      width: 52, height: 52, borderRadius: "50%", background: avColor, border: "3px solid #fff",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: "3px 3px 0 0 var(--ink)", flexShrink: 0,
-                    }}>
+                    <div className="friend-avatar" style={{ background: avColor }}>
                       <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18 }}>
                         {getInitials(friend.username)}
                       </span>
@@ -135,10 +127,10 @@ export default function FriendsListPage() {
                     </div>
                   </div>
                   <div className="friend-actions">
-                    <button className="btn btn-primary btn-view-quizzes" onClick={() => navigate(`/profile/${friend.username}`)} disabled={loading}>
+                    <button type="button" className="btn btn-primary btn-view-quizzes" onClick={() => navigate(`/profile/${friend.username}`)} disabled={loading}>
                       Vedi profilo
                     </button>
-                    <button className="btn btn-outline btn-remove" onClick={() => setConfirmDialog({ username: friend.username })} disabled={loading}>
+                    <button type="button" className="btn btn-outline btn-remove" onClick={() => setConfirmDialog({ username: friend.username })} disabled={loading}>
                       Rimuovi
                     </button>
                   </div>

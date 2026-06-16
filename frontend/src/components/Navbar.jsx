@@ -1,6 +1,8 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useNotifications } from "../hooks/useNotifications";
+import { describeNotification } from "../services/NotificationsService";
 
 /* ── Inline SVG icons (no emoji) ── */
 const IcHome = () => (
@@ -68,31 +70,56 @@ const IcArrow = () => (
   </svg>
 );
 
+const IcBell = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+    <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+  </svg>
+);
+
 /* ── Brand mark ── */
 function BrandMark() {
   return (
-    <div style={{
-      width: 38, height: 38, borderRadius: 12,
-      background: "var(--ink)", color: "var(--lime)",
-      display: "grid", placeItems: "center",
-      fontFamily: "'Bricolage Grotesque', sans-serif",
-      fontWeight: 800, fontSize: 20,
-      boxShadow: "3px 3px 0 0 var(--coral)",
-      transform: "rotate(-4deg)",
-      flexShrink: 0,
-    }}>
+    <div className="brand-mark">
       Q
     </div>
   );
 }
 
+/* ── Lista notifiche del dropdown ── */
+function NotifList({ notifications, onOpen }) {
+  if (notifications.length === 0) {
+    return <div className="notif-empty">Nessuna notifica</div>;
+  }
+  return notifications.map((n) => {
+    const { text, detail } = describeNotification(n);
+    return (
+      <button
+        key={n.id}
+        type="button"
+        className={`notif-dd-item${n.read ? "" : " unread"}`}
+        onClick={() => onOpen(n)}
+      >
+        {!n.read && <span className="notification-dot" aria-hidden="true" />}
+        <span className="notif-dd-text">
+          {text}{detail ? ` — ${detail}` : ""}
+        </span>
+      </button>
+    );
+  });
+}
+
 export default function Navbar() {
   const { isAuthenticated: isLoggedIn, logout: onLogout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [friendsDropdownOpen, setFriendsDropdownOpen] = useState(false);
   const [quizDropdownOpen, setQuizDropdownOpen] = useState(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const desktopNavRef = useRef(null);
   const mobileNavRef = useRef(null);
+
+  const { notifications, unreadCount, markRead } = useNotifications({ enabled: isLoggedIn, limit: 6 });
 
   const isActive = (path) => location.pathname === path;
 
@@ -102,15 +129,23 @@ export default function Navbar() {
       const inMobile  = mobileNavRef.current  && mobileNavRef.current.contains(event.target);
       if (!inDesktop && !inMobile) closeAll();
     };
-    if (quizDropdownOpen || friendsDropdownOpen) {
+    if (quizDropdownOpen || friendsDropdownOpen || notifDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [quizDropdownOpen, friendsDropdownOpen]);
+  }, [quizDropdownOpen, friendsDropdownOpen, notifDropdownOpen]);
 
-  const toggleQuiz    = () => { setQuizDropdownOpen(v => !v);    if (friendsDropdownOpen) setFriendsDropdownOpen(false); };
-  const toggleFriends = () => { setFriendsDropdownOpen(v => !v); if (quizDropdownOpen)    setQuizDropdownOpen(false); };
-  const closeAll      = () => { setQuizDropdownOpen(false); setFriendsDropdownOpen(false); };
+  const toggleQuiz    = () => { setQuizDropdownOpen(v => !v);    setFriendsDropdownOpen(false); setNotifDropdownOpen(false); };
+  const toggleFriends = () => { setFriendsDropdownOpen(v => !v); setQuizDropdownOpen(false);    setNotifDropdownOpen(false); };
+  const toggleNotif   = () => { setNotifDropdownOpen(v => !v);   setQuizDropdownOpen(false);    setFriendsDropdownOpen(false); };
+  const closeAll      = () => { setQuizDropdownOpen(false); setFriendsDropdownOpen(false); setNotifDropdownOpen(false); };
+
+  const openNotification = async (n) => {
+    const { to } = describeNotification(n);
+    if (!n.read) await markRead(n.id);
+    closeAll();
+    navigate(to);
+  };
 
   /* ── Public sidebar (not logged in) ── */
   if (!isLoggedIn) {
@@ -177,7 +212,7 @@ export default function Navbar() {
 
           {/* Quiz dropdown */}
           <div className={`nav-dropdown${quizDropdownOpen ? " open" : ""}`}>
-            <button className={`nav-item nav-dd-toggle${quizActive ? " active" : ""}`} onClick={toggleQuiz}>
+            <button type="button" className={`nav-item nav-dd-toggle${quizActive ? " active" : ""}`} onClick={toggleQuiz}>
               <span className="nav-icon"><IcQuiz /></span>
               <span className="nav-text">Quiz</span>
               <span className="nav-dd-arrow"><IcArrow /></span>
@@ -193,7 +228,7 @@ export default function Navbar() {
 
           {/* Friends dropdown */}
           <div className={`nav-dropdown${friendsDropdownOpen ? " open" : ""}`}>
-            <button className={`nav-item nav-dd-toggle${friendsActive ? " active" : ""}`} onClick={toggleFriends}>
+            <button type="button" className={`nav-item nav-dd-toggle${friendsActive ? " active" : ""}`} onClick={toggleFriends}>
               <span className="nav-icon"><IcFriends /></span>
               <span className="nav-text">Amicizie</span>
               <span className="nav-dd-arrow"><IcArrow /></span>
@@ -202,6 +237,24 @@ export default function Navbar() {
               <div className="nav-dd-panel">
                 <Link to="/friendship/requests" className="nav-item" onClick={closeAll}>Richieste</Link>
                 <Link to="/friendship/friends"  className="nav-item" onClick={closeAll}>Amici</Link>
+              </div>
+            )}
+          </div>
+
+          {/* Notifications dropdown */}
+          <div className={`nav-dropdown${notifDropdownOpen ? " open" : ""}`}>
+            <button type="button" className={`nav-item nav-dd-toggle${isActive("/notifications") ? " active" : ""}`} onClick={toggleNotif}>
+              <span className="nav-icon notif-bell">
+                <IcBell />
+                {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>}
+              </span>
+              <span className="nav-text">Notifiche</span>
+              <span className="nav-dd-arrow"><IcArrow /></span>
+            </button>
+            {notifDropdownOpen && (
+              <div className="nav-dd-panel notif-dd-panel">
+                <NotifList notifications={notifications} onOpen={openNotification} />
+                <Link to="/notifications" className="nav-item notif-dd-all" onClick={closeAll}>Vedi tutte</Link>
               </div>
             )}
           </div>
@@ -225,7 +278,7 @@ export default function Navbar() {
           </Link>
 
           {/* Logout */}
-          <button onClick={onLogout} className="nav-item logout-btn">
+          <button type="button" onClick={onLogout} className="nav-item logout-btn">
             <span className="nav-icon"><IcLogout /></span>
             <span className="nav-text">Logout</span>
           </button>
@@ -241,7 +294,7 @@ export default function Navbar() {
 
         {/* Mobile quiz dropdown */}
         <div className="mobile-nav-dropdown">
-          <button className={`mobile-nav-item${quizDropdownOpen ? " active" : ""}`} onClick={toggleQuiz}>
+          <button type="button" className={`mobile-nav-item${quizDropdownOpen ? " active" : ""}`} onClick={toggleQuiz}>
             <span className="mobile-nav-icon"><IcQuiz /></span>
             <span className="mobile-nav-text">Quiz</span>
           </button>
@@ -256,7 +309,7 @@ export default function Navbar() {
 
         {/* Mobile friends dropdown */}
         <div className="mobile-nav-dropdown">
-          <button className={`mobile-nav-item${friendsDropdownOpen ? " active" : ""}`} onClick={toggleFriends}>
+          <button type="button" className={`mobile-nav-item${friendsDropdownOpen ? " active" : ""}`} onClick={toggleFriends}>
             <span className="mobile-nav-icon"><IcFriends /></span>
             <span className="mobile-nav-text">Amici</span>
           </button>
@@ -268,12 +321,29 @@ export default function Navbar() {
           )}
         </div>
 
+        {/* Mobile notifications dropdown */}
+        <div className="mobile-nav-dropdown">
+          <button type="button" className={`mobile-nav-item${notifDropdownOpen ? " active" : ""}`} onClick={toggleNotif}>
+            <span className="mobile-nav-icon notif-bell">
+              <IcBell />
+              {unreadCount > 0 && <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>}
+            </span>
+            <span className="mobile-nav-text">Notifiche</span>
+          </button>
+          {notifDropdownOpen && (
+            <div className="mobile-dropdown-menu notif-dd-panel">
+              <NotifList notifications={notifications} onOpen={openNotification} />
+              <Link to="/notifications" className="mobile-dropdown-item notif-dd-all" onClick={closeAll}>Vedi tutte</Link>
+            </div>
+          )}
+        </div>
+
         <Link to="/profile" className={`mobile-nav-item${location.pathname.startsWith("/profile") ? " active" : ""}`}>
           <span className="mobile-nav-icon"><IcProfile /></span>
           <span className="mobile-nav-text">Profilo</span>
         </Link>
 
-        <button onClick={onLogout} className="mobile-nav-item logout-btn">
+        <button type="button" onClick={onLogout} className="mobile-nav-item logout-btn">
           <span className="mobile-nav-icon"><IcLogout /></span>
           <span className="mobile-nav-text">Esci</span>
         </button>

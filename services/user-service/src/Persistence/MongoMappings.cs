@@ -4,6 +4,7 @@ using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Bson.Serialization.Serializers;
 using UserService.Challenges.Models;
 using UserService.Friendships.Models;
+using UserService.Notifications.Models;
 using UserService.Users.Models;
 
 namespace UserService.Persistence;
@@ -25,6 +26,7 @@ public static class MongoMappings
 
         MapSnakeCase<Challenge>(cm => ConfigureObjectIdStringId(cm.IdMemberMap));
         MapSnakeCase<Friendship>(cm => ConfigureObjectIdStringId(cm.IdMemberMap));
+        MapSnakeCase<Notification>(cm => ConfigureObjectIdStringId(cm.IdMemberMap));
         MapSnakeCase<User>();            // Id stringa così com'è (nessuna rappresentazione ObjectId)
     }
 

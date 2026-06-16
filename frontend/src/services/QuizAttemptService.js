@@ -18,11 +18,6 @@ export const completeSession = async (sessionId) => {
   return res.ok ? res.data : null;
 };
 
-export const getSession = async (sessionId) => {
-  const res = await quizApi.get(`/sessions/${sessionId}`);
-  return res.ok ? res.data : null;
-};
-
 export const getLeaderboard = async (quizId) => {
   const res = await quizApi.get(`/quizzes/${quizId}/leaderboard`);
   return res.ok ? res.data : [];
@@ -30,12 +25,5 @@ export const getLeaderboard = async (quizId) => {
 
 export const getMyAttempts = async (quizId) => {
   const res = await quizApi.get(`/users/me/attempts/${quizId}`);
-  return res.ok ? res.data : null;
-};
-
-/** Deprecati — mantenuti per compatibilità con vecchie pagine. */
-export const submitQuizAttempt = async () => ({ success: false, message: 'Usa startSession -> answerQuestion -> completeSession' });
-export const getAttemptReview = async (sessionId) => {
-  const res = await quizApi.get(`/sessions/${sessionId}`);
   return res.ok ? res.data : null;
 };

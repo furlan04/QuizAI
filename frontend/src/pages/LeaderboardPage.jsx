@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getLeaderboard } from "../services/QuizAttemptService";
-import { getCurrentUser } from "../services/CommonService";
+import { useAuth } from "../auth/AuthContext";
 
 const positionIcon = (pos) => `#${pos}`;
 
@@ -15,7 +15,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { quizId } = useParams();
-  const me = getCurrentUser();
+  const { user: me } = useAuth();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -85,18 +85,8 @@ export default function LeaderboardPage() {
           const isMe = me && entry.username === me.username;
           return (
             <div
-              key={index}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "56px 1fr auto auto",
-                alignItems: "center",
-                gap: 12,
-                padding: "12px 16px",
-                background: isMe ? "var(--lime,#e8ff8a)" : "#fff",
-                border: "2px solid var(--ink)",
-                borderRadius: "var(--radius-sm,10px)",
-                boxShadow: "3px 3px 0 0 var(--ink)",
-              }}
+              key={entry.username}
+              className={`leaderboard-row${isMe ? " is-me" : ""}`}
             >
               <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: 18 }}>
                 {positionIcon(index + 1)}

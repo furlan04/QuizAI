@@ -35,6 +35,11 @@
       "type": ["string", "null"],
       "maxLength": 60000,
       "description": "Testo estratto da un documento caricato (PDF/DOCX/PPTX) su cui ancorare il quiz (RAG). Null/assente per i quiz generati dal solo topic. Transitorio: non viene mai persistito."
+    },
+    "deep_search": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se true, l'ai-agent-service consulta il web (Browser Use) prima di generare il quiz per arricchirlo con informazioni aggiornate sul topic. Ignorato per i quiz ancorati a un documento."
     }
   }
 }

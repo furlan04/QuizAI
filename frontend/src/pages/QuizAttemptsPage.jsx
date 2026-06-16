@@ -20,9 +20,10 @@ export default function QuizAttemptsPage() {
       setNotFound(false);
       try {
         const data = await getMyAttempts(quizId);
-        if (ignore) return;
-        if (data && data.answers) setAttempt(data);
-        else setNotFound(true);
+        if (!ignore) {
+          if (data && data.answers) setAttempt(data);
+          else setNotFound(true);
+        }
       } catch {
         if (!ignore) setNotFound(true);
       } finally {

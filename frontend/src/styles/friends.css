@@ -230,3 +230,31 @@
   .friends-grid    { grid-template-columns: 1fr; }
   .friendship-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Dialogo conferma rimozione amico ── */
+.friend-confirm-dialog {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-hard-lg);
+  z-index: 10000;
+  min-width: 320px;
+  max-width: 380px;
+}
+
+/* ── Avatar amico (colore di sfondo impostato inline) ── */
+.friend-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 0 0 var(--ink);
+  flex-shrink: 0;
+}

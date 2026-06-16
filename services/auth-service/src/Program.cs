@@ -6,8 +6,10 @@ using AuthService.Jwt;
 using AuthService.Keys;
 using AuthService.Messaging;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +18,9 @@ var cfg = builder.Configuration;
 var mysqlUrl = cfg["MYSQL_URL"]
     ?? "Server=localhost;Port=3306;Database=quizai_auth;Uid=root;Pwd=root;";
 var mqUrl = cfg["RABBITMQ_URL"] ?? "amqp://guest:guest@localhost:5672/";
+var frontendUrl = cfg["FRONTEND_URL"]?.TrimEnd('/') ?? "http://localhost:3000";
+var jwtIssuer   = cfg["JWT_ISSUER"]   ?? "quizai";
+var jwtAudience = cfg["JWT_AUDIENCE"] ?? "quizai";
 
 // ── MySQL + Identity ──────────────────────────────────────────────────────────
 // Versione fissa: evita la connessione eager di AutoDetect durante la configurazione DI
@@ -36,8 +41,37 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 // ── RSA keys + JWT ────────────────────────────────────────────────────────────
-builder.Services.AddSingleton<RsaKeyProvider>();
+// Istanza creata subito: la stessa chiave pubblica serve sia al JWKS sia alla
+// validazione locale del token in GET /auth/me.
+var rsaKeys = new RsaKeyProvider(cfg);
+builder.Services.AddSingleton(rsaKeys);
 builder.Services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
+// ── JWT Authentication (token letto dal cookie httpOnly `access_token`) ───────
+// auth-service valida i propri token con la chiave pubblica RSA locale, così
+// può proteggere GET /auth/me senza chiamarsi via HTTP (niente self-call al JWKS).
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.MapInboundClaims = false; // mantieni i claim originali: sub, email, username
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer              = jwtIssuer,
+            ValidAudience            = jwtAudience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey         = new RsaSecurityKey(rsaKeys.PublicKey) { KeyId = rsaKeys.Kid },
+        };
+        o.Events = new JwtBearerEvents
+        {
+            // Il frontend non manda più l'header Authorization: il token sta nel cookie.
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies[AuthCookie.Name];
+                return Task.CompletedTask;
+            }
+        };
+    });
+builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService.Auth.AuthService>();
 builder.Services.AddScoped<IUserRegisteredPublisher, UserRegisteredPublisher>();
 builder.Services.AddSingleton<IGoogleTokenValidator, GoogleTokenValidator>();
@@ -94,8 +128,13 @@ builder.Services.AddSwaggerGen(o =>
 builder.Services.AddControllers();
 
 // ── CORS (frontend) ─────────────────────────────────────────────────────────
+// AllowCredentials è obbligatorio perché il cookie viaggi nelle richieste cross-origin;
+// non è combinabile con AllowAnyOrigin, quindi l'origine va elencata esplicitamente.
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+    p.WithOrigins(frontendUrl)
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+     .AllowCredentials()));
 
 var app = builder.Build();
 

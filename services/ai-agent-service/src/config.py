@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     # Internal
     internal_api_key: str = "changeme"
 
+    # Browser Use — deep web search before quiz generation (opt-in per request)
+    browser_use_api_key: str = ""                  # empty disables deep search
+    browser_use_base_url: str = "https://api.browser-use.com"
+    browser_use_timeout: float = 180.0             # overall budget for one research run (s)
+    browser_use_poll_interval: float = 3.0         # delay between task status polls (s)
+    deep_search_context_chars: int = 6000          # cap on web context fed to the LLM
+
     # Document upload + RAG (all ephemeral / in-memory)
     max_upload_bytes: int = 15 * 1024 * 1024  # 15 MB hard limit on uploads
     max_source_chars: int = 60000             # cap on forwarded document text

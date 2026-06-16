@@ -6,5 +6,6 @@ public record QuizGenerateMessage(
     string Difficulty,
     int NumQuestions,
     string UserId,
-    string? SourceText = null
+    string? SourceText = null,
+    bool DeepSearch = false
 );

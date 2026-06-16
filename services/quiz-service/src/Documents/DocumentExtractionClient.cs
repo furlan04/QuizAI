@@ -19,6 +19,8 @@ public interface IDocumentExtractionClient
     /// </summary>
     Task<ExtractedDocument> ExtractAsync(
         Stream content, string fileName, string contentType, CancellationToken ct = default);
+
+    Task<Stream> GenerateAnkiAsync(string title, string questionsJson, CancellationToken ct = default);
 }
 
 public class DocumentExtractionClient : IDocumentExtractionClient
@@ -67,6 +69,22 @@ public class DocumentExtractionClient : IDocumentExtractionClient
 
             return result;
         }
+    }
+
+    public async Task<Stream> GenerateAnkiAsync(string title, string questionsJson, CancellationToken ct = default)
+    {
+        var form = new MultipartFormDataContent();
+        form.Add(new StringContent(title), "title");
+        form.Add(new StringContent(questionsJson), "questions_json");
+
+        var resp = await _http.PostAsync("/anki/generate", form, ct);
+        if (!resp.IsSuccessStatusCode)
+        {
+            var body = await resp.Content.ReadAsStringAsync(ct);
+            throw new DocumentExtractionException((int)resp.StatusCode, $"Errore generazione Anki: {ExtractDetail(body)}");
+        }
+
+        return await resp.Content.ReadAsStreamAsync(ct);
     }
 
     private static string ExtractDetail(string body)

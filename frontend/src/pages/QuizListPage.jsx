@@ -1,10 +1,10 @@
 import { Link, useParams } from "react-router-dom";
 import QuizList from "../components/QuizList";
-import { getCurrentUser } from "../services/CommonService";
+import { useAuth } from "../auth/AuthContext";
 
 export default function QuizListPage() {
   const { userId } = useParams();
-  const me = getCurrentUser();
+  const { user: me } = useAuth();
 
   // Senza parametro -> i miei quiz (filtro per createdBy === mio id)
   const creatorId = userId || me?.userId || null;

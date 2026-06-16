@@ -5,6 +5,7 @@ from ..state import AgentState
 from ..prompts.generator_prompt import (
     GENERATOR_SYSTEM_PROMPT,
     GENERATOR_USER_PROMPT,
+    GENERATOR_RESEARCH_SECTION,
     DOC_GENERATOR_SYSTEM_PROMPT,
     DOC_GENERATOR_USER_PROMPT,
 )
@@ -66,6 +67,9 @@ def generator_node(state: AgentState) -> dict:
                 subtopics=subtopics_text,
                 notes=plan.get("notes") or "None",
             )
+            # Deep search: ground generation on any web-gathered facts.
+            if state.web_context:
+                user_msg += GENERATOR_RESEARCH_SECTION.format(research=state.web_context)
 
         result: RawQuestions = client.chat.completions.create(
             model=settings.groq_model,

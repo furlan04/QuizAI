@@ -23,6 +23,15 @@ Notes: {notes}
 Return a list of {total_questions} questions, each with text, options (4 items), correct_index, and explanation.
 """
 
+GENERATOR_RESEARCH_SECTION = """
+
+Reference facts gathered from the web (use them for accuracy; you may also draw
+on your own knowledge of the topic):
+\"\"\"
+{research}
+\"\"\"
+"""
+
 DOC_GENERATOR_SYSTEM_PROMPT = """You are a quiz question writer who works strictly from a provided document.
 You generate high-quality multiple-choice questions using ONLY the information in the supplied excerpts.
 

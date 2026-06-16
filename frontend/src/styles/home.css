@@ -440,3 +440,90 @@
   .hero-actions  { flex-direction: column; align-items: center; }
   .btn-hero      { width: 100%; max-width: 280px; }
 }
+
+/* ============================================================
+   Home (landing) — sezioni con stile estratto dall'inline
+   ============================================================ */
+
+/* ── Badge "Powered by AI" ── */
+.home-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--lime);
+  border: 2px solid var(--ink);
+  border-radius: 100px;
+  padding: 5px 14px;
+  margin-bottom: 24px;
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+
+/* ── Pulsanti hero ── */
+.home-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--radius-sm);
+  padding: 13px 26px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 16px;
+  text-decoration: none;
+  box-shadow: var(--shadow-hard);
+  transition: transform .1s, box-shadow .1s;
+}
+.home-hero-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--ink);
+}
+.home-hero-btn--primary {
+  background: var(--violet);
+  color: #fff;
+  border: 2.5px solid var(--ink);
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.home-hero-btn--secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 2.5px solid var(--ink);
+  font-weight: 700;
+}
+
+/* ── Numero passo "Come funziona" (colore di sfondo impostato inline) ── */
+.home-step-number {
+  width: 44px;
+  height: 44px;
+  border: 2.5px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: 3px 3px 0 0 var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+/* ── Pulsanti CTA finale ── */
+.home-cta-btn {
+  border-radius: var(--radius-sm);
+  padding: 13px 26px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 15px;
+  text-decoration: none;
+}
+.home-cta-btn--primary {
+  background: var(--lime);
+  color: var(--ink);
+  border: 2.5px solid rgba(255, 255, 255, .3);
+  font-weight: 800;
+  box-shadow: 4px 4px 0 0 rgba(255, 255, 255, .18);
+}
+.home-cta-btn--secondary {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, .35);
+  font-weight: 700;
+}

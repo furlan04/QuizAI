@@ -5,6 +5,7 @@ from ..state import AgentState
 from ..prompts.planner_prompt import (
     PLANNER_SYSTEM_PROMPT,
     PLANNER_USER_PROMPT,
+    PLANNER_RESEARCH_SECTION,
     DOC_PLANNER_SYSTEM_PROMPT,
     DOC_PLANNER_USER_PROMPT,
 )
@@ -33,6 +34,9 @@ def planner_node(state: AgentState) -> dict:
                 difficulty=state.difficulty,
                 num_questions=state.num_questions,
             )
+            # Deep search: fold any web-gathered facts into the planning prompt.
+            if state.web_context:
+                user_msg += PLANNER_RESEARCH_SECTION.format(research=state.web_context)
 
         plan: QuizPlan = client.chat.completions.create(
             model=settings.groq_model,

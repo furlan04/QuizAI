@@ -1,7 +1,8 @@
 import { quizApi } from '../lib/apiClient';
+import { getConfig } from '../config/config';
 
-export const generateQuiz = async (topic, difficulty, numQuestions) => {
-  const res = await quizApi.post('/quizzes/generate', { topic, difficulty, numQuestions });
+export const generateQuiz = async (topic, difficulty, numQuestions, deepSearch = false) => {
+  const res = await quizApi.post('/quizzes/generate', { topic, difficulty, numQuestions, deepSearch });
   if (res.ok) return { success: true, ...res.data };
   return { success: false, message: res.error || 'Errore durante la generazione del quiz' };
 };
@@ -22,9 +23,6 @@ export const generateQuizFromFile = async (file, difficulty, numQuestions) => {
   return { success: false, message: res.error || 'Errore durante la generazione del quiz dal documento' };
 };
 
-/** Compat con vecchio createQuiz */
-export const createQuiz = (topic) => generateQuiz(topic, 'medium', 5);
-
 export const getQuizzes = async ({ topic, difficulty, page = 1, pageSize = 20 } = {}) => {
   const params = new URLSearchParams();
   if (topic)      params.set('topic', topic);
@@ -36,17 +34,34 @@ export const getQuizzes = async ({ topic, difficulty, page = 1, pageSize = 20 } 
   return res.ok ? res.data : { items: [], total: 0, page, pageSize };
 };
 
-/** Alias compatibilità */
-export const getMyQuizzes = () => getQuizzes();
-
 export const getQuizById = async (quizId) => {
   const res = await quizApi.get(`/quizzes/${quizId}`);
   if (res.status === 202) return { generating: true };
   return res.ok ? res.data : null;
 };
 
-/** Compat: alcuni vecchi componenti chiedevano quiz da una location custom */
-export const getQuizzesFromLocation = async (location) => {
-  const res = await quizApi.get(location);
-  return res.ok ? res.data : null;
+export const downloadAnkiDeck = async (quizId, quizTitle) => {
+  const baseUrl = getConfig('QUIZ_SERVICE_URL');
+  try {
+    const response = await fetch(`${baseUrl}/quizzes/${quizId}/anki`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { success: false, message: errorData.error || 'Errore durante il download' };
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${quizTitle}.apkg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: 'Errore di rete durante il download' };
+  }
 };
