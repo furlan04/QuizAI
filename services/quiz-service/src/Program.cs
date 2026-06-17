@@ -47,7 +47,7 @@ builder.Services.AddHttpClient<IDocumentExtractionClient, DocumentExtractionClie
 {
     c.BaseAddress = new Uri(fileServiceUrl);
     c.DefaultRequestHeaders.Add("X-Internal-Api-Key", internalApiKey);
-    c.Timeout = TimeSpan.FromSeconds(60);
+    c.Timeout = TimeSpan.FromMinutes(5);
 });
 
 // ── JWT Authentication via JWKS (auth-service) ───────────────────────────────

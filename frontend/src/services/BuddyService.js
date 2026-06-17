@@ -4,7 +4,7 @@ export const uploadBuddyDocument = async (file) => {
   const form = new FormData();
   form.append('file', file);
   
-  const res = await fileApi.post('/buddy/upload', form);
+  const res = await fileApi.post('/files/buddy/upload', form);
   if (res.ok) return { success: true, ...res.data };
   return { success: false, message: res.error || 'Errore durante l\'upload del documento' };
 };
@@ -38,7 +38,7 @@ export const deleteBuddySession = async (sessionId) => {
 };
 
 export const chatWithBuddy = async (sessionId, userId, message, history) => {
-  const res = await aiApi.post('/buddy/chat', { session_id: sessionId, user_id: userId, message, history });
+  const res = await aiApi.post('/ai/buddy/chat', { session_id: sessionId, user_id: userId, message, history });
   if (res.ok) return { success: true, ...res.data };
   return { success: false, message: res.error || 'Errore durante la chat con Buddy' };
 };

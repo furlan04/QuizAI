@@ -50,7 +50,9 @@ async def extract_document(
             )
 
         try:
-            text = extract_text(
+            from starlette.concurrency import run_in_threadpool
+            text = await run_in_threadpool(
+                extract_text,
                 file.filename or "", data, max_chars=settings.max_source_chars
             )
         except UnsupportedDocumentError as exc:
@@ -144,7 +146,8 @@ async def buddy_upload(
             raise HTTPException(status_code=400, detail="Empty file")
         
         try:
-            text = extract_text(file.filename or "", data)
+            from starlette.concurrency import run_in_threadpool
+            text = await run_in_threadpool(extract_text, file.filename or "", data)
         except UnsupportedDocumentError as exc:
             raise HTTPException(status_code=415, detail=str(exc)) from exc
         except DocumentExtractionError as exc:
@@ -159,28 +162,32 @@ async def buddy_upload(
         if not chunks:
             raise HTTPException(status_code=422, detail="No chunks generated from text")
 
-        model = get_embed_model()
-        embeddings = model.encode(chunks)
+        from starlette.concurrency import run_in_threadpool
+        model = await run_in_threadpool(get_embed_model)
+        embeddings = await run_in_threadpool(model.encode, chunks)
 
         session_id = str(uuid.uuid4())
         qdrant_url = os.environ.get("QDRANT_URL", "http://qdrant:6333")
         client = QdrantClient(url=qdrant_url)
 
-        client.create_collection(
-            collection_name=session_id,
-            vectors_config=VectorParams(size=model.get_sentence_embedding_dimension(), distance=Distance.COSINE)
-        )
-
-        points = [
-            PointStruct(
-                id=i,
-                vector=embedding.tolist(),
-                payload={"text": chunk}
+        def do_create_and_upsert():
+            client.create_collection(
+                collection_name=session_id,
+                vectors_config=VectorParams(size=model.get_sentence_embedding_dimension(), distance=Distance.COSINE)
             )
-            for i, (chunk, embedding) in enumerate(zip(chunks, embeddings))
-        ]
 
-        client.upsert(collection_name=session_id, points=points)
+            points = [
+                PointStruct(
+                    id=i,
+                    vector=embedding.tolist(),
+                    payload={"text": chunk}
+                )
+                for i, (chunk, embedding) in enumerate(zip(chunks, embeddings))
+            ]
+
+            client.upsert(collection_name=session_id, points=points)
+
+        await run_in_threadpool(do_create_and_upsert)
 
         title = Path(file.filename or "document").stem
         return {"session_id": session_id, "title": title}

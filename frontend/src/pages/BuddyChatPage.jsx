@@ -13,6 +13,9 @@ export default function BuddyChatPage() {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   useEffect(() => {
     fetchSession();
   }, [sessionId]);
@@ -23,10 +26,13 @@ export default function BuddyChatPage() {
 
   const fetchSession = async () => {
     setLoading(true);
+    setError("");
     const data = await getBuddySession(sessionId);
     if (data) {
       setSession(data);
       setHistory(data.history || []);
+    } else {
+      setError("Impossibile caricare la sessione.");
     }
     setLoading(false);
   };
@@ -34,6 +40,9 @@ export default function BuddyChatPage() {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || sending) return;
+
+    setError("");
+    setSuccess("");
 
     const userMessage = { role: 'user', content: message.trim() };
     const currentHistory = [...history];
@@ -52,60 +61,83 @@ export default function BuddyChatPage() {
       
       // Check if it's a quiz generation trigger
       if (res.response && res.response.toLowerCase().includes("quiz")) {
-        // Mostra un toast notification (implementazione basica)
-        alert("Generazione quiz avviata! Controlla la tua lista quiz a breve.");
+        setSuccess("Generazione quiz avviata! Controlla la tua lista quiz a breve.");
       }
     } else {
-      alert(res.message);
+      setError(res.message || "Errore durante l'invio del messaggio.");
       // Revert optimism
       setHistory(currentHistory);
     }
     setSending(false);
   };
 
-  if (loading) return <div className="page-container"><div className="loading-spinner" /></div>;
-  if (!session) return <div className="page-container"><div className="empty-state"><p>Sessione non trovata.</p></div></div>;
+  if (loading) return <div className="buddy-container"><div className="loading-spinner" /></div>;
+  if (!session) return <div className="buddy-container"><div className="buddy-empty-state"><p>Sessione non trovata.</p></div></div>;
 
   return (
-    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }}>
-      <div className="page-header" style={{ marginBottom: '1rem' }}>
-        <h1 className="page-title">{session.title}</h1>
-      </div>
+    <div className="buddy-container" style={{ paddingTop: '2rem' }}>
+      <div className="buddy-chat-wrapper">
+        <div className="buddy-chat-header">
+          <h1 className="page-title">{session.title}</h1>
+        </div>
 
-      <div className="chat-container" style={{ flex: 1, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {history.length === 0 ? (
-          <div className="empty-state text-muted text-center mt-5">
-            Inizia a fare domande sul documento! Prova a chiedere "Fammi un riassunto" o "Genera un quiz".
+        {(error || success) && (
+          <div style={{ padding: '1rem 1.5rem', background: '#fff' }}>
+            {error && (
+              <div className="alert alert-error">
+                <div className="alert-content">
+                  <span className="alert-text">{error}</span>
+                </div>
+              </div>
+            )}
+            {success && (
+              <div className="alert alert-success">
+                <div className="alert-content">
+                  <span className="alert-text">{success}</span>
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          history.map((msg, idx) => (
-            <div key={idx} style={{ alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '75%', padding: '12px 16px', borderRadius: '12px', backgroundColor: msg.role === 'user' ? '#3b82f6' : '#f1f5f9', color: msg.role === 'user' ? '#fff' : '#0f172a' }}>
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{msg.content}</div>
+        )}
+
+        <div className="buddy-chat-messages">
+          {history.length === 0 ? (
+            <div className="buddy-empty-state" style={{ marginTop: 0, border: 'none', boxShadow: 'none' }}>
+              <p>Inizia a fare domande sul documento! Prova a chiedere "Fammi un riassunto" o "Genera un quiz".</p>
             </div>
-          ))
-        )}
-        {sending && (
-          <div style={{ alignSelf: 'flex-start', padding: '12px 16px', borderRadius: '12px', backgroundColor: '#f1f5f9', color: '#64748b' }}>
-            Buddy sta scrivendo...
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          ) : (
+            history.map((msg, idx) => (
+              <div key={idx} className={`message-bubble ${msg.role === 'user' ? 'message-user' : 'message-assistant'}`}>
+                <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{msg.content}</div>
+              </div>
+            ))
+          )}
+          {sending && (
+            <div className="buddy-typing-indicator">
+              <div className="typing-dot"></div>
+              <div className="typing-dot"></div>
+              <div className="typing-dot"></div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
-      <form onSubmit={handleSend} style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Chiedi qualcosa sul documento..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          disabled={sending}
-          style={{ flex: 1 }}
-        />
-        <button type="submit" className="btn btn-primary" disabled={!message.trim() || sending}>
-          Invia
-        </button>
-      </form>
+        <div className="buddy-chat-input-area">
+          <form onSubmit={handleSend} className="buddy-chat-form">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Chiedi qualcosa sul documento..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              disabled={sending}
+            />
+            <button type="submit" className="btn btn-primary" disabled={!message.trim() || sending}>
+              Invia
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

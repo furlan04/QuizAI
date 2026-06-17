@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getBuddySessions, deleteBuddySession, uploadBuddyDocument, createBuddySession } from '../services/BuddyService';
 
 export default function BuddySessionsPage() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
+
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchSessions();
@@ -16,26 +17,31 @@ export default function BuddySessionsPage() {
 
   const fetchSessions = async () => {
     setLoading(true);
+    setError("");
     const data = await getBuddySessions();
     setSessions(data || []);
     setLoading(false);
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      await processUpload(selectedFile);
+    }
+    // Reset the input value so the same file can be selected again if it fails
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) return;
+  const processUpload = async (fileToUpload) => {
     setUploading(true);
+    setError("");
     
     // 1. Upload to file-service
-    const uploadRes = await uploadBuddyDocument(file);
+    const uploadRes = await uploadBuddyDocument(fileToUpload);
     if (!uploadRes.success) {
-      alert(uploadRes.message);
+      setError(uploadRes.message || "Errore durante il caricamento del documento.");
       setUploading(false);
       return;
     }
@@ -46,12 +52,17 @@ export default function BuddySessionsPage() {
     
     setUploading(false);
     if (!createRes.success) {
-      alert(createRes.message);
+      setError(createRes.message || "Errore durante la creazione della sessione.");
       return;
     }
 
-    setShowModal(false);
     navigate(`/buddy/${session_id}`);
+  };
+
+  const handleNewBuddyClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleDelete = async (e, sessionId) => {
@@ -59,29 +70,49 @@ export default function BuddySessionsPage() {
     e.stopPropagation();
     if (!window.confirm("Sei sicuro di voler eliminare questa sessione?")) return;
     
+    setError("");
     const success = await deleteBuddySession(sessionId);
     if (success) {
       setSessions(sessions.filter(s => s.id !== sessionId && s._id !== sessionId));
     } else {
-      alert("Errore durante l'eliminazione della sessione");
+      setError("Errore durante l'eliminazione della sessione");
     }
   };
 
   return (
-    <div className="page-container">
+    <div className="buddy-container">
       <div className="page-header">
         <h1 className="page-title">Buddy Chat</h1>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          Nuovo Buddy
+        <button className="btn btn-primary" onClick={handleNewBuddyClick} disabled={uploading}>
+          {uploading ? 'Caricamento...' : 'Nuovo Buddy'}
         </button>
       </div>
+
+      {error && (
+        <div className="alert alert-error" style={{ marginBottom: 20 }}>
+          <div className="alert-content">
+            <span className="alert-text">{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file input for direct opening of file explorer */}
+      <input 
+        type="file" 
+        accept=".pdf,.docx" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        style={{ display: 'none' }} 
+      />
 
       {loading ? (
         <div className="loading-spinner" />
       ) : sessions.length === 0 ? (
         <div className="empty-state">
           <p>Non hai ancora nessuna sessione Buddy.</p>
-          <button className="btn btn-primary mt-3" onClick={() => setShowModal(true)}>Carica un documento</button>
+          <button className="btn btn-primary mt-3" onClick={handleNewBuddyClick} disabled={uploading}>
+            {uploading ? 'Caricamento in corso...' : 'Carica un documento'}
+          </button>
         </div>
       ) : (
         <div className="card-grid">
@@ -98,26 +129,6 @@ export default function BuddySessionsPage() {
               </p>
             </div>
           ))}
-        </div>
-      )}
-
-      {showModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h2>Nuovo Buddy</h2>
-            <p>Carica un documento (PDF, DOCX) per iniziare a studiare con l'AI.</p>
-            <form onSubmit={handleUpload}>
-              <div className="form-group mt-3">
-                <input type="file" accept=".pdf,.docx" onChange={handleFileChange} required />
-              </div>
-              <div className="modal-actions mt-4">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={uploading}>Annulla</button>
-                <button type="submit" className="btn btn-primary" disabled={!file || uploading}>
-                  {uploading ? 'Caricamento...' : 'Inizia'}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </div>
