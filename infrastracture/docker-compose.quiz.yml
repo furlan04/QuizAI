@@ -55,8 +55,6 @@ services:
     build:
       context: ../services/auth-service
       dockerfile: Dockerfile
-    ports:
-      - "5001:5001"
     env_file:
       - ../services/auth-service/.env
     volumes:
@@ -100,8 +98,6 @@ services:
     build:
       context: ../services/quiz-service
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
     env_file:
       - ../services/quiz-service/.env
     environment:
@@ -138,8 +134,6 @@ services:
     build:
       context: ../services/user-service
       dockerfile: Dockerfile
-    ports:
-      - "5002:5002"
     env_file:
       - ../services/user-service/.env
     environment:
@@ -171,8 +165,6 @@ services:
     build:
       context: ..
       dockerfile: services/ai-agent-service/Dockerfile
-    ports:
-      - "8000:8000"
     env_file:
       - ../services/ai-agent-service/.env
     environment:
@@ -197,8 +189,6 @@ services:
     build:
       context: ../services/file-service
       dockerfile: Dockerfile
-    ports:
-      - "8001:8001"
     environment:
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
     develop:
@@ -207,6 +197,30 @@ services:
           path: ../services/file-service/src
           target: /app/src
 
+  # ── Gateway ─────────────────────────────────────────────────────────────────
+
+  gateway:
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      quiz-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5000' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   # ── Frontend ────────────────────────────────────────────────────────────────
 
   frontend:
@@ -214,18 +228,14 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_AUTH_SERVICE_URL: http://localhost:5001
-        REACT_APP_QUIZ_SERVICE_URL: http://localhost:8080
-        REACT_APP_USER_SERVICE_URL: http://localhost:5002
+        REACT_APP_AUTH_SERVICE_URL: http://localhost:5000
+        REACT_APP_QUIZ_SERVICE_URL: http://localhost:5000/quiz
+        REACT_APP_USER_SERVICE_URL: http://localhost:5000
         REACT_APP_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
     ports:
       - "3000:3000"
     depends_on:
-      auth-service:
-        condition: service_healthy
-      quiz-service:
-        condition: service_healthy
-      user-service:
+      gateway:
         condition: service_healthy
 
 volumes:
