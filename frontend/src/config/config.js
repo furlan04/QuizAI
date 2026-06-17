@@ -6,6 +6,8 @@ const APP_CONFIG = {
   AUTH_SERVICE_URL: env.REACT_APP_AUTH_SERVICE_URL || 'http://localhost:5000',
   QUIZ_SERVICE_URL: env.REACT_APP_QUIZ_SERVICE_URL || 'http://localhost:5000/quiz',
   USER_SERVICE_URL: env.REACT_APP_USER_SERVICE_URL || 'http://localhost:5000',
+  AI_SERVICE_URL: env.REACT_APP_AI_SERVICE_URL || 'http://localhost:5000',
+  FILE_SERVICE_URL: env.REACT_APP_FILE_SERVICE_URL || 'http://localhost:5000',
 
   GOOGLE_CLIENT_ID: env.REACT_APP_GOOGLE_CLIENT_ID || '',
 

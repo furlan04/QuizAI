@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .api.routes.health import router as health_router
+from .api.routes.buddy import router as buddy_router
 from .messaging.consumer import start_consumer
 from .infrastructure.mongo_client import close_mongo_client
 
@@ -42,3 +43,4 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(buddy_router)

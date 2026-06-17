@@ -24,3 +24,5 @@ python-dotenv==1.2.2
 jsonschema==4.23.0
 rank-bm25==0.2.2
 httpx==0.28.1
+qdrant-client>=1.7.0
+sentence-transformers>=2.3.0

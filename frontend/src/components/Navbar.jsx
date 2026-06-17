@@ -36,6 +36,12 @@ const IcProfile = () => (
   </svg>
 );
 
+const IcBuddy = () => (
+  <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+);
+
 const IcSettings = () => (
   <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3"/>
@@ -265,6 +271,12 @@ export default function Navbar() {
             <span className="nav-text">Crea</span>
           </Link>
 
+          {/* Buddy */}
+          <Link to="/buddy" className={`nav-item${location.pathname.startsWith("/buddy") ? " active" : ""}`}>
+            <span className="nav-icon"><IcBuddy /></span>
+            <span className="nav-text">Buddy</span>
+          </Link>
+
           {/* Profile */}
           <Link to="/profile" className={`nav-item${location.pathname.startsWith("/profile") ? " active" : ""}`}>
             <span className="nav-icon"><IcProfile /></span>
@@ -337,6 +349,11 @@ export default function Navbar() {
             </div>
           )}
         </div>
+
+        <Link to="/buddy" className={`mobile-nav-item${location.pathname.startsWith("/buddy") ? " active" : ""}`}>
+          <span className="mobile-nav-icon"><IcBuddy /></span>
+          <span className="mobile-nav-text">Buddy</span>
+        </Link>
 
         <Link to="/profile" className={`mobile-nav-item${location.pathname.startsWith("/profile") ? " active" : ""}`}>
           <span className="mobile-nav-icon"><IcProfile /></span>

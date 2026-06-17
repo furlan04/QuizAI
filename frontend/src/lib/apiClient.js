@@ -106,3 +106,5 @@ const createClient = (baseUrl) => ({
 export const authApi = createClient(getConfig('AUTH_SERVICE_URL'));
 export const quizApi = createClient(getConfig('QUIZ_SERVICE_URL'));
 export const userApi = createClient(getConfig('USER_SERVICE_URL'));
+export const aiApi = createClient(getConfig('AI_SERVICE_URL'));
+export const fileApi = createClient(getConfig('FILE_SERVICE_URL'));
