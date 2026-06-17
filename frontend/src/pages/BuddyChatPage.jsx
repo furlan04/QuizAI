@@ -50,29 +50,36 @@ export default function BuddyChatPage() {
     setMessage("");
     setSending(true);
 
-    const res = await chatWithBuddy(sessionId, user?.userId, userMessage.content, currentHistory);
-    
-    if (res.success) {
-      const newHistory = res.updated_history || [...currentHistory, userMessage, { role: 'assistant', content: res.response }];
-      setHistory(newHistory);
+    try {
+      const res = await chatWithBuddy(sessionId, user?.userId, userMessage.content, currentHistory);
       
-      // Update session history on backend
-      try {
-        await updateBuddySessionHistory(sessionId, newHistory);
-      } catch (err) {
-        console.error("Failed to update history", err);
+      if (res.success) {
+        const newHistory = res.updated_history || [...currentHistory, userMessage, { role: 'assistant', content: res.response }];
+        setHistory(newHistory);
+        
+        // Update session history on backend
+        try {
+          await updateBuddySessionHistory(sessionId, newHistory);
+        } catch (err) {
+          console.error("Failed to update history", err);
+        }
+        
+        // Check if it's a quiz generation trigger
+        if (res.response && res.response.toLowerCase().includes("quiz")) {
+          setSuccess("Generazione quiz avviata! Controlla la tua lista quiz a breve.");
+        }
+      } else {
+        setError(res.message || "Errore durante l'invio del messaggio.");
+        // Revert optimism
+        setHistory(currentHistory);
       }
-      
-      // Check if it's a quiz generation trigger
-      if (res.response && res.response.toLowerCase().includes("quiz")) {
-        setSuccess("Generazione quiz avviata! Controlla la tua lista quiz a breve.");
-      }
-    } else {
-      setError(res.message || "Errore durante l'invio del messaggio.");
-      // Revert optimism
+    } catch (err) {
+      console.error("Error during chatWithBuddy", err);
+      setError("Si è verificato un errore imprevisto.");
       setHistory(currentHistory);
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   if (loading) return <div className="buddy-container"><div className="loading-spinner" /></div>;

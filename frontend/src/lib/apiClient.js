@@ -59,16 +59,21 @@ export const request = async (url, options = {}) => {
   }
 
   let response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
   try {
     response = await fetch(url, {
       method,
       headers: finalHeaders,
       body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
       credentials: 'include', // invia/riceve il cookie httpOnly access_token
-      signal,
+      signal: signal || controller.signal,
     });
+    clearTimeout(timeoutId);
   } catch (err) {
-    if (err?.name === 'AbortError') return { ok: false, status: 0, data: null, error: 'aborted', errorCode: null };
+    clearTimeout(timeoutId);
+    if (err?.name === 'AbortError') return { ok: false, status: 0, data: null, error: 'Request timed out', errorCode: null };
     return { ok: false, status: 0, data: null, error: 'network_error', errorCode: null };
   }
 
