@@ -115,20 +115,34 @@ export default function BuddySessionsPage() {
           </button>
         </div>
       ) : (
-        <div className="card-grid">
-          {sessions.map(session => (
-            <div key={session.id || session._id} className="quiz-card" onClick={() => navigate(`/buddy/${session.id || session._id}`)}>
-              <div className="quiz-card-header">
-                <h3>{session.title}</h3>
-                <button className="btn-icon text-danger" onClick={(e) => handleDelete(e, session.id || session._id)}>
-                  Elimina
-                </button>
+        <div className="quiz-grid" style={{ marginTop: '30px' }}>
+          {sessions.map((session, index) => {
+            const coverClass = `quiz-cover-${index % 6}`;
+            return (
+              <div key={session.id || session._id} className="quiz-card" onClick={() => navigate(`/buddy/${session.id || session._id}`)}>
+                <div className={`quiz-card-header ${coverClass}`}>
+                  <div className="quiz-ai-badge">Buddy Session</div>
+                </div>
+                <div className="quiz-card-content">
+                  <h3 className="quiz-title">{session.title || "Documento senza titolo"}</h3>
+                  <p className="quiz-description">
+                    Ultimo aggiornamento: {new Date(session.lastMessageAt || session.last_message_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="quiz-card-actions">
+                  <button className="btn btn-play" onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/buddy/${session.id || session._id}`);
+                  }}>
+                    Apri Chat
+                  </button>
+                  <button className="btn btn-primary-outline" onClick={(e) => handleDelete(e, session.id || session._id)} style={{ color: 'var(--coral)', borderColor: 'var(--coral)' }}>
+                    Elimina Sessione
+                  </button>
+                </div>
               </div>
-              <p className="text-muted text-sm mt-2">
-                Ultimo messaggio: {new Date(session.lastMessageAt || session.last_message_at).toLocaleString()}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

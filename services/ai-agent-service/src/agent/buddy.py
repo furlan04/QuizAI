@@ -45,11 +45,11 @@ def retrieve_context(session_id: str, message: str) -> list[str]:
         
         query_vector = encoder.encode(message).tolist()
         
-        results = qdrant.search(
+        results = qdrant.query_points(
             collection_name=session_id,
-            query_vector=query_vector,
+            query=query_vector,
             limit=5
-        )
+        ).points
         
         chunks = []
         for res in results:

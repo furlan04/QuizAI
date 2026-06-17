@@ -50,14 +50,18 @@ export default function BuddyChatPage() {
     setMessage("");
     setSending(true);
 
-    const res = await chatWithBuddy(sessionId, user?.id, userMessage.content, currentHistory);
+    const res = await chatWithBuddy(sessionId, user?.userId, userMessage.content, currentHistory);
     
     if (res.success) {
       const newHistory = res.updated_history || [...currentHistory, userMessage, { role: 'assistant', content: res.response }];
       setHistory(newHistory);
       
       // Update session history on backend
-      await updateBuddySessionHistory(sessionId, newHistory);
+      try {
+        await updateBuddySessionHistory(sessionId, newHistory);
+      } catch (err) {
+        console.error("Failed to update history", err);
+      }
       
       // Check if it's a quiz generation trigger
       if (res.response && res.response.toLowerCase().includes("quiz")) {
