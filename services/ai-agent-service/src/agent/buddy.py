@@ -83,7 +83,20 @@ async def generate_chat_response(session_id: str, user_id: str, message: str, hi
     
     wants_quiz = is_quiz_request(message)
     if wants_quiz:
-        quiz_id = str(uuid.uuid4())
+        import bson
+        from ..infrastructure.mongo_client import create_quiz_skeleton
+        
+        quiz_id = str(bson.ObjectId())
+        
+        # Create skeleton in MongoDB so quiz-service can update it later
+        await create_quiz_skeleton(
+            quiz_id=quiz_id,
+            user_id=user_id,
+            topic=message,
+            difficulty="medium",
+            num_questions=5
+        )
+        
         event = QuizGenerateEvent(
             quiz_id=quiz_id,
             topic=message,
