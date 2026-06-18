@@ -6,17 +6,24 @@ import { getBuddySession, chatWithBuddy, updateBuddySessionHistory } from '../se
 export default function BuddyChatPage() {
   const { id: sessionId } = useParams();
   const { user } = useAuth();
-  const [session, setSession] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [state, dispatch] = React.useReducer((s, a) => ({ ...s, ...a }), {
+    session: null, history: [], message: "", loading: true, sending: false, error: "", success: ""
+  });
+  const { session, history, message, loading, sending, error, success } = state;
+  
   const messagesEndRef = useRef(null);
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
   useEffect(() => {
+    const fetchSession = async () => {
+      dispatch({ loading: true, error: "" });
+      const data = await getBuddySession(sessionId);
+      if (data) {
+        const historyWithIds = (data.history || []).map(m => ({ ...m, id: m.id || crypto.randomUUID() }));
+        dispatch({ session: data, history: historyWithIds, loading: false });
+      } else {
+        dispatch({ error: "Impossibile caricare la sessione.", loading: false });
+      }
+    };
     fetchSession();
   }, [sessionId]);
 
@@ -24,31 +31,16 @@ export default function BuddyChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history]);
 
-  const fetchSession = async () => {
-    setLoading(true);
-    setError("");
-    const data = await getBuddySession(sessionId);
-    if (data) {
-      setSession(data);
-      setHistory(data.history || []);
-    } else {
-      setError("Impossibile caricare la sessione.");
-    }
-    setLoading(false);
-  };
-
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim() || sending) return;
 
-    setError("");
-    setSuccess("");
+    dispatch({ error: "", success: "" });
 
-    const userMessage = { role: 'user', content: message.trim() };
+    const userMessage = { id: crypto.randomUUID(), role: 'user', content: message.trim() };
     const currentHistory = [...history];
-    setHistory([...currentHistory, userMessage]);
-    setMessage("");
-    setSending(true);
+    const newOptimisticHistory = [...currentHistory, userMessage];
+    dispatch({ history: newOptimisticHistory, message: "", sending: true });
 
     try {
       const chatTitle = session?.title || "Quiz";
@@ -56,31 +48,30 @@ export default function BuddyChatPage() {
       const res = await chatWithBuddy(sessionId, user?.userId, userMessage.content, currentHistory, chatTitle, userName);
       
       if (res.success) {
-        const newHistory = res.updated_history || [...currentHistory, userMessage, { role: 'assistant', content: res.response }];
-        setHistory(newHistory);
+        const finalHistory = res.updated_history 
+          ? res.updated_history.map(m => ({ ...m, id: m.id || crypto.randomUUID() })) 
+          : [...newOptimisticHistory, { id: crypto.randomUUID(), role: 'assistant', content: res.response }];
+        dispatch({ history: finalHistory });
         
         // Update session history on backend
         try {
-          await updateBuddySessionHistory(sessionId, newHistory);
+          await updateBuddySessionHistory(sessionId, finalHistory);
         } catch (err) {
           console.error("Failed to update history", err);
         }
         
         // Check if it's a quiz generation trigger
         if (res.response && res.response.toLowerCase().includes("quiz")) {
-          setSuccess("Generazione quiz avviata! Controlla la tua lista quiz a breve.");
+          dispatch({ success: "Generazione quiz avviata! Controlla la tua lista quiz a breve." });
         }
       } else {
-        setError(res.message || "Errore durante l'invio del messaggio.");
-        // Revert optimism
-        setHistory(currentHistory);
+        dispatch({ error: res.message || "Errore durante l'invio del messaggio.", history: currentHistory });
       }
     } catch (err) {
       console.error("Error during chatWithBuddy", err);
-      setError("Si è verificato un errore imprevisto.");
-      setHistory(currentHistory);
+      dispatch({ error: "Si è verificato un errore imprevisto.", history: currentHistory });
     } finally {
-      setSending(false);
+      dispatch({ sending: false });
     }
   };
 
@@ -119,8 +110,8 @@ export default function BuddyChatPage() {
               <p>Inizia a fare domande sul documento! Prova a chiedere "Fammi un riassunto" o "Genera un quiz".</p>
             </div>
           ) : (
-            history.map((msg, idx) => (
-              <div key={idx} className={`message-bubble ${msg.role === 'user' ? 'message-user' : 'message-assistant'}`}>
+            history.map((msg) => (
+              <div key={msg.id} className={`message-bubble ${msg.role === 'user' ? 'message-user' : 'message-assistant'}`}>
                 <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{msg.content}</div>
               </div>
             ))
@@ -141,8 +132,9 @@ export default function BuddyChatPage() {
               type="text"
               className="form-control"
               placeholder="Chiedi qualcosa sul documento..."
+              aria-label="Chiedi qualcosa sul documento..."
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => dispatch({ message: e.target.value })}
               disabled={sending}
             />
             <button type="submit" className="btn btn-primary" disabled={!message.trim() || sending}>

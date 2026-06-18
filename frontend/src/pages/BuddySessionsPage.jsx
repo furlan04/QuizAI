@@ -83,7 +83,7 @@ export default function BuddySessionsPage() {
     <div className="buddy-container">
       <div className="page-header">
         <h1 className="page-title">Buddy Chat</h1>
-        <button className="btn btn-primary" onClick={handleNewBuddyClick} disabled={uploading}>
+        <button type="button" className="btn btn-primary" onClick={handleNewBuddyClick} disabled={uploading}>
           {uploading ? 'Caricamento...' : 'Nuovo Buddy'}
         </button>
       </div>
@@ -103,6 +103,7 @@ export default function BuddySessionsPage() {
         ref={fileInputRef} 
         onChange={handleFileChange} 
         style={{ display: 'none' }} 
+        aria-label="Carica un documento"
       />
 
       {loading ? (
@@ -110,7 +111,7 @@ export default function BuddySessionsPage() {
       ) : sessions.length === 0 ? (
         <div className="empty-state">
           <p>Non hai ancora nessuna sessione Buddy.</p>
-          <button className="btn btn-primary mt-3" onClick={handleNewBuddyClick} disabled={uploading}>
+          <button type="button" className="btn btn-primary mt-3" onClick={handleNewBuddyClick} disabled={uploading}>
             {uploading ? 'Caricamento in corso...' : 'Carica un documento'}
           </button>
         </div>
@@ -119,7 +120,19 @@ export default function BuddySessionsPage() {
           {sessions.map((session, index) => {
             const coverClass = `quiz-cover-${index % 6}`;
             return (
-              <div key={session.id || session._id} className="quiz-card" onClick={() => navigate(`/buddy/${session.id || session._id}`)}>
+              <div 
+                key={session.id || session._id} 
+                className="quiz-card" 
+                onClick={() => navigate(`/buddy/${session.id || session._id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/buddy/${session.id || session._id}`);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
                 <div className={`quiz-card-header ${coverClass}`}>
                   <div className="quiz-ai-badge">Buddy Session</div>
                 </div>
@@ -130,13 +143,13 @@ export default function BuddySessionsPage() {
                   </p>
                 </div>
                 <div className="quiz-card-actions">
-                  <button className="btn btn-play" onClick={(e) => {
+                  <button type="button" className="btn btn-play" onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/buddy/${session.id || session._id}`);
                   }}>
                     Apri Chat
                   </button>
-                  <button className="btn btn-primary-outline" onClick={(e) => handleDelete(e, session.id || session._id)} style={{ color: 'var(--coral)', borderColor: 'var(--coral)' }}>
+                  <button type="button" className="btn btn-primary-outline" onClick={(e) => handleDelete(e, session.id || session._id)} style={{ color: 'var(--coral)', borderColor: 'var(--coral)' }}>
                     Elimina Sessione
                   </button>
                 </div>
