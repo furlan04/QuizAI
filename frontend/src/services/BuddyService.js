@@ -37,8 +37,8 @@ export const deleteBuddySession = async (sessionId) => {
   return res.ok;
 };
 
-export const chatWithBuddy = async (sessionId, userId, message, history) => {
-  const res = await aiApi.post('/ai/buddy/chat', { session_id: sessionId, user_id: userId, message, history });
+export const chatWithBuddy = async (sessionId, userId, message, history, chatTitle, userName) => {
+  const res = await aiApi.post('/ai/buddy/chat', { session_id: sessionId, user_id: userId, message, history, chat_title: chatTitle, username: userName });
   if (res.ok) return { success: true, ...res.data };
   return { success: false, message: res.error || 'Errore durante la chat con Buddy' };
 };

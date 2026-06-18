@@ -11,6 +11,8 @@ class ChatRequest(BaseModel):
     user_id: str
     message: str
     history: List[Dict[str, Any]] = []
+    username: str = "Buddy"
+    chat_title: str = "Quiz"
 
 class ChatResponse(BaseModel):
     response: str
@@ -23,7 +25,9 @@ async def buddy_chat(request: ChatRequest):
             session_id=request.session_id,
             user_id=request.user_id,
             message=request.message,
-            history=request.history
+            history=request.history,
+            username=request.username,
+            chat_title=request.chat_title
         )
         return ChatResponse(
             response=response_text,

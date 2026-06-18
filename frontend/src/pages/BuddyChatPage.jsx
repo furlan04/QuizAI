@@ -51,7 +51,9 @@ export default function BuddyChatPage() {
     setSending(true);
 
     try {
-      const res = await chatWithBuddy(sessionId, user?.userId, userMessage.content, currentHistory);
+      const chatTitle = session?.title || "Quiz";
+      const userName = user?.username || "Utente";
+      const res = await chatWithBuddy(sessionId, user?.userId, userMessage.content, currentHistory, chatTitle, userName);
       
       if (res.success) {
         const newHistory = res.updated_history || [...currentHistory, userMessage, { role: 'assistant', content: res.response }];

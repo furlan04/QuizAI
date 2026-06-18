@@ -77,7 +77,7 @@ Reply ONLY 'YES' or 'NO'."""
         text = message.lower()
         return "quiz" in text and ("generate" in text or "create" in text or "make" in text or "me" in text)
 
-async def generate_chat_response(session_id: str, user_id: str, message: str, history: list[dict]) -> tuple[str, list[dict]]:
+async def generate_chat_response(session_id: str, user_id: str, message: str, history: list[dict], username: str = "Buddy", chat_title: str = "Quiz") -> tuple[str, list[dict]]:
     chunks = retrieve_context(session_id, message)
     context_str = "\n\n".join(chunks)
     
@@ -92,14 +92,15 @@ async def generate_chat_response(session_id: str, user_id: str, message: str, hi
         await create_quiz_skeleton(
             quiz_id=quiz_id,
             user_id=user_id,
-            topic=message,
+            topic=chat_title,
             difficulty="medium",
-            num_questions=5
+            num_questions=5,
+            username=username
         )
         
         event = QuizGenerateEvent(
             quiz_id=quiz_id,
-            topic=message,
+            topic=chat_title,
             difficulty="medium",
             num_questions=5,
             user_id=user_id,

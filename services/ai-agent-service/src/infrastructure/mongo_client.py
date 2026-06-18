@@ -20,7 +20,7 @@ def get_mongo_client() -> AsyncIOMotorClient:
         _client = AsyncIOMotorClient(settings.mongodb_url)
     return _client
 
-async def create_quiz_skeleton(quiz_id: str, user_id: str, topic: str, difficulty: str, num_questions: int) -> None:
+async def create_quiz_skeleton(quiz_id: str, user_id: str, topic: str, difficulty: str, num_questions: int, username: str = "Buddy") -> None:
     """
     Creates a skeleton quiz in the 'quizzes' collection so that quiz-service
     can update it later when generation finishes.
@@ -39,7 +39,7 @@ async def create_quiz_skeleton(quiz_id: str, user_id: str, topic: str, difficult
             "questions": None,
             "tags": None,
             "created_by": user_id,
-            "created_by_username": "Buddy",
+            "created_by_username": username,
             "status": "generating",
             "error": None,
             "created_at": datetime.now(timezone.utc)
