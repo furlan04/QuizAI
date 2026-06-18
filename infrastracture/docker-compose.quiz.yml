@@ -49,14 +49,24 @@ services:
       timeout: 5s
       retries: 10
 
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── Microservizi ────────────────────────────────────────────────────────────
 
   auth-service:
     build:
       context: ../services/auth-service
       dockerfile: Dockerfile
-    ports:
-      - "5001:5001"
     env_file:
       - ../services/auth-service/.env
     volumes:
@@ -100,8 +110,6 @@ services:
     build:
       context: ../services/quiz-service
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
     env_file:
       - ../services/quiz-service/.env
     environment:
@@ -138,8 +146,6 @@ services:
     build:
       context: ../services/user-service
       dockerfile: Dockerfile
-    ports:
-      - "5002:5002"
     env_file:
       - ../services/user-service/.env
     environment:
@@ -171,18 +177,19 @@ services:
     build:
       context: ..
       dockerfile: services/ai-agent-service/Dockerfile
-    ports:
-      - "8000:8000"
     env_file:
       - ../services/ai-agent-service/.env
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
+      QDRANT_URL: "http://qdrant:6333"
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
     depends_on:
       rabbitmq:
         condition: service_healthy
       mongodb:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
     develop:
       watch:
@@ -197,15 +204,41 @@ services:
     build:
       context: ../services/file-service
       dockerfile: Dockerfile
-    ports:
-      - "8001:8001"
     environment:
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
+      QDRANT_URL: "http://qdrant:6333"
+    depends_on:
+      qdrant:
+        condition: service_healthy
     develop:
       watch:
         - action: sync+restart
           path: ../services/file-service/src
           target: /app/src
+
+  # ── Gateway ─────────────────────────────────────────────────────────────────
+
+  gateway:
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      quiz-service:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5000' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   # ── Frontend ────────────────────────────────────────────────────────────────
 
@@ -214,18 +247,14 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_AUTH_SERVICE_URL: http://localhost:5001
-        REACT_APP_QUIZ_SERVICE_URL: http://localhost:8080
-        REACT_APP_USER_SERVICE_URL: http://localhost:5002
+        REACT_APP_AUTH_SERVICE_URL: http://localhost:5000
+        REACT_APP_QUIZ_SERVICE_URL: http://localhost:5000/quiz
+        REACT_APP_USER_SERVICE_URL: http://localhost:5000
         REACT_APP_GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
     ports:
       - "3000:3000"
     depends_on:
-      auth-service:
-        condition: service_healthy
-      quiz-service:
-        condition: service_healthy
-      user-service:
+      gateway:
         condition: service_healthy
 
 volumes:
@@ -233,3 +262,4 @@ volumes:
   mongo_data:
   mysql_data:
   auth_keys:
+  qdrant_data:

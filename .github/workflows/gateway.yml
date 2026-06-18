@@ -1,0 +1,39 @@
+name: gateway
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/gateway/**"
+      - "services/gateway.Tests/**"
+      - ".github/workflows/gateway.yml"
+  pull_request:
+    paths:
+      - "services/gateway/**"
+      - "services/gateway.Tests/**"
+      - ".github/workflows/gateway.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/gateway.Tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-gateway-${{ hashFiles('services/gateway*/**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-gateway-
+
+      - run: dotnet restore
+      - run: dotnet build --configuration Release --no-restore
+      - run: dotnet test --configuration Release --no-build --logger "console;verbosity=normal"

@@ -11,3 +11,4 @@
 @import './friends.css';    /* friends list, friendship requests        */
 @import './profile.css';    /* profilo & impostazioni account           */
 @import './home.css';       /* homepage pubblica, sezioni, auth         */
+@import './buddy.css';      /* buddy chat & sessions                    */

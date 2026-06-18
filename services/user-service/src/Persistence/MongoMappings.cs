@@ -6,6 +6,7 @@ using UserService.Challenges.Models;
 using UserService.Friendships.Models;
 using UserService.Notifications.Models;
 using UserService.Users.Models;
+using UserService.Buddy.Models;
 
 namespace UserService.Persistence;
 
@@ -28,6 +29,7 @@ public static class MongoMappings
         MapSnakeCase<Friendship>(cm => ConfigureObjectIdStringId(cm.IdMemberMap));
         MapSnakeCase<Notification>(cm => ConfigureObjectIdStringId(cm.IdMemberMap));
         MapSnakeCase<User>();            // Id stringa così com'è (nessuna rappresentazione ObjectId)
+        MapSnakeCase<BuddySession>();    // Id stringa fornito dal client (session_id)
     }
 
     // Id stringa rappresentato come ObjectId: ripristina anche il generatore che

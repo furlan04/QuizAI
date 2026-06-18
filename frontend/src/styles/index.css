@@ -8,6 +8,7 @@
 @import "./profile.css";
 @import "./friends.css";
 @import "./settings.css";
+@import "./buddy.css";
 @import "./App.css";
 
 @tailwind base;

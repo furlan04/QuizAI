@@ -19,6 +19,9 @@ class Settings(BaseSettings):
 
     # Internal
     internal_api_key: str = "changeme"
+    
+    # Qdrant
+    qdrant_url: str = "http://qdrant:6333"
 
     # Browser Use — deep web search before quiz generation (opt-in per request)
     browser_use_api_key: str = ""                  # empty disables deep search

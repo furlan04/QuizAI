@@ -43,6 +43,7 @@ builder.Services.AddScoped<IUserService, UserService.Users.UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<UserService.Buddy.IBuddyService, UserService.Buddy.BuddyService>();
 builder.Services.AddScoped<IChallengeCreatedPublisher, ChallengeCreatedPublisher>();
 builder.Services.AddScoped<IFriendRequestPublisher, FriendRequestPublisher>();
 
