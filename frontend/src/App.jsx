@@ -19,6 +19,8 @@ import QuizDetailPage from "./pages/QuizDetailPage";
 import LikedQuizzesPage from "./pages/LikedQuizzesPage";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import BuddySessionsPage from "./pages/BuddySessionsPage";
+import BuddyChatPage from "./pages/BuddyChatPage";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -141,6 +143,24 @@ function AppShell() {
           element={
             <ProtectedRoute>
               <LeaderboardPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Rotte Buddy (RAG Chat) */}
+        <Route 
+          path="/buddy" 
+          element={
+            <ProtectedRoute>
+              <BuddySessionsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/buddy/:id" 
+          element={
+            <ProtectedRoute>
+              <BuddyChatPage />
             </ProtectedRoute>
           } 
         />

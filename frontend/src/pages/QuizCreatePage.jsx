@@ -23,6 +23,65 @@ const LOADING_PHRASES = [
   "Quasi pronto...",
 ];
 
+function LoadingScreen({ phraseIndex }) {
+  return (
+    <div className="quiz-create-container">
+      <style>{`
+        @keyframes qg-orbit { to { transform: rotate(360deg); } }
+        @keyframes qg-pulse { 0%,100% { transform: scale(1); opacity:.9 } 50% { transform: scale(1.12); opacity:1 } }
+        @keyframes qg-fade  { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform:none } }
+        @keyframes qg-dot   { 0%,80%,100% { opacity:.25 } 40% { opacity:1 } }
+      `}</style>
+      <div className="quiz-create-card" style={{ textAlign: "center", padding: "56px 32px" }}>
+        {/* Anello orbitante con nucleo pulsante */}
+        <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 28px" }}>
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: "50%",
+            border: "4px solid var(--cream,#efe9da)",
+            borderTopColor: "var(--violet,#7c5cff)",
+            borderRightColor: "var(--coral,#ff6b5e)",
+            animation: "qg-orbit 0.9s linear infinite",
+          }} />
+          <div style={{
+            position: "absolute", inset: 30, borderRadius: "50%",
+            background: "var(--lime,#d6f25b)",
+            border: "2.5px solid var(--ink,#1a1726)",
+            animation: "qg-pulse 0.9s ease-in-out infinite",
+          }} />
+        </div>
+
+        <h1 className="create-title" style={{ marginBottom: 10 }}>Sto creando il tuo quiz</h1>
+
+        {/* Frase a rotazione */}
+        <p
+          key={phraseIndex}
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 15, color: "var(--ink-soft,#6b6578)",
+            minHeight: 24, animation: "qg-fade 0.5s ease-out",
+          }}
+        >
+          {LOADING_PHRASES[phraseIndex]}
+        </p>
+
+        {/* Puntini animati */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 18 }}>
+          {[0, 1, 2].map((i) => (
+            <span key={i} style={{
+              width: 9, height: 9, borderRadius: "50%", background: "var(--ink,#1a1726)",
+              animation: `qg-dot 1.4s ease-in-out ${i * 0.2}s infinite`,
+            }} />
+          ))}
+        </div>
+
+        <p className="form-hint" style={{ marginTop: 26 }}>
+          Può richiedere qualche secondo. Non chiudere la pagina.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function QuizCreatePage() {
   // Campi del form raggruppati in un reducer (merge per patch).
   const [form, setForm] = useReducer((s, patch) => ({ ...s, ...patch }), {
@@ -123,62 +182,7 @@ export default function QuizCreatePage() {
 
   // ── Schermata di caricamento ──
   if (phase === "submitting" || phase === "generating") {
-    return (
-      <div className="quiz-create-container">
-        <style>{`
-          @keyframes qg-orbit { to { transform: rotate(360deg); } }
-          @keyframes qg-pulse { 0%,100% { transform: scale(1); opacity:.9 } 50% { transform: scale(1.12); opacity:1 } }
-          @keyframes qg-fade  { from { opacity:0; transform: translateY(6px) } to { opacity:1; transform:none } }
-          @keyframes qg-dot   { 0%,80%,100% { opacity:.25 } 40% { opacity:1 } }
-        `}</style>
-        <div className="quiz-create-card" style={{ textAlign: "center", padding: "56px 32px" }}>
-          {/* Anello orbitante con nucleo pulsante */}
-          <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 28px" }}>
-            <div style={{
-              position: "absolute", inset: 0, borderRadius: "50%",
-              border: "4px solid var(--cream,#efe9da)",
-              borderTopColor: "var(--violet,#7c5cff)",
-              borderRightColor: "var(--coral,#ff6b5e)",
-              animation: "qg-orbit 0.9s linear infinite",
-            }} />
-            <div style={{
-              position: "absolute", inset: 30, borderRadius: "50%",
-              background: "var(--lime,#d6f25b)",
-              border: "2.5px solid var(--ink,#1a1726)",
-              animation: "qg-pulse 0.9s ease-in-out infinite",
-            }} />
-          </div>
-
-          <h1 className="create-title" style={{ marginBottom: 10 }}>Sto creando il tuo quiz</h1>
-
-          {/* Frase a rotazione */}
-          <p
-            key={phraseIndex}
-            style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 15, color: "var(--ink-soft,#6b6578)",
-              minHeight: 24, animation: "qg-fade 0.5s ease-out",
-            }}
-          >
-            {LOADING_PHRASES[phraseIndex]}
-          </p>
-
-          {/* Puntini animati */}
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 18 }}>
-            {[0, 1, 2].map((i) => (
-              <span key={i} style={{
-                width: 9, height: 9, borderRadius: "50%", background: "var(--ink,#1a1726)",
-                animation: `qg-dot 1.4s ease-in-out ${i * 0.2}s infinite`,
-              }} />
-            ))}
-          </div>
-
-          <p className="form-hint" style={{ marginTop: 26 }}>
-            Può richiedere qualche secondo. Non chiudere la pagina.
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen phraseIndex={phraseIndex} />;
   }
 
   // ── Form (anche stato 'failed' torna qui con messaggio) ──
@@ -245,6 +249,7 @@ export default function QuizCreatePage() {
                       className="deep-search-input"
                       checked={deepSearch}
                       onChange={(e) => setForm({ deepSearch: e.target.checked })}
+                      aria-checked={deepSearch}
                     />
                     <span className="deep-search-track" aria-hidden="true">
                       <span className="deep-search-thumb" />

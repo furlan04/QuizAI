@@ -49,6 +49,18 @@ services:
       timeout: 5s
       retries: 10
 
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/6333' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ── Microservizi ────────────────────────────────────────────────────────────
 
   auth-service:
@@ -170,11 +182,14 @@ services:
     environment:
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
       MONGODB_URL: "mongodb://mongodb:27017/?replicaSet=rs0"
+      QDRANT_URL: "http://qdrant:6333"
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
     depends_on:
       rabbitmq:
         condition: service_healthy
       mongodb:
+        condition: service_healthy
+      qdrant:
         condition: service_healthy
     develop:
       watch:
@@ -191,6 +206,10 @@ services:
       dockerfile: Dockerfile
     environment:
       INTERNAL_API_KEY: "${INTERNAL_API_KEY:-changeme}"
+      QDRANT_URL: "http://qdrant:6333"
+    depends_on:
+      qdrant:
+        condition: service_healthy
     develop:
       watch:
         - action: sync+restart
@@ -243,3 +262,4 @@ volumes:
   mongo_data:
   mysql_data:
   auth_keys:
+  qdrant_data:

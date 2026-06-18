@@ -59,16 +59,21 @@ export const request = async (url, options = {}) => {
   }
 
   let response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
   try {
     response = await fetch(url, {
       method,
       headers: finalHeaders,
       body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
       credentials: 'include', // invia/riceve il cookie httpOnly access_token
-      signal,
+      signal: signal || controller.signal,
     });
+    clearTimeout(timeoutId);
   } catch (err) {
-    if (err?.name === 'AbortError') return { ok: false, status: 0, data: null, error: 'aborted', errorCode: null };
+    clearTimeout(timeoutId);
+    if (err?.name === 'AbortError') return { ok: false, status: 0, data: null, error: 'Request timed out', errorCode: null };
     return { ok: false, status: 0, data: null, error: 'network_error', errorCode: null };
   }
 
@@ -99,6 +104,7 @@ const createClient = (baseUrl) => ({
   get:    (path, opts)        => request(`${baseUrl}${path}`, { ...opts, method: 'GET' }),
   post:   (path, body, opts)  => request(`${baseUrl}${path}`, { ...opts, method: 'POST', body }),
   put:    (path, body, opts)  => request(`${baseUrl}${path}`, { ...opts, method: 'PUT', body }),
+  patch:  (path, body, opts)  => request(`${baseUrl}${path}`, { ...opts, method: 'PATCH', body }),
   del:    (path, opts)        => request(`${baseUrl}${path}`, { ...opts, method: 'DELETE' }),
 });
 
@@ -106,3 +112,5 @@ const createClient = (baseUrl) => ({
 export const authApi = createClient(getConfig('AUTH_SERVICE_URL'));
 export const quizApi = createClient(getConfig('QUIZ_SERVICE_URL'));
 export const userApi = createClient(getConfig('USER_SERVICE_URL'));
+export const aiApi = createClient(getConfig('AI_SERVICE_URL'));
+export const fileApi = createClient(getConfig('FILE_SERVICE_URL'));
