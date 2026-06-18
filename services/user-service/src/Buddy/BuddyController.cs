@@ -2,7 +2,6 @@ namespace UserService.Buddy;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 using System.Security.Claims;
 using UserService.Buddy.Models;
 
@@ -22,14 +21,11 @@ public class UpdateBuddySessionHistoryRequest
 [Authorize]
 public class BuddyController : ControllerBase
 {
-    private readonly IMongoCollection<BuddySession> _sessions;
-    private readonly IConfiguration _config;
-    private static readonly HttpClient _httpClient = new HttpClient();
+    private readonly IBuddyService _buddyService;
 
-    public BuddyController(IMongoDatabase database, IConfiguration config)
+    public BuddyController(IBuddyService buddyService)
     {
-        _sessions = database.GetCollection<BuddySession>("buddy_sessions");
-        _config = config;
+        _buddyService = buddyService;
     }
 
     private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub")!;
@@ -37,35 +33,14 @@ public class BuddyController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateSession([FromBody] CreateBuddySessionRequest request)
     {
-        var session = new BuddySession
-        {
-            Id = request.SessionId,
-            UserId = GetUserId(),
-            Title = request.Title,
-            CreatedAt = DateTime.UtcNow,
-            LastMessageAt = DateTime.UtcNow,
-            History = new List<BuddyMessage>()
-        };
-
-        await _sessions.InsertOneAsync(session);
+        var session = await _buddyService.CreateSessionAsync(request.SessionId, GetUserId(), request.Title);
         return Ok(session);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetSessions()
     {
-        var userId = GetUserId();
-        var filter = Builders<BuddySession>.Filter.Eq(s => s.UserId, userId);
-        var projection = Builders<BuddySession>.Projection
-            .Include(s => s.Id)
-            .Include(s => s.Title)
-            .Include(s => s.LastMessageAt);
-
-        var sessions = await _sessions.Find(filter)
-            .Project<BuddySession>(projection)
-            .SortByDescending(s => s.LastMessageAt)
-            .ToListAsync();
-
+        var sessions = await _buddyService.GetSessionsAsync(GetUserId());
         return Ok(sessions.Select(s => new 
         {
             id = s.Id,
@@ -77,8 +52,7 @@ public class BuddyController : ControllerBase
     [HttpGet("{sessionId}")]
     public async Task<IActionResult> GetSession(string sessionId)
     {
-        var userId = GetUserId();
-        var session = await _sessions.Find(s => s.Id == sessionId && s.UserId == userId).FirstOrDefaultAsync();
+        var session = await _buddyService.GetSessionAsync(sessionId, GetUserId());
 
         if (session == null)
         {
@@ -91,19 +65,9 @@ public class BuddyController : ControllerBase
     [HttpPatch("{sessionId}")]
     public async Task<IActionResult> UpdateHistory(string sessionId, [FromBody] UpdateBuddySessionHistoryRequest request)
     {
-        var userId = GetUserId();
-        var filter = Builders<BuddySession>.Filter.And(
-            Builders<BuddySession>.Filter.Eq(s => s.Id, sessionId),
-            Builders<BuddySession>.Filter.Eq(s => s.UserId, userId)
-        );
+        var success = await _buddyService.UpdateHistoryAsync(sessionId, GetUserId(), request.History);
 
-        var update = Builders<BuddySession>.Update
-            .Set(s => s.History, request.History)
-            .Set(s => s.LastMessageAt, DateTime.UtcNow);
-
-        var result = await _sessions.UpdateOneAsync(filter, update);
-
-        if (result.MatchedCount == 0)
+        if (!success)
         {
             return NotFound(new { error = "Session not found." });
         }
@@ -114,29 +78,11 @@ public class BuddyController : ControllerBase
     [HttpDelete("{sessionId}")]
     public async Task<IActionResult> DeleteSession(string sessionId)
     {
-        var userId = GetUserId();
-        var filter = Builders<BuddySession>.Filter.And(
-            Builders<BuddySession>.Filter.Eq(s => s.Id, sessionId),
-            Builders<BuddySession>.Filter.Eq(s => s.UserId, userId)
-        );
+        var success = await _buddyService.DeleteSessionAsync(sessionId, GetUserId());
 
-        var result = await _sessions.DeleteOneAsync(filter);
-
-        if (result.DeletedCount == 0)
+        if (!success)
         {
             return NotFound(new { error = "Session not found." });
-        }
-
-        var fileServiceUrl = _config["FILE_SERVICE_URL"] ?? "http://file-service:8001";
-        
-        try
-        {
-            await _httpClient.DeleteAsync($"{fileServiceUrl.TrimEnd('/')}/buddy/{sessionId}");
-        }
-        catch (Exception ex)
-        {
-            // Log it normally, but proceed since Mongo deletion succeeded.
-            Console.WriteLine($"Error notifying file-service for deletion of buddy session {sessionId}: {ex.Message}");
         }
 
         return Ok(new { status = "deleted" });
